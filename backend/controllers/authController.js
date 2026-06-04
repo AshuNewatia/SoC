@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 
 // Generate JWT token
 const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1d' });
 };
 
 // @desc    Register a new user
@@ -63,7 +63,7 @@ export const login = async (req, res) => {
     // Compare password with hashed version
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({ message: 'Invalid Password' });
     }
 
     // Generate token
