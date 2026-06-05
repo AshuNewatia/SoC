@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/authContext';
 import { User, Mail, Lock, UserPlus } from 'lucide-react';
-
+// Import official brand icons
+import { FaGoogle, FaGithub } from 'react-icons/fa'; 
 
 function Signup() {
   const [name, setName] = useState('');
@@ -21,7 +22,7 @@ function Signup() {
       return;
     }
     setError('');
-    setLoading(true);
+    loading(true);
     try {
       await signup(name, email, password);
       navigate('/');
@@ -30,6 +31,35 @@ function Signup() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // --- NEW: OAUTH INITIATORS ---
+  const handleGoogleLogin = () => {
+    const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+    const options = {
+      redirect_uri: 'http://localhost:5173/oauth/callback', // Your frontend callback route
+      client_id: '504301300518-n1dds4ima2782diua2pfsft0q50o8bft.apps.googleusercontent.com', // Put your Client ID here
+      access_type: 'offline',
+      response_type: 'code',
+      prompt: 'consent',
+      scope: [
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/userinfo.email',
+      ].join(' '),
+    };
+    const qs = new URLSearchParams(options).toString();
+    window.location.href = `${rootUrl}?${qs}`;
+  };
+
+  const handleGithubLogin = () => {
+    const rootUrl = 'https://github.com/login/oauth/authorize';
+    const options = {
+      client_id: 'Ov23liAjvQDdoB6Ix9s4', // Put your GitHub Client ID here
+      redirect_uri: 'http://localhost:5173/oauth/callback',
+      scope: 'user:email',
+    };
+    const qs = new URLSearchParams(options).toString();
+    window.location.href = `${rootUrl}?${qs}`;
   };
 
   return (
@@ -130,6 +160,34 @@ function Signup() {
                 {loading ? 'Creating account...' : 'Sign Up'}
               </button>
             </form>
+
+            {/* --- NEW: VISUAL DIVIDER AND SOCIAL LOGIN BUTTONS --- */}
+            <div className="relative my-6 flex items-center justify-center">
+              <div className="border-t border-white/20 w-full"></div>
+              <span className="absolute bg-transparent px-3 text-xs text-white/50 uppercase tracking-wider backdrop-blur-sm">
+                Or continue with
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium hover:bg-white/10 transition duration-200 text-sm"
+              >
+                <FaGoogle className="w-4 h-4 text-red-400" />
+                Google
+              </button>
+              <button
+                type="button"
+                onClick={handleGithubLogin}
+                className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium hover:bg-white/10 transition duration-200 text-sm"
+              >
+                <FaGithub className="w-4 h-4" />
+                GitHub
+              </button>
+            </div>
+            {/* --- END OF OAUTH VISUAL CHANGES --- */}
 
             <p className="mt-6 text-center text-sm text-white/70">
               Already have an account?{' '}

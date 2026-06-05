@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import { useAuth } from './context/authContext';
+import OAuthCallback from './pages/OAuthCallback.jsx';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -17,6 +18,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/oauth/callback" element={<OAuthCallback />} />
         <Route
           path="/"
           element={
