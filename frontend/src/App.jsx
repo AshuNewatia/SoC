@@ -5,12 +5,12 @@ import Dashboard from './pages/Dashboard';
 import { useAuth } from './context/authContext';
 import OAuthCallback from './pages/OAuthCallback.jsx';
 
-function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
-  if (!user) return <Navigate to="/login" />;
-  return children;
-}
+// function ProtectedRoute({ children }) {
+//   const { user, loading } = useAuth();
+//   if (loading) return <div>Loading...</div>;
+//   if (!user) return <Navigate to="/login" />;
+//   return children;
+// }
 
 function App() {
   return (
@@ -22,9 +22,9 @@ function App() {
         <Route
           path="/"
           element={
-            <ProtectedRoute>
+            // <ProtectedRoute>
               <Dashboard />
-            </ProtectedRoute>
+            // </ProtectedRoute>
           }
         />
       </Routes>
