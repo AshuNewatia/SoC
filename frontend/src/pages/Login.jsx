@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/authContext'
 import { useNavigate } from 'react-router-dom';
-
+import { Mail, Lock, LogIn } from 'lucide-react';
 
 
 function Login() {
@@ -11,7 +11,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,43 +31,95 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded shadow-md w-96">
-        <h2 className="text-2xl font-bold mb-6">Login</h2>
+    // Gradient background with animated waves/pattern
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-primary via-primary-hover to-blue-900">
+      {/* Decorative blurred circles */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-white/20 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+      
+      {/* Main container */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4">
+        
+        {/* Glassmorphic card */}
+        <div className="w-full max-w-md">
+          {/* Brand header above card */}
+          <div className="text-center mb-8">
+            <div className="inline-block p-3 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
+              <span className="text-white font-bold text-2xl">IIT </span>
+              <span className="text-white font-bold text-2xl">Indore</span>
+            </div>
+            <h1 className="text-white text-4xl font-bold tracking-tight">Welcome back</h1>
+            <p className="text-white/70 mt-2">Sign in to your collaborative workspace</p>
+          </div>
 
-        {/* Show error message if any */}
-        {error && <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">{error}</div>}
+          {/* Glass card */}
+          <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl border border-white/20 p-8">
+            
+            {error && (
+              <div className="mb-6 p-3 bg-red-500/20 backdrop-blur-sm border border-red-500/30 text-white rounded-xl text-sm">
+                {error}
+              </div>
+            )}
 
-        <input
-          type="email"
-          placeholder="IITI Email (@iiti.ac.in)"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-2 border rounded mb-4"
-          required
-        />
+            <form onSubmit={handleSubmit}>
+              {/* Email field with icon */}
+              <div className="mb-5">
+                <label className="block text-white/80 text-sm font-medium mb-2">Email Address</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 w-5 h-5" />
+                  <input
+                    type="email"
+                    placeholder="you@iiti.ac.in"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition"
+                    required
+                  />
+                </div>
+              </div>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 border rounded mb-4"
-          required
-        />
+              {/* Password field with icon */}
+              <div className="mb-6">
+                <label className="block text-white/80 text-sm font-medium mb-2">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 w-5 h-5" />
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition"
+                    required
+                  />
+                </div>
+              </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
+              {/* Submit button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-white text-primary font-semibold py-3 rounded-xl hover:bg-white/90 transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <LogIn className="w-5 h-5" />
+                {loading ? 'Signing in...' : 'Sign In'}
+              </button>
+            </form>
 
-        <p className="mt-4 text-center text-sm">
-          Don't have an account? <a href="/signup" className="text-blue-600">Sign up</a>
-        </p>
-      </form>
+            {/* Signup link */}
+            <p className="mt-6 text-center text-sm text-white/70">
+              Don't have an account?{' '}
+              <a href="/signup" className="text-white font-semibold hover:underline">
+                Create account
+              </a>
+            </p>
+          </div>
+
+          {/* Footer note */}
+          <p className="text-center text-white/50 text-xs mt-8">
+            Secured with 🔐 IIT Indore SSO
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
