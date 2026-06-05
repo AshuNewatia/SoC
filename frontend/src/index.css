@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+@theme {
+  --color-bg-light: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-primary: #0EA5E9;
+  --color-primary-hover: #0284C7;
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-border-light: #E2E8F0;
+  --color-success: #10B981;
+
+  --font-family-sans: Inter, system-ui, sans-serif;
+  --radius-xl: 1rem;
+}
+
+/* Keyframes and custom animations go outside @theme */
 @keyframes float {
   0% { transform: translate(0, 0); }
   50% { transform: translate(20px, -20px); }
