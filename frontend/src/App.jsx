@@ -26,7 +26,7 @@ import { useAuth } from "./context/authContext";
 //   return children;
 // }
 
-// ✅ This layout includes the responsive sidebar + header
+// This layout includes the responsive sidebar + header
 function AuthenticatedLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -50,9 +50,9 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
 
-        {/* ✅ Protected Routes with both guards and the responsive layout */}
+        {/* Protected Routes with both guards and the responsive layout */}
         <Route
-          path="/"
+          path="/dashboard"
           element={
             // <ProtectedRoute>
               <AuthenticatedLayout>

@@ -1,4 +1,3 @@
-// components/Header.jsx
 import { Bell, Search, ChevronDown, Menu } from "lucide-react";
 
 export default function Header({ title = "Overview", onMenuClick }) {
