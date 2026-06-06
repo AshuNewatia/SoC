@@ -1,11 +1,9 @@
-import AppLayout from "../components/layouts/AppLayout";
-
-export default function Settings() {
+// Dashboard.jsx – simplified
+export default function Dashboard() {
   return (
-    <AppLayout title="Settings">
-
-      <h1>Settings Page</h1>
-
-    </AppLayout>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold">Setting Content</h1>
+      {/* rest of your dashboard UI */}
+    </div>
   );
 }

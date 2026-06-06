@@ -1,11 +1,9 @@
-import AppLayout from "../components/layouts/AppLayout";
-
-export default function Workspace() {
+// Dashboard.jsx – simplified
+export default function Dashboard() {
   return (
-    <AppLayout title="Workspace">
-
-      <h1>Workspace Page</h1>
-
-    </AppLayout>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold">workspace Content</h1>
+      {/* rest of your dashboard UI */}
+    </div>
   );
 }
