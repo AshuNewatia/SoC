@@ -31,7 +31,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
           fixed top-0 left-0 w-72 bg-white shadow-md z-50 flex flex-col
           transition-transform duration-300 ease-in-out
           md:relative md:translate-x-0 md:z-30
-          h-screen        /* ← fixed full viewport height */
+          h-screen
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
@@ -65,7 +65,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
           <div className="h-px bg-slate-200"></div>
         </div>
 
-        {/* Scrollable content – takes available space, pushes bottom section down */}
+        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 py-5 space-y-2">
             <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/15 text-primary font-semibold shadow-sm transition-all">
@@ -97,7 +97,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
               ))}
             </div>
 
-            {/* 👇 "See More" with explicit bottom margin → creates gap before the border line above Analytics */}
+            {/* "See More" with bottom margin to separate from the upcoming border line */}
             <button className="mt-4 mb-6 text-primary font-medium flex items-center gap-2 hover:gap-3 transition-all">
               See More
               <ChevronRight size={16} />
@@ -105,8 +105,8 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
           </div>
         </div>
 
-        {/* Bottom section – fixed to bottom via flex layout, border line now has a clear gap from "See More" */}
-        <div className="px-4 pb-6 pt-0 border-t border-slate-200">
+        {/* Bottom section – border line now sits a little above Analytics thanks to pt-3 */}
+        <div className="px-4 pb-6 pt-3 border-t border-slate-200">
           <div className="space-y-2">
             <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 hover:shadow-sm transition-all">
               <BarChart3 size={18} />
