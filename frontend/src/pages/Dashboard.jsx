@@ -1,14 +1,11 @@
-import { useNavigate } from 'react-router-dom';
-import SideBar from "../components/sidebar/Sidebar"
+import AppLayout from "../components/layouts/AppLayout";
 
-function Dashboard() {
-  const navigate = useNavigate();
-
+export default function Dashboard() {
   return (
-    <div>
-        <SideBar />
-    </div>
+    <AppLayout title="Overview">
+
+      <h1>Dashboard Content</h1>
+
+    </AppLayout>
   );
 }
-
-export default Dashboard;
