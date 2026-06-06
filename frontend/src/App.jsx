@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Workspace from "./pages/Workspace";
+import MyBoard from "./pages/MyBoard"
 import OAuthCallback from "./pages/OAuthCallback";
 
 import { useAuth } from "./context/authContext";
@@ -65,6 +66,15 @@ function App() {
           element={
             // <ProtectedRoute>
               <Workspace />
+            // </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/myboard"
+          element={
+            // <ProtectedRoute>
+              <MyBoard />
             // </ProtectedRoute>
           }
         />
