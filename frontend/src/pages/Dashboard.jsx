@@ -1,14 +1,9 @@
-import { useNavigate } from 'react-router-dom';
-import SideBar from "../components/sidebar/Sidebar"
-
-function Dashboard() {
-  const navigate = useNavigate();
-
+// Dashboard.jsx – simplified
+export default function Dashboard() {
   return (
-    <div>
-        <SideBar />
+    <div className="p-6">
+      <h1 className="text-2xl font-bold">Dashboard Content</h1>
+      {/* rest of your dashboard UI */}
     </div>
   );
 }
-
-export default Dashboard;
