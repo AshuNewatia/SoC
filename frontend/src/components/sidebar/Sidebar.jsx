@@ -9,6 +9,7 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
+import { NavLink } from "react-router-dom";
 
 const workspaces = [
   "CS301 Project",
@@ -17,6 +18,14 @@ const workspaces = [
 ];
 
 export default function Sidebar({ isOpen = false, onClose = () => {} }) {
+  // Helper function to get NavLink classes based on active state
+  const getLinkClass = ({ isActive }) =>
+    `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+      isActive
+        ? "bg-primary/15 text-primary font-semibold shadow-sm"
+        : "hover:bg-slate-100 hover:shadow-sm text-text-primary"
+    }`;
+
   return (
     <>
       {isOpen && (
@@ -68,14 +77,14 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 py-5 space-y-2">
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/15 text-primary font-semibold shadow-sm transition-all">
+            <NavLink to="/dashboard" className={getLinkClass}>
               <LayoutDashboard size={18} />
               Overview
-            </button>
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 hover:shadow-sm transition-all duration-200">
+            </NavLink>
+            <NavLink to="/MyBoard" className={getLinkClass}>
               <KanbanSquare size={18} />
               My Board
-            </button>
+            </NavLink>
           </div>
 
           <div className="px-4">
@@ -97,7 +106,6 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
               ))}
             </div>
 
-            {/* "See More" with bottom margin to separate from the upcoming border line */}
             <button className="mt-4 mb-6 text-primary font-medium flex items-center gap-2 hover:gap-3 transition-all">
               See More
               <ChevronRight size={16} />
@@ -105,17 +113,17 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
           </div>
         </div>
 
-        {/* Bottom section – border line now sits a little above Analytics thanks to pt-3 */}
+        {/* Bottom section */}
         <div className="px-4 pb-6 pt-3 border-t border-slate-200">
           <div className="space-y-2">
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 hover:shadow-sm transition-all">
+            <NavLink to="/Analytics" className={getLinkClass}>
               <BarChart3 size={18} />
               Analytics
-            </button>
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-100 hover:shadow-sm transition-all">
+            </NavLink>
+            <NavLink to="/Settings" className={getLinkClass}>
               <Settings size={18} />
               Settings
-            </button>
+            </NavLink>
             <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all">
               <LogOut size={18} />
               Logout
