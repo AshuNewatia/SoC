@@ -6,7 +6,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
-import Workspace from "./pages/Workspace";
+import Workspace from "./pages/WorkSpace";
 import MyBoard from "./pages/MyBoard";
 import OAuthCallback from "./pages/OAuthCallback";
 
