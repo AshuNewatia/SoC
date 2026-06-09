@@ -31,13 +31,20 @@ function AuthenticatedLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <main className="flex-1">
-        <Header onMenuClick={() => setSidebarOpen(true)} />
-        {children}
-      </main>
+    <div className="flex h-screen overflow-hidden">
+  <Sidebar
+    isOpen={sidebarOpen}
+    onClose={() => setSidebarOpen(false)}
+  />
+
+  <main className="flex-1 flex flex-col overflow-hidden">
+    <Header onMenuClick={() => setSidebarOpen(true)} />
+
+    <div className="flex-1 overflow-y-auto">
+      {children}
     </div>
+  </main>
+</div>
   );
 }
 
