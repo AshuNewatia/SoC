@@ -9,10 +9,9 @@ export default function Header({ title = "Overview", onMenuClick }) {
   const formattedDate = `${weekday}, ${month} ${day} ${year}`;
 
   return (
-    <header className="h-16 md:h-18 bg-white/90 backdrop-blur-md shadow-sm px-4 md:px-8 flex items-center justify-between sticky top-0 z-30">
+    <header className="h-16 md:h-18 bg-white/90 backdrop-blur-md shadow-md px-4 md:px-8 flex items-center justify-between sticky top-0 z-30">
       {/* Left Side: menu button + title + date */}
       <div className="flex items-center gap-3">
-        {/* Menu button - visible only on mobile */}
         <button
           onClick={onMenuClick}
           className="md:hidden p-2 -ml-2 rounded-lg hover:bg-gray-100 transition-all"
@@ -26,10 +25,10 @@ export default function Header({ title = "Overview", onMenuClick }) {
         </div>
       </div>
 
-      {/* Right Side: search, notification, profile (same as before) */}
+      {/* Right Side: search, notification, profile */}
       <div className="flex items-center gap-2 md:gap-4">
         <div className="relative">
-          <button className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-all">
+          <button className="md:hidden p-2 rounded-xl hover:bg-gray-100 transition-all">
             <Search size={18} className="text-gray-600" />
           </button>
           <div className="hidden md:block relative">
@@ -41,11 +40,15 @@ export default function Header({ title = "Overview", onMenuClick }) {
             />
           </div>
         </div>
-        <button className="relative p-2 rounded-full hover:bg-gray-100 transition-all">
+
+        {/* Notification button - hover adds shadow without lifting */}
+        <button className="relative p-2 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all duration-200">
           <Bell size={20} />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500" />
         </button>
-        <button className="flex items-center gap-2 md:gap-3 pl-0 md:pl-2.5 pr-0 md:pr-2.5 py-1 rounded-full hover:bg-gray-100 transition-all">
+
+        {/* Profile button - hover adds shadow without lifting */}
+        <button className="flex items-center gap-2 md:gap-3 pl-2 pr-3 py-1.5 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all duration-200">
           <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-white font-semibold text-sm">
             H
           </div>
