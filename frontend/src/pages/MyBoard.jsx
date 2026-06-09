@@ -265,6 +265,40 @@ const deleteNote = (id) => {
 };
 
 
+const [searchTerm, setSearchTerm] = useState("");
+const [priorityFilter, setPriorityFilter] =
+  useState("All");
+
+  
+const [tagFilter, setTagFilter] =
+  useState("All");
+
+const filterTasks = (taskList) => {
+  return taskList.filter((task) => {
+    const matchesSearch =
+      task.title
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+    const matchesPriority =
+      priorityFilter === "All" ||
+      task.priority === priorityFilter;
+
+    const matchesTag =
+      tagFilter === "All" ||
+      task.tag === tagFilter;
+
+    return (
+      matchesSearch &&
+      matchesPriority &&
+      matchesTag
+    );
+  });
+};
+
+
+
+
   return (
     <div className="p-6 lg:p-8 bg-slate-50">
       {/* Page Header */}
@@ -483,6 +517,45 @@ const deleteNote = (id) => {
     />
   </div>
 </div>
+<div className="flex flex-col md:flex-row gap-3 mb-5">
+  <input
+    type="text"
+    placeholder="Search tasks..."
+    value={searchTerm}
+    onChange={(e) =>
+      setSearchTerm(e.target.value)
+    }
+    className="flex-1 border border-slate-300 rounded-xl px-4 py-2"
+  />
+
+  <select
+    value={priorityFilter}
+    onChange={(e) =>
+      setPriorityFilter(e.target.value)
+    }
+    className="border border-slate-300 rounded-xl px-4 py-2"
+  >
+    <option>All</option>
+    <option>Low</option>
+    <option>Medium</option>
+    <option>High</option>
+  </select>
+  <select
+  value={tagFilter}
+  onChange={(e) =>
+    setTagFilter(e.target.value)
+  }
+  className="border border-slate-300 rounded-xl px-4 py-2"
+>
+  <option value="All">All Tags</option>
+  <option value="Frontend">Frontend</option>
+  <option value="Backend">Backend</option>
+  <option value="Bug">Bug</option>
+  <option value="Feature">Feature</option>
+  <option value="Research">Research</option>
+  <option value="Design">Design</option>
+</select>
+</div>
   <h2 className="text-xl font-semibold text-slate-900 mb-5">
     Personal Tasks
   </h2>
@@ -492,7 +565,7 @@ const deleteNote = (id) => {
       <BoardColumn
         columnId="todo"
         title="To Do"
-        tasks={tasks.todo}
+        tasks={filterTasks(tasks.todo)}
          onDelete={handleDeleteTask}
          onOpen={(task) => {
     setSelectedTask(task);
@@ -504,7 +577,7 @@ const deleteNote = (id) => {
       <BoardColumn
         columnId="progress"
         title="In Progress"
-        tasks={tasks.progress}
+        tasks={filterTasks(tasks.progress)}
          onDelete={handleDeleteTask}
          onOpen={(task) => {
     setSelectedTask(task);
@@ -516,7 +589,7 @@ const deleteNote = (id) => {
       <BoardColumn
         columnId="completed"
         title="Completed"
-        tasks={tasks.completed}
+        tasks={filterTasks(tasks.completed)}
          onDelete={handleDeleteTask}
          onOpen={(task) => {
     setSelectedTask(task);

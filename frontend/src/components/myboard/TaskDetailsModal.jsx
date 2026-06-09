@@ -73,7 +73,6 @@ export default function TaskDetailsModal({
               <option>Low</option>
               <option>Medium</option>
               <option>High</option>
-              <option>Critical</option>
             </select>
 
             <input
