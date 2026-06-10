@@ -52,7 +52,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
           </button>
         </div>
 
-        {/* Desktop logo */}
+        {/* Desktop logo  */}
         <div className="hidden md:flex h-[72px] px-6 items-center flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-white font-bold text-lg shadow-md">
