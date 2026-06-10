@@ -37,12 +37,19 @@ function AuthenticatedLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen w-screen overflow-hidden bg-slate-50">
+      {/* Sidebar stays locked to the screen height */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <main className="flex-1">
+      
+      {/* Main interface pane */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        {children}
-      </main>
+        
+        {/* Only this area will scroll when content overflows */}
+        <main className="flex-1 overflow-y-auto focus:outline-none">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
