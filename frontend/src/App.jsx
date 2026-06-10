@@ -6,9 +6,15 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
-import Workspace from "./pages/WorkSpace";
+import WorkSpace from "./pages/WorkSpace";
 import MyBoard from "./pages/MyBoard";
 import OAuthCallback from "./pages/OAuthCallback";
+
+import WorkspaceChat from "./components/workspace/WorkspaceChat";
+import WorkspaceActivity from "./components/workspace/WorkspaceActivity"
+import WorkspaceOverview from "./components/workspace/WorkspaceOverview"
+import WorkspaceMembers from "./components/workspace/WorkspaceMembers"
+import WorkspaceBoard from "./components/workspace/WorkspaceBoard"
 
 import Sidebar from "./components/sidebar/Sidebar";
 import Header from "./components/header/Header";
@@ -55,9 +61,9 @@ function App() {
           path="/dashboard"
           element={
             // <ProtectedRoute>
-              <AuthenticatedLayout>
-                <Dashboard />
-              </AuthenticatedLayout>
+            <AuthenticatedLayout>
+              <Dashboard />
+            </AuthenticatedLayout>
             // </ProtectedRoute>
           }
         />
@@ -65,9 +71,9 @@ function App() {
           path="/analytics"
           element={
             // <ProtectedRoute>
-              <AuthenticatedLayout>
-                <Analytics />
-              </AuthenticatedLayout>
+            <AuthenticatedLayout>
+              <Analytics />
+            </AuthenticatedLayout>
             // </ProtectedRoute>
           }
         />
@@ -75,9 +81,19 @@ function App() {
           path="/settings"
           element={
             // <ProtectedRoute>
-              <AuthenticatedLayout>
-                <Settings />
-              </AuthenticatedLayout>
+            <AuthenticatedLayout>
+              <Settings />
+            </AuthenticatedLayout>
+            // </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/myboard"
+          element={
+            // <ProtectedRoute>
+            <AuthenticatedLayout>
+              <MyBoard />
+            </AuthenticatedLayout>
             // </ProtectedRoute>
           }
         />
@@ -86,21 +102,36 @@ function App() {
           element={
             // <ProtectedRoute>
               <AuthenticatedLayout>
-                <Workspace />
+                <WorkSpace />
               </AuthenticatedLayout>
             // </ProtectedRoute>
           }
-        />
-        <Route
-          path="/myboard"
-          element={
-            // <ProtectedRoute>
-              <AuthenticatedLayout>
-                <MyBoard />
-              </AuthenticatedLayout>
-            // </ProtectedRoute>
-          }
-        />
+        >
+          <Route
+            path="overview"
+            element={<WorkspaceOverview />}
+          />
+
+          <Route
+            path="board"
+            element={<WorkspaceBoard />}
+          />
+
+          <Route
+            path="chat"
+            element={<WorkspaceChat />}
+          />
+
+          <Route
+            path="activity"
+            element={<WorkspaceActivity />}
+          />
+
+          <Route
+            path="members"
+            element={<WorkspaceMembers />}
+          />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

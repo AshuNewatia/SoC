@@ -10,12 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
-
-const workspaces = [
-  "CS301 Project",
-  "AI Research Lab",
-  "Tech Fest",
-];
+import { workspaces } from "../../data/workspaces";
 
 export default function Sidebar({ isOpen = false, onClose = () => {} }) {
   // Helper function to get NavLink classes based on active state
@@ -96,13 +91,13 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
             </div>
             <div className="space-y-2">
               {workspaces.map((workspace) => (
-                <button
-                  key={workspace}
+                <NavLink
+                  key={workspace.id} to = {`/workspace/${workspace.id}/overview`}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                 >
                   <FolderKanban size={18} />
-                  {workspace}
-                </button>
+                  {workspace.name}
+                </NavLink>
               ))}
             </div>
 
