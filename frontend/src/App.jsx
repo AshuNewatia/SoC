@@ -39,7 +39,7 @@ function AuthenticatedLayout({ children }) {
   return (
     <div className="flex min-h-screen">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <main className="flex-1 flex flex-col bg-gray-50">
+      <main className="flex-1">
         <Header onMenuClick={() => setSidebarOpen(true)} />
         {children}
       </main>
