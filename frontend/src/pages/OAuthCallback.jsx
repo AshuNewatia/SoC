@@ -32,7 +32,7 @@ function OAuthCallback() {
         localStorage.setItem('user', JSON.stringify(user));
 
         // Successful authentication redirect
-        navigate('/'); 
+        navigate('/dashboard'); 
       } catch (err) {
         console.error(err);
         const serverMessage = err.response?.data?.message || 'OAuth Verification Failed';
