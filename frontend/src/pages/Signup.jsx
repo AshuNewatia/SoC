@@ -34,11 +34,15 @@ function Signup() {
   }
 };
 
+const getRedirectUri = () => {
+  return `${window.location.origin}/oauth/callback`;
+};
+
   // --- NEW: OAUTH INITIATORS ---
   const handleGoogleLogin = () => {
     const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
     const options = {
-      redirect_uri: 'http://localhost:5173/oauth/callback', // Your frontend callback route
+      redirect_uri: getRedirectUri(), // Your frontend callback route
       client_id: '504301300518-n1dds4ima2782diua2pfsft0q50o8bft.apps.googleusercontent.com', // Put your Client ID here
       access_type: 'offline',
       response_type: 'code',
@@ -56,7 +60,7 @@ function Signup() {
     const rootUrl = 'https://github.com/login/oauth/authorize';
     const options = {
       client_id: 'Ov23liAjvQDdoB6Ix9s4', // Put your GitHub Client ID here
-      redirect_uri: 'http://localhost:5173/oauth/callback',
+      redirect_uri: getRedirectUri(),
       scope: 'user:email',
     };
     const qs = new URLSearchParams(options).toString();
