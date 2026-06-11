@@ -1,6 +1,7 @@
 import StatsGrid from "../components/dashboard/StatsGrid";
 import Hero from "../components/dashboard/Hero";
 import { FolderKanban,CheckSquare,CalendarClock,BadgeCheck } from "lucide-react";
+import { useAuth } from '../context/authContext';
 
 const workspaceStat = [
   {
@@ -29,14 +30,18 @@ const workspaceStat = [
   }
 ]
 
-const user = {
-  name: "Harsh",
-  role: "student"
-}
 
-const summary = "You have 2 task due this week"
 
-let greeting = " ";
+
+export default function Dashboard() {
+  const { user } = useAuth(); 
+  const displayUser = {
+    name: user?.name || "User", 
+    role: user?.role || "Student"
+  };
+
+  const summary = "You have 2 tasks due this week";
+  let greeting = " ";
 const hour = new Date().getHours();
 if(hour >= 5 && hour <=11){
   greeting = "Good Morning"
@@ -52,10 +57,9 @@ else if(hour >= 0 && hour <= 4){
 }
 
 
-export default function Dashboard() {
   return (
     <div className="p-6">
-      <Hero user ={user} summary = {summary} greeting = {greeting} />
+      <Hero user ={displayUser} summary = {summary} greeting = {greeting} />
       <StatsGrid workspaceStat = {workspaceStat} />
     </div>
   );

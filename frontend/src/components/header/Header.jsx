@@ -1,6 +1,8 @@
 import { Bell, Search, ChevronDown, Menu } from "lucide-react";
+import { useAuth } from '../../context/authContext';
 
 export default function Header({ title = "Overview", onMenuClick }) {
+  const { user } = useAuth();
   const today = new Date();
   const weekday = today.toLocaleDateString("en-US", { weekday: "long" });
   const month = today.toLocaleDateString("en-US", { month: "long" });
@@ -52,7 +54,7 @@ export default function Header({ title = "Overview", onMenuClick }) {
           <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-white font-semibold text-sm">
             H
           </div>
-          <p className="text-sm font-semibold text-gray-800 hidden md:block">Harsh</p>
+          <p className="text-sm font-semibold text-gray-800 hidden md:block">{user?.name || "User"}</p>
           <ChevronDown size={16} className="text-gray-500 hidden md:block" />
         </button>
       </div>

@@ -5,6 +5,7 @@ import { User, Mail, Lock, UserPlus } from 'lucide-react';
 // Import official brand icons
 import { FaGoogle, FaGithub } from 'react-icons/fa'; 
 
+
 function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -16,22 +17,22 @@ function Signup() {
   const { signup } = useAuth();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    setError('');
-    loading(true);
-    try {
-      await signup(name, email, password);
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Signup failed');
-    } finally {
-      setLoading(false);
-    }
-  };
+  e.preventDefault();
+  if (password !== confirmPassword) {
+    setError('Passwords do not match');
+    return;
+  }
+  setError('');
+  setLoading(true); // <--- CORRECTED: Use the setter function
+  try {
+    await signup(name, email, password);
+    navigate('/dashboard');
+  } catch (err) {
+    setError(err.response?.data?.message || 'Signup failed');
+  } finally {
+    setLoading(false); // <--- CORRECTED: Use the setter function
+  }
+};
 
   // --- NEW: OAUTH INITIATORS ---
   const handleGoogleLogin = () => {
