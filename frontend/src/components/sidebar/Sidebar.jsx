@@ -72,7 +72,6 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
         {/* Scrollable content inside the sidebar */}
         <div className="flex-1 overflow-y-auto minimalist-scrollbar">
           <div className="px-4 py-5 space-y-2">
-            {/* Added onClick={onClose} to auto-close on mobile */}
             <NavLink to="/dashboard" className={getLinkClass} onClick={onClose}>
               <LayoutDashboard size={18} />
               Overview
@@ -95,8 +94,14 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
                 <NavLink
                   key={workspace.id}
                   to={`/workspace/${workspace.id}/overview`}
-                  onClick={onClose} // Added onClick here
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 hover:bg-white hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                      isActive
+                        ? "bg-primary/15 text-primary font-semibold shadow-sm"
+                        : "bg-slate-50 hover:bg-white hover:shadow-md hover:-translate-y-0.5 text-text-primary"
+                    }`
+                  }
                 >
                   <FolderKanban size={18} />
                   {workspace.name}
@@ -106,7 +111,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
 
             <button 
               className="mt-4 mb-6 text-primary font-medium flex items-center gap-2 hover:gap-3 transition-all"
-              onClick={onClose} // Optional: close if they click "See More"
+              onClick={onClose}
             >
               See More
               <ChevronRight size={16} />
@@ -117,7 +122,6 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
         {/* Bottom section (Stays anchored to the bottom) */}
         <div className="px-4 pb-6 pt-3 border-t border-slate-200 bg-white flex-shrink-0">
           <div className="space-y-2">
-            {/* Added onClick={onClose} to bottom links too */}
             <NavLink to="/Analytics" className={getLinkClass} onClick={onClose}>
               <BarChart3 size={18} />
               Analytics
@@ -127,7 +131,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
               Settings
             </NavLink>
             <button 
-              onClick={onClose} // Added onClick here
+              onClick={onClose}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all"
             >
               <LogOut size={18} />
