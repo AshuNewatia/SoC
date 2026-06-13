@@ -11,7 +11,7 @@ export default function CreateTaskModal({
     description: "",
     priority: "Medium",
     dueDate: "",
-    tag: "",
+    tag: "Frontend",
   });
 
   const handleChange = (e) => {
@@ -27,13 +27,22 @@ export default function CreateTaskModal({
     if (!formData.title.trim()) return;
 
     const newTask = {
-      id: Date.now(),
-      title: formData.title,
-      description: formData.description,
-      priority: formData.priority,
-      dueDate: formData.dueDate,
-      tag: formData.tag || "General",
-    };
+  id: Date.now(),
+  title: formData.title,
+  description: formData.description,
+  priority: formData.priority,
+  dueDate: formData.dueDate,
+  tag: formData.tag,
+
+  createdAt: new Date().toISOString(),
+
+  activity: [
+    {
+      action: "Task Created",
+      timestamp: new Date().toISOString(),
+    },
+  ],
+};
 
     onCreateTask(newTask);
 
@@ -42,7 +51,7 @@ export default function CreateTaskModal({
       description: "",
       priority: "Medium",
       dueDate: "",
-      tag: "",
+      tag: "Frontend",
     });
 
     onClose();
@@ -51,8 +60,8 @@ export default function CreateTaskModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 overflow-y-auto">
-      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl my-8 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
 
         <div className="flex items-center justify-between p-6 border-b border-slate-200">
@@ -70,91 +79,123 @@ export default function CreateTaskModal({
 
         {/* Form */}
 
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="p-6 space-y-5"
+        >
+          {/* Title */}
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Task Title
+            </label>
+
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="Enter task title"
+              className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          {/* Description */}
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Description
+            </label>
+
+            <textarea
+              name="description"
+              rows="4"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Task details..."
+              className="w-full border border-slate-300 rounded-xl p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Priority + Date */}
+
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Task Title
+                Priority
               </label>
 
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
+              <select
+                name="priority"
+                value={formData.priority}
                 onChange={handleChange}
-                placeholder="Enter task title"
                 className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Description
-              </label>
-
-              <textarea
-                name="description"
-                rows="4"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Task details..."
-                className="w-full border border-slate-300 rounded-xl p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Priority
-                </label>
-
-                <select
-                  name="priority"
-                  value={formData.priority}
-                  onChange={handleChange}
-                  className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option>Low</option>
-                  <option>Medium</option>
-                  <option>High</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Due Date
-                </label>
-
-                <input
-                  type="date"
-                  name="dueDate"
-                  value={formData.dueDate}
-                  onChange={handleChange}
-                  className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Tag
+                Due Date
               </label>
 
               <input
-                type="text"
-                name="tag"
-                value={formData.tag}
+                type="date"
+                name="dueDate"
+                value={formData.dueDate}
                 onChange={handleChange}
-                placeholder="Frontend, Backend, Personal..."
                 className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
 
+          {/* Tag */}
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Tag
+            </label>
+
+            <select
+              name="tag"
+              value={formData.tag}
+              onChange={handleChange}
+              className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="Frontend">
+                Frontend
+              </option>
+
+              <option value="Backend">
+                Backend
+              </option>
+
+              <option value="Bug">
+                Bug
+              </option>
+
+              <option value="Feature">
+                Feature
+              </option>
+
+              <option value="Research">
+                Research
+              </option>
+
+              <option value="Design">
+                Design
+              </option>
+            </select>
+          </div>
+
           {/* Footer */}
 
-          <div className="flex justify-end gap-3 mt-8">
+          <div className="flex justify-end gap-3 pt-3">
             <button
               type="button"
               onClick={onClose}

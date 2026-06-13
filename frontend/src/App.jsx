@@ -9,7 +9,7 @@ import Settings from "./pages/Settings";
 import Workspace from "./pages/WorkSpace";
 import MyBoard from "./pages/MyBoard";
 import OAuthCallback from "./pages/OAuthCallback";
-
+import KanbanBoard from "./pages/KanbanBoard";
 import Sidebar from "./components/sidebar/Sidebar";
 import Header from "./components/header/Header";
 import { useAuth } from "./context/authContext";
@@ -100,6 +100,10 @@ function App() {
               </AuthenticatedLayout>
             // </ProtectedRoute>
           }
+        />
+        <Route
+          path="/kanban"
+          element={<KanbanBoard />}
         />
       </Routes>
     </BrowserRouter>

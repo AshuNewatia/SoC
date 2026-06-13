@@ -6,11 +6,11 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
-import TaskCard from "../components/myboard/TaskCard";
 import CreateTaskModal from "../components/myboard/CreateTaskModal";
 import { DragDropContext } from "@hello-pangea/dnd";
 import BoardColumn from "../components/myboard/BoardColumn";
 import TaskDetailsModal from "../components/myboard/TaskDetailsModal";
+import DeadlineCalendar from "../components/myboard/DeadlineCalendar";
 
 
 const STORAGE_KEY = "myboard_tasks";
@@ -23,6 +23,7 @@ const initialTasks = {
       priority: "High",
       dueDate: "2026-06-10",
       tag: "Backend",
+      status: "todo"
     },
   ],
   progress: [
@@ -32,6 +33,7 @@ const initialTasks = {
       priority: "Medium",
       dueDate: "2026-06-08",
       tag: "Frontend",
+      status: "progress"
     },
   ],
   completed: [
@@ -41,6 +43,7 @@ const initialTasks = {
       priority: "Low",
       dueDate: "2026-06-05",
       tag: "Management",
+      status: "completed"
     },
   ],
 };
@@ -54,10 +57,24 @@ export default function MyBoard() {
 const [showModal, setShowModal] = useState(false);
 
 const handleCreateTask = (newTask) => {
+
+const taskWithStatus = {
+    ...newTask,
+    status: "todo",
+    activity: [
+      {
+        action: "Task Created",
+        timestamp: new Date().toISOString(),
+      },
+    ],
+  };
+
   setTasks((prev) => ({
     ...prev,
     todo: [newTask, ...prev.todo],
   }));
+
+  addActivity(`Created task "${newTask.title}"`);
 };
 
 const handleDragEnd = (result) => {
@@ -78,13 +95,32 @@ const handleDragEnd = (result) => {
       ? sourceColumn
       : [...tasks[destination.droppableId]];
 
-  const [movedTask] = sourceColumn.splice(source.index, 1);
+  // const [movedTask] = sourceColumn.splice(source.index, 1);
+
+  const [movedTask] = sourceColumn.splice(
+  source.index,
+  1
+);
+
+const updatedTask = {
+  ...movedTask,
+  status: destination.droppableId,
+
+  activity: [
+    ...(movedTask.activity || []),
+    {
+      action: `Moved to ${destination.droppableId}`,
+      timestamp: new Date().toISOString(),
+    },
+  ],
+};
+
 
   destinationColumn.splice(
-    destination.index,
-    0,
-    movedTask
-  );
+  destination.index,
+  0,
+  updatedTask
+);
 
   setTasks((prev) => ({
     ...prev,
@@ -98,23 +134,79 @@ const [selectedTask, setSelectedTask] = useState(null);
 const [showTaskModal, setShowTaskModal] = useState(false);
 
 const handleUpdateTask = (updatedTask) => {
+  
   setTasks((prev) => ({
     todo: prev.todo.map((t) =>
-      t.id === updatedTask.id ? updatedTask : t
+      t.id === updatedTask.id
+  ? {
+      ...updatedTask,
+
+      activity: [
+        ...(t.activity || []),
+
+        {
+          action: "Task Updated",
+          timestamp:
+            new Date().toISOString(),
+        },
+      ],
+    }
+  : t
     ),
 
     progress: prev.progress.map((t) =>
-      t.id === updatedTask.id ? updatedTask : t
+      t.id === updatedTask.id
+  ? {
+      ...updatedTask,
+
+      activity: [
+        ...(t.activity || []),
+
+        {
+          action: "Task Updated",
+          timestamp:
+            new Date().toISOString(),
+        },
+      ],
+    }
+  : t
     ),
 
     completed: prev.completed.map((t) =>
-      t.id === updatedTask.id ? updatedTask : t
+      t.id === updatedTask.id
+  ? {
+      ...updatedTask,
+
+      activity: [
+        ...(t.activity || []),
+
+        {
+          action: "Task Updated",
+          timestamp:
+            new Date().toISOString(),
+        },
+      ],
+    }
+  : t
     ),
   }));
+
+  addActivity(
+  `Updated task "${updatedTask.title}"`
+);
 };
 
 
 const handleDeleteTask = (taskId) => {
+
+const task =
+  [...tasks.todo, ...tasks.progress, ...tasks.completed]
+    .find((t) => t.id === taskId);
+
+if (task) {
+  addActivity(`Deleted task "${task.title}"`);
+}
+
   setTasks((prev) => ({
     todo: prev.todo.filter((t) => t.id !== taskId),
     progress: prev.progress.filter((t) => t.id !== taskId),
@@ -177,6 +269,42 @@ const completionPercentage =
       );
 
 
+ const taskDistribution = [
+  {
+    label: "To Do",
+    count: tasks.todo.length,
+  },
+  {
+    label: "In Progress",
+    count: tasks.progress.length,
+  },
+  {
+    label: "Completed",
+    count: tasks.completed.length,
+  },
+];
+
+const tagCounts = {};
+
+[
+  ...tasks.todo,
+  ...tasks.progress,
+  ...tasks.completed,
+].forEach((task) => {
+  const tag = task.tag || "General";
+
+  tagCounts[tag] =
+    (tagCounts[tag] || 0) + 1;
+});
+
+const maxTasks =
+  Math.max(
+    tasks.todo.length,
+    tasks.progress.length,
+    tasks.completed.length,
+    1
+  );
+
 const upcomingTasks = [
   ...tasks.todo,
   ...tasks.progress,
@@ -188,7 +316,11 @@ const upcomingTasks = [
   )
   .slice(0, 5);
 
-
+const allTasks = [
+  ...tasks.todo,
+  ...tasks.progress,
+  ...tasks.completed,
+];
 
 
   const getDaysRemaining = (date) => {
@@ -297,6 +429,29 @@ const filterTasks = (taskList) => {
 };
 
 
+const [activities, setActivities] = useState(() => {
+  const saved = localStorage.getItem("myboard_activity");
+  return saved ? JSON.parse(saved) : [];
+});
+
+useEffect(() => {
+  localStorage.setItem(
+    "myboard_activity",
+    JSON.stringify(activities)
+  );
+}, [activities]);
+
+
+const addActivity = (text) => {
+  setActivities((prev) => [
+    {
+      id: Date.now(),
+      text,
+      time: new Date().toLocaleString(),
+    },
+    ...prev.slice(0, 19),
+  ]);
+};
 
 
   return (
@@ -363,20 +518,28 @@ const filterTasks = (taskList) => {
 
       {/* Productivity Widgets */}
 
-      <div className="grid lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid lg:grid-cols-3 gap-4 mb-4">
         {/* Focus */}
 
-      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 h-[350px] flex flex-col">
   <h2 className="font-semibold text-lg mb-4">
     Upcoming Deadlines
   </h2>
 
   {upcomingTasks.length === 0 ? (
-    <p className="text-slate-400 text-sm">
-      No upcoming deadlines.
-    </p>
+    <div className="h-full flex flex-col items-center justify-center text-center">
+  <div className="text-5xl mb-3">📅</div>
+
+  <h3 className="font-medium text-slate-700">
+    No Upcoming Deadlines
+  </h3>
+
+  <p className="text-sm text-slate-400 mt-1">
+    Tasks with due dates will appear here.
+  </p>
+</div>
   ) : (
-    <div className="space-y-3">
+    <div className="space-y-3 overflow-y-auto flex-1 pr-2">
       {upcomingTasks.map((task) => {
         const status = getDeadlineStyle(
           task.dueDate
@@ -413,7 +576,7 @@ const filterTasks = (taskList) => {
 
         {/* Notes */}
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 h-[350px] flex flex-col">
   <div className="flex items-center justify-between mb-4">
     <h2 className="font-semibold text-lg">
       Quick Notes
@@ -428,76 +591,113 @@ const filterTasks = (taskList) => {
     </button>
   </div>
 
-  <div className="space-y-4 max-h-[400px] overflow-y-auto">
-    {notes.map((note) => (
-      <div
-        key={note.id}
-        className="border border-slate-200 rounded-xl p-3"
-      >
-        <div className="flex justify-between items-center mb-2">
-          <input
-            value={note.title}
+ <div className="overflow-y-auto flex-1 pr-2">
+  {notes.length === 0 ? (
+    <div className="h-full flex flex-col items-center justify-center text-center">
+      <div className="text-5xl mb-3">📝</div>
+
+      <h3 className="font-medium text-slate-700">
+        No Notes Yet
+      </h3>
+
+      <p className="text-sm text-slate-400 mt-1 max-w-xs">
+        Capture ideas, reminders, meeting points,
+        or anything important for later.
+      </p>
+
+      
+    </div>
+  ) : (
+    <div className="space-y-4">
+      {notes.map((note) => (
+        <div
+          key={note.id}
+          className="border border-slate-200 rounded-xl p-3"
+        >
+          <div className="flex justify-between items-center mb-2">
+            <input
+              value={note.title}
+              onChange={(e) =>
+                updateNote(
+                  note.id,
+                  "title",
+                  e.target.value
+                )
+              }
+              className="font-semibold w-full outline-none"
+            />
+
+            <button
+              onClick={() => deleteNote(note.id)}
+              className="text-red-500 ml-2"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+
+          <textarea
+            rows={3}
+            value={note.content}
             onChange={(e) =>
               updateNote(
                 note.id,
-                "title",
+                "content",
                 e.target.value
               )
             }
-            className="font-semibold w-full outline-none"
+            placeholder="Write something..."
+            className="w-full resize-none outline-none text-sm text-slate-600"
           />
-
-          <button
-            onClick={() => deleteNote(note.id)}
-            className="text-red-500 ml-2"
-          >
-            <Trash2 size={16} />
-          </button>
         </div>
+      ))}
+    </div>
+  )}
+</div>
 
-        <textarea
-          rows={3}
-          value={note.content}
-          onChange={(e) =>
-            updateNote(
-              note.id,
-              "content",
-              e.target.value
-            )
-          }
-          placeholder="Write something..."
-          className="w-full resize-none outline-none text-sm text-slate-600"
-        />
-      </div>
-    ))}
-  </div>
 </div>
 
         {/* Goals */}
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-          <h2 className="font-semibold text-lg mb-4">
-            Monthly Goal
-          </h2>
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 h-[350px]">
+  <h2 className="font-semibold text-lg mb-4">
+    Task Distribution
+  </h2>
 
-          <div className="w-full bg-slate-200 rounded-full h-3">
-            <div
-              className="bg-blue-600 h-3 rounded-full"
-              style={{ width: "70%" }}
-            />
-          </div>
+  <div className="space-y-4">
+    {taskDistribution.map((item) => (
+      <div key={item.label}>
+        <div className="flex justify-between text-sm mb-1">
+          <span>{item.label}</span>
+          <span>{item.count}</span>
+        </div>
 
-          <p className="mt-3 text-sm text-slate-500">
-            70% completed
-          </p>
+        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-blue-600"
+            style={{
+              width: `${
+                (item.count / maxTasks) * 100
+              }%`,
+            }}
+          />
         </div>
       </div>
+    ))}
+  </div>
+</div>
+      </div>
+
+
+{/* Deadline Calender */}
+
+      <div className="max-h-[350px] overflow-y-auto mb-4">
+  <DeadlineCalendar tasks={allTasks} />
+</div>
 
       
-
       {/* Personal Kanban */}
 <div>
-  <div className="bg-white rounded-2xl p-5 border border-slate-200 mb-8">
+  <div className="bg-white rounded-2xl p-5 border border-slate-200 mb-5">
   <div className="flex justify-between mb-3">
     <h3 className="font-semibold">
       Productivity Progress
@@ -508,6 +708,8 @@ const filterTasks = (taskList) => {
     </span>
   </div>
 
+  
+
   <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
     <div
       className="h-full bg-green-500 transition-all duration-500"
@@ -517,6 +719,43 @@ const filterTasks = (taskList) => {
     />
   </div>
 </div>
+<div className="bg-white rounded-2xl p-5 border border-slate-200 mb-8">
+  <h3 className="font-semibold mb-4">
+    Recent Activity
+  </h3>
+
+  <div className="space-y-3 max-h-60 overflow-y-auto">
+    {activities.length === 0 ? (
+      <div className="flex flex-col items-center justify-center py-8 text-center">
+  <div className="text-5xl mb-3">📊</div>
+
+  <h3 className="font-medium text-slate-700">
+    No Activity Yet
+  </h3>
+
+  <p className="text-sm text-slate-400 mt-1">
+    Task actions will be recorded here.
+  </p>
+</div>
+    ) : (
+      activities.map((activity) => (
+        <div
+          key={activity.id}
+          className="border-b pb-2"
+        >
+          <p className="text-sm text-slate-800">
+            {activity.text}
+          </p>
+
+          <p className="text-xs text-slate-400">
+            {activity.time}
+          </p>
+        </div>
+      ))
+    )}
+  </div>
+</div>
+
 <div className="flex flex-col md:flex-row gap-3 mb-5">
   <input
     type="text"
@@ -540,21 +779,6 @@ const filterTasks = (taskList) => {
     <option>Medium</option>
     <option>High</option>
   </select>
-  <select
-  value={tagFilter}
-  onChange={(e) =>
-    setTagFilter(e.target.value)
-  }
-  className="border border-slate-300 rounded-xl px-4 py-2"
->
-  <option value="All">All Tags</option>
-  <option value="Frontend">Frontend</option>
-  <option value="Backend">Backend</option>
-  <option value="Bug">Bug</option>
-  <option value="Feature">Feature</option>
-  <option value="Research">Research</option>
-  <option value="Design">Design</option>
-</select>
 </div>
   <h2 className="text-xl font-semibold text-slate-900 mb-5">
     Personal Tasks

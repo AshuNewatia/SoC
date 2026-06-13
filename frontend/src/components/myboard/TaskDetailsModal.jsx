@@ -29,7 +29,7 @@ export default function TaskDetailsModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-2xl shadow-xl">
+     <div className="bg-white rounded-3xl w-full max-w-2xl shadow-xl max-h-[90vh] flex flex-col">
         {/* Header */}
 
         <div className="flex items-center justify-between p-6 border-b">
@@ -47,7 +47,7 @@ export default function TaskDetailsModal({
 
         {/* Body */}
 
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 overflow-y-auto flex-1">
           <input
             name="title"
             value={formData?.title || ""}
@@ -75,6 +75,24 @@ export default function TaskDetailsModal({
               <option>High</option>
             </select>
 
+
+            <div>
+  <label className="block mb-2 text-sm font-medium">
+    Status
+  </label>
+
+  <select
+    name="status"
+    value={formData?.status || "todo"}
+    onChange={handleChange}
+    className="w-full border rounded-xl p-3"
+  >
+    <option value="todo">To Do</option>
+    <option value="progress">In Progress</option>
+    <option value="completed">Completed</option>
+  </select>
+</div>
+
             <input
               type="date"
               name="dueDate"
@@ -91,6 +109,38 @@ export default function TaskDetailsModal({
             placeholder="Tag"
             className="w-full border rounded-xl p-3"
           />
+          {/* Activity History */}
+
+<div className="mt-6 border-t pt-4">
+  <h3 className="font-semibold text-lg mb-3">
+    Activity History
+  </h3>
+
+  {task.activity?.length ? (
+    <div className="space-y-3 max-h-48 overflow-y-auto">
+      {task.activity.map((item, index) => (
+        <div
+          key={index}
+          className="border-l-2 border-slate-300 pl-3"
+        >
+          <p className="text-sm font-medium">
+            {item.action}
+          </p>
+
+          <span className="text-xs text-slate-500">
+            {new Date(
+              item.timestamp
+            ).toLocaleString()}
+          </span>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="text-sm text-slate-400">
+      No activity recorded yet.
+    </p>
+  )}
+</div>
         </div>
 
         {/* Footer */}

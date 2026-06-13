@@ -12,6 +12,28 @@ export default function TaskCard({ task, onDelete, onOpen }) {
     Medium: "bg-yellow-100 text-yellow-700",
     High: "bg-red-100 text-red-700",
   };
+  const tagStyles = {
+  Frontend:
+    "bg-blue-100 text-blue-700",
+
+  Backend:
+    "bg-purple-100 text-purple-700",
+
+  Bug:
+    "bg-red-100 text-red-700",
+
+  Feature:
+    "bg-green-100 text-green-700",
+
+  Research:
+    "bg-yellow-100 text-yellow-700",
+
+  Design:
+    "bg-pink-100 text-pink-700",
+
+  General:
+    "bg-slate-100 text-slate-700",
+};
 
   return (
     <div onClick={() => onOpen(task)} className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all duration-200">
@@ -50,9 +72,14 @@ export default function TaskCard({ task, onDelete, onOpen }) {
       {/* Footer */}
 
       <div className="flex items-center justify-between">
-        <span className="text-xs bg-slate-100 px-2 py-1 rounded-lg">
-          {task.tag}
-        </span>
+       <span
+  className={`text-xs px-2 py-1 rounded-lg font-medium ${
+    tagStyles[task.tag] ||
+    "bg-slate-100 text-slate-700"
+  }`}
+>
+  {task.tag}
+</span>
 
         <div className="flex items-center gap-2">
   <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-semibold">
