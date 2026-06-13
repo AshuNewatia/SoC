@@ -12,13 +12,12 @@ import {
 import { NavLink } from "react-router-dom";
 import { workspaces } from "../../data/workspaces";
 
-export default function Sidebar({ isOpen = false, onClose = () => {} }) {
+export default function Sidebar({ isOpen = false, onClose = () => { } }) {
   // Helper function to get NavLink classes based on active state
   const getLinkClass = ({ isActive }) =>
-    `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-      isActive
-        ? "bg-primary/15 text-primary font-semibold shadow-sm"
-        : "hover:bg-slate-100 hover:shadow-sm text-text-primary"
+    `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
+      ? "bg-primary/15 text-primary font-semibold shadow-sm"
+      : "hover:bg-slate-100 hover:shadow-sm text-text-primary"
     }`;
 
   return (
@@ -79,6 +78,10 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
             <NavLink to="/MyBoard" className={getLinkClass} onClick={onClose}>
               <KanbanSquare size={18} />
               My Board
+            </NavLink>
+            <NavLink to="/kanban" className={getLinkClass}>
+              <KanbanSquare size={18} />
+              Kanban Board
             </NavLink>
           </div>
 
