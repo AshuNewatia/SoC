@@ -1,6 +1,6 @@
 import WorkspaceHero from "../components/workspace/WorkspaceHero";
 import WorkspaceNav from "../components/workspace/WorkspaceNav";
-import WorkspaceOverview from "../components/workspace/WorkspaceOverview";
+import WorkspaceOverview from "../components/workspace/overview/WorkspaceOverview";
 import { workspaces } from "../data/workspaces";
 import { useParams } from "react-router-dom";
 import { Outlet } from "react-router-dom";

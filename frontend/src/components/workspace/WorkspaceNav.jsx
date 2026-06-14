@@ -13,7 +13,7 @@ export default function WorkspaceNav() {
     }`;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-1.5 flex items-center gap-1 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+    <div className="bg-white border border-slate-200 rounded-2xl p-1.5 flex items-center gap-1 shadow-[0_2px_12px_rgba(0,0,0,0.04)] sticky top-5 z-50">
       {tabs.map((tab) => (
         <NavLink key={tab} to={`/workspace/${id}/${tab.toLowerCase()}`} className={getTabClass}>
           {tab}
