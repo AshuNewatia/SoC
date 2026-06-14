@@ -41,7 +41,7 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
         {/* Mobile header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200 md:hidden">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-white font-bold text-lg shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-primary to-primary-hover flex items-center justify-center text-white font-bold text-lg shadow-md">
               C
             </div>
             <h1 className="font-bold text-xl text-text-primary">CampusFlow</h1>
@@ -52,9 +52,9 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
         </div>
 
         {/* Desktop logo  */}
-        <div className="hidden md:flex h-[72px] px-6 items-center flex-shrink-0">
+        <div className="hidden md:flex h-18 px-6 items-center shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-white font-bold text-lg shadow-md">
+            <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-primary to-primary-hover flex items-center justify-center text-white font-bold text-lg shadow-md">
               C
             </div>
             <div>
@@ -64,7 +64,7 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
           </div>
         </div>
 
-        <div className="px-4 flex-shrink-0">
+        <div className="px-4 shrink-0">
           <div className="h-px bg-slate-200"></div>
         </div>
 
@@ -79,7 +79,6 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
               <KanbanSquare size={18} />
               My Board
             </NavLink>
-            
           </div>
 
           <div className="px-4">
@@ -120,7 +119,7 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
         </div>
 
         {/* Bottom section (Stays anchored to the bottom) */}
-        <div className="px-4 pb-6 pt-3 border-t border-slate-200 bg-white flex-shrink-0">
+        <div className="px-4 pb-6 pt-3 border-t border-slate-200 bg-white shrink-0">
           <div className="space-y-2">
             <NavLink to="/Analytics" className={getLinkClass} onClick={onClose}>
               <BarChart3 size={18} />

@@ -58,7 +58,7 @@ else if(hour >= 0 && hour <= 4){
 
 
   return (
-    <div className="p-6">
+    <div className="p-5.75">
       <Hero user ={displayUser} summary = {summary} greeting = {greeting} />
       <StatsGrid workspaceStat = {workspaceStat} />
     </div>

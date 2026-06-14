@@ -13,9 +13,10 @@ import OAuthCallback from "./pages/OAuthCallback";
 
 import WorkspaceChat from "./components/workspace/WorkspaceChat";
 import WorkspaceActivity from "./components/workspace/WorkspaceActivity"
-import WorkspaceOverview from "./components/workspace/WorkspaceOverview"
+import WorkspaceOverview from "./components/workspace/overview/WorkspaceOverview"
 import WorkspaceMembers from "./components/workspace/WorkspaceMembers"
 import WorkspaceBoard from "./components/workspace/WorkspaceBoard"
+// import KanbanBoard from "./components/workspace/KanbanBoard";
 
 import Sidebar from "./components/sidebar/Sidebar";
 import Header from "./components/header/Header";
@@ -116,7 +117,6 @@ function App() {
             // </ProtectedRoute>
           }
         >
-        
           <Route
             path="overview"
             element={<WorkspaceOverview />}
