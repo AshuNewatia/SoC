@@ -79,10 +79,7 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
               <KanbanSquare size={18} />
               My Board
             </NavLink>
-            <NavLink to="/kanban" className={getLinkClass}>
-              <KanbanSquare size={18} />
-              Kanban Board
-            </NavLink>
+            
           </div>
 
           <div className="px-4">
