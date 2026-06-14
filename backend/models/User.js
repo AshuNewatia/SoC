@@ -6,7 +6,8 @@ const userSchema = new mongoose.Schema({
   password: { type: String },
   googleId: { type: String },
   githubId: { type: String },
-  avatar: { type: String }
+  avatar: { type: String },
+  hasPassword: { type: Boolean, default: false }
 });
 
 export default mongoose.model('User', userSchema);
