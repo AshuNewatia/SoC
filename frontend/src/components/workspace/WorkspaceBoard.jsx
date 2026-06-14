@@ -1,3 +1,5 @@
+import KanbanBoard from "../../pages/KanbanBoard";
+
 export default function WorkspaceBoard() {
-  return <div>Board Page</div>;
+  return <KanbanBoard />;
 }

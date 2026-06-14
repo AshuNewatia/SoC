@@ -11,7 +11,7 @@ export default function CreateTaskModal({
     description: "",
     priority: "Medium",
     dueDate: "",
-    tag: "Frontend",
+    tag: "",
   });
 
   const handleChange = (e) => {
@@ -51,7 +51,7 @@ export default function CreateTaskModal({
       description: "",
       priority: "Medium",
       dueDate: "",
-      tag: "Frontend",
+      tag: "",
     });
 
     onClose();
@@ -161,36 +161,14 @@ export default function CreateTaskModal({
               Tag
             </label>
 
-            <select
+            <textarea
               name="tag"
+              rows="1"
               value={formData.tag}
               onChange={handleChange}
-              className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="Frontend">
-                Frontend
-              </option>
-
-              <option value="Backend">
-                Backend
-              </option>
-
-              <option value="Bug">
-                Bug
-              </option>
-
-              <option value="Feature">
-                Feature
-              </option>
-
-              <option value="Research">
-                Research
-              </option>
-
-              <option value="Design">
-                Design
-              </option>
-            </select>
+              placeholder="frontend, backend, ...."
+              className="w-full border border-slate-300 rounded-xl p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
           {/* Footer */}
