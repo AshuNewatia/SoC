@@ -18,5 +18,15 @@ router.patch(
   updateTaskStatus
 )
 
+router.put(
+ "/tasks/:taskId",
+ updateTask
+);
+
+router.delete(
+ "/tasks/:taskId",
+ deleteTask
+);
+
 
 export default router;
