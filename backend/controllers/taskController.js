@@ -48,6 +48,7 @@ export const getTasks = async (req, res) => {
 
 };
 
+
 export const updateTaskStatus = async (req, res) => {
     try {
         const { taskId } = req.params;
@@ -67,6 +68,53 @@ export const updateTaskStatus = async (req, res) => {
             task: updatedTask
         });
     } catch (error) {
+        console.error(error);
 
+        res.status(500).json({
+            message: "Server Error"
+        });
+    }
+}
+
+export const deleteTask = async (req, res) => {
+    try {
+        const { taskId } = req.params;
+
+        const deletedTask = await Task.findByIdAndDelete(taskId);
+
+        if (!deletedTask) {
+            return res.status(404).json({
+                message: "Task not found"
+            });
+        }
+
+        res.status(200).json({
+            message: "Task deleted"
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Server Error"
+        });
+    }
+}
+
+export const updateTask = async (req, res) => {
+    try {
+        const { taskId } = req.params;
+
+        const updatedTask =
+            await Task.findByIdAndUpdate(
+                taskId,
+                req.body,
+                { new: true }
+            );
+
+        res.status(200).json(updatedTask);
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Server Error"
+        });
     }
 }
