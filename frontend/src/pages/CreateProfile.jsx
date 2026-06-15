@@ -78,7 +78,7 @@ function CreateProfile() {
 
   return (
     // Preserving your exact color palette from the OAuthCallback component
-    <div className="min-h-screen bg-gradient-to-br from-primary to-blue-900 flex flex-col items-center justify-center text-white p-4">
+    <div className="min-h-screen bg-linear-to-br from-primary to-blue-900 flex flex-col items-center justify-center text-white p-4">
       
       <div className="w-full max-w-md bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 shadow-2xl">
         <h2 className="text-3xl font-semibold mb-2 tracking-wide">Complete Setup</h2>

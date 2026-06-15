@@ -10,10 +10,26 @@ import {
   X,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import { workspaces } from "../../data/workspaces";
+import { useEffect, useState } from "react";
+import api from "../../services/api";
+
 
 export default function Sidebar({ isOpen = false, onClose = () => { } }) {
   // Helper function to get NavLink classes based on active state
+  const [workspaces, setWorkspaces] = useState([]);
+  useEffect(() => {
+    const fetchWorkspaces = async () => {
+      try {
+        const res = await api.get("/api/workspaces");
+        setWorkspaces(res.data);
+      } catch (err) {
+        console.error("Error fetching workspaces", err);
+      }
+    };
+
+    fetchWorkspaces();
+  }, []);
+
   const getLinkClass = ({ isActive }) =>
     `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
       ? "bg-primary/15 text-primary font-semibold shadow-sm"
@@ -89,26 +105,31 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
               </button>
             </div>
             <div className="space-y-2">
-              {workspaces.map((workspace) => (
-                <NavLink
-                  key={workspace.id}
-                  to={`/workspace/${workspace.id}/overview`}
-                  onClick={onClose}
-                  className={({ isActive }) =>
-                    `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                      isActive
-                        ? "bg-primary/15 text-primary font-semibold shadow-sm"
-                        : "bg-slate-50 hover:bg-white hover:shadow-md hover:-translate-y-0.5 text-text-primary"
-                    }`
-                  }
-                >
-                  <FolderKanban size={18} />
-                  {workspace.name}
-                </NavLink>
-              ))}
+              {workspaces.length === 0 ? (
+                <div className="text-sm text-slate-500 px-4 py-3">
+                  No workspaces found
+                </div>
+              ) : (
+                  workspaces.map((workspace) => (
+                    <NavLink
+                      key={workspace._id}
+                      to={`/workspace/${workspace._id}/overview`}
+                      onClick={onClose}
+                      className={({ isActive }) =>
+                        `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
+                          ? "bg-primary/15 text-primary font-semibold shadow-sm"
+                          : "bg-slate-50 hover:bg-white hover:shadow-md hover:-translate-y-0.5 text-text-primary"
+                        }`
+                      }
+                    >
+                      <FolderKanban size={18} />
+                      {workspace.name}
+                    </NavLink>
+                  ))
+                )}
             </div>
 
-            <button 
+            <button
               className="mt-4 mb-6 text-primary font-medium flex items-center gap-2 hover:gap-3 transition-all"
               onClick={onClose}
             >
@@ -129,7 +150,7 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
               <Settings size={18} />
               Settings
             </NavLink>
-            <button 
+            <button
               onClick={onClose}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all"
             >

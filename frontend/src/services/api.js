@@ -5,7 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const api = axios.create({
   // Adding /api here means all requests automatically go to /api/...
-  baseURL: `${API_URL}/api`, 
+  baseURL: `${API_URL}`, 
   headers: {
     'Content-Type': 'application/json'
   }

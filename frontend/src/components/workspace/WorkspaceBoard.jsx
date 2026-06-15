@@ -11,8 +11,13 @@ import CreateTaskModal from "../kanban/CreateTaskModal";
 import EditTaskModal from "../kanban/EditTaskModal";
 import { boardData as initialBoard } from "../../data/mockBoard";
 
-import { getTasks, createTask, updateTask, deleteTask, updateTaskStatus, } from "../../services/taskServices";
-
+import {
+  getTasks,
+  createTask as createTaskApi,
+  updateTask as updateTaskApi,
+  deleteTask as deleteTaskApi,
+  updateTaskStatus as updateTaskStatusApi,
+} from "../../services/taskServices";
 
 export default function KanbanBoard() {
   const { id: workspaceId } = useParams();
@@ -28,7 +33,7 @@ export default function KanbanBoard() {
 
   const fetchTasks = async () => {
     try {
-      const res = await getTasks(workspaceId)
+      const res = await getTasks(workspaceId);
       const tasks = res.data;
       setBoard({
         ...initialBoard,
@@ -79,24 +84,17 @@ export default function KanbanBoard() {
     };
   }, [workspaceId, currentUserName]);
 
+  // ✅ Bug #3 fixed: use user?._id (lowercase) instead of User._id
   const createTask = async (task) => {
     try {
-      const res = await createTask(workspaceId,
-        {
-          ...task,
-          status: targetColumn,
-        });
+      const res = await createTaskApi(workspaceId, {
+        ...task,
+        status: targetColumn,
+        createdBy: user?._id,
+        assignedTo: [],
+      });
       const savedTask = res.data;
-      setBoard((prev) => ({
-        ...prev,
-        columns: {
-          ...prev.columns,
-          [savedTask.status]: {
-            ...prev.columns[savedTask.status],
-            tasks: [savedTask, ...prev.columns[savedTask.status].tasks],
-          },
-        },
-      }));
+      await fetchTasks();               // ✅ await refresh
       socket.emit("taskCreated", savedTask);
       setCreateOpen(false);
     } catch (err) {
@@ -106,8 +104,8 @@ export default function KanbanBoard() {
 
   const deleteTask = async (task) => {
     try {
-      await deleteTask(task._id);
-      fetchTasks();
+      await deleteTaskApi(task._id);
+      await fetchTasks();               // ✅ await refresh
       setDrawerOpen(false);
       setSelectedTask(null);
       socket.emit("taskDeleted", task);
@@ -116,11 +114,15 @@ export default function KanbanBoard() {
     }
   };
 
+  // ✅ Bug #1 fixed: use selectedTask._id instead of task._id
   const handleEditTask = async (updatedTask) => {
     try {
-      await updateTask(task._id, updatedTask);
-      fetchTasks();
-      socket.emit("taskUpdated", updatedTask);
+      await updateTaskApi(selectedTask._id, updatedTask);
+      await fetchTasks();                // ✅ await refresh
+      socket.emit("taskUpdated", {
+        ...selectedTask,
+        ...updatedTask,
+      });
       setEditOpen(false);
     } catch (err) {
       console.error("Error updating task:", err);
@@ -162,14 +164,15 @@ export default function KanbanBoard() {
 
     setBoard(updatedBoard);
 
+    // ✅ Bug #2 fixed: use movedTask._id instead of task._id
     try {
-      await updateTaskStatus(task._id, {
+      await updateTaskStatusApi(movedTask._id, {
         status: destination.droppableId,
       });
       socket.emit("taskMoved", movedTask);
     } catch (err) {
       console.error("Error moving task:", err);
-      fetchTasks();
+      await fetchTasks();   // rollback on error
     }
   };
 
@@ -204,7 +207,7 @@ export default function KanbanBoard() {
         onSave={handleEditTask}
       />
 
-      {/* Header Card – same width as columns container */}
+      {/* Header Card */}
       <div className="bg-surface rounded-2xl shadow-sm border border-border-light p-5 mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -223,7 +226,7 @@ export default function KanbanBoard() {
         </div>
       </div>
 
-      {/* Kanban Columns – full width alignment */}
+      {/* Kanban Columns */}
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="overflow-x-auto">
           <div className="flex justify-between gap-6 min-w-max px-1">
