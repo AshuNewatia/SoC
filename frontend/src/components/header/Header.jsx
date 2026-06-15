@@ -1,8 +1,11 @@
 import { Bell, Search, ChevronDown, Menu } from "lucide-react";
 import { useAuth } from '../../context/authContext';
+import { useNavigate } from 'react-router-dom'; // 1. Import useNavigate
 
 export default function Header({ title = "Overview", onMenuClick }) {
   const { user } = useAuth();
+  const navigate = useNavigate(); // 2. Initialize it
+  
   const today = new Date();
   const weekday = today.toLocaleDateString("en-US", { weekday: "long" });
   const month = today.toLocaleDateString("en-US", { month: "long" });
@@ -43,16 +46,18 @@ export default function Header({ title = "Overview", onMenuClick }) {
           </div>
         </div>
 
-        {/* Notification button - hover adds shadow without lifting */}
         <button className="relative p-2 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all duration-200">
           <Bell size={20} />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500" />
         </button>
 
-        {/* Profile button - hover adds shadow without lifting */}
-        <button className="flex items-center gap-2 md:gap-3 pl-2 pr-3 py-1.5 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all duration-200">
+        {/* 3. Attach navigate('/profile') to the profile button */}
+        <button 
+          onClick={() => navigate('/profile')} 
+          className="flex items-center gap-2 md:gap-3 pl-2 pr-3 py-1.5 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all duration-200"
+        >
           <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-white font-semibold text-sm">
-            H
+            {user?.name?.charAt(0) || 'U'}
           </div>
           <p className="text-sm font-semibold text-gray-800 hidden md:block">{user?.name || "User"}</p>
           <ChevronDown size={16} className="text-gray-500 hidden md:block" />
