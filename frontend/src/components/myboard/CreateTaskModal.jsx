@@ -27,22 +27,20 @@ export default function CreateTaskModal({
     if (!formData.title.trim()) return;
 
     const newTask = {
-  id: Date.now(),
-  title: formData.title,
-  description: formData.description,
-  priority: formData.priority,
-  dueDate: formData.dueDate,
-  tag: formData.tag,
-
-  createdAt: new Date().toISOString(),
-
-  activity: [
-    {
-      action: "Task Created",
-      timestamp: new Date().toISOString(),
-    },
-  ],
-};
+      id: Date.now(),
+      title: formData.title,
+      description: formData.description,
+      priority: formData.priority,
+      dueDate: formData.dueDate,
+      tag: formData.tag,
+      createdAt: new Date().toISOString(),
+      activity: [
+        {
+          action: "Task Created",
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    };
 
     onCreateTask(newTask);
 
@@ -60,77 +58,63 @@ export default function CreateTaskModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 overflow-y-auto">
+      <div className="w-full max-w-2xl bg-surface rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <h2 className="text-2xl font-bold text-slate-800">
-            Create New Task
-          </h2>
-
+        <div className="flex items-center justify-between p-5 border-b border-border-light">
+          <h2 className="text-xl font-semibold text-text-primary">Create New Task</h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-slate-100 transition"
+            className="p-1.5 rounded-lg hover:bg-bg-light transition"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Form */}
-
-        <form
-          onSubmit={handleSubmit}
-          className="p-6 space-y-5"
-        >
+        <form onSubmit={handleSubmit} className="p-5 space-y-5">
           {/* Title */}
-
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label className="block text-sm font-medium text-text-primary mb-1.5">
               Task Title
             </label>
-
             <input
               type="text"
               name="title"
               value={formData.title}
               onChange={handleChange}
               placeholder="Enter task title"
-              className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border-light rounded-xl px-4 py-2.5 text-sm text-text-primary bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
               required
             />
           </div>
 
           {/* Description */}
-
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label className="block text-sm font-medium text-text-primary mb-1.5">
               Description
             </label>
-
             <textarea
               name="description"
               rows="4"
               value={formData.description}
               onChange={handleChange}
               placeholder="Task details..."
-              className="w-full border border-slate-300 rounded-xl p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border-light rounded-xl px-4 py-2.5 text-sm text-text-primary bg-surface resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
             />
           </div>
 
           {/* Priority + Date */}
-
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-text-primary mb-1.5">
                 Priority
               </label>
-
               <select
                 name="priority"
                 value={formData.priority}
                 onChange={handleChange}
-                className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-border-light rounded-xl px-4 py-2.5 text-sm text-text-primary bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               >
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
@@ -138,75 +122,52 @@ export default function CreateTaskModal({
                 <option value="Critical">Critical</option>
               </select>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-text-primary mb-1.5">
                 Due Date
               </label>
-
               <input
                 type="date"
                 name="dueDate"
                 value={formData.dueDate}
                 onChange={handleChange}
-                className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-border-light rounded-xl px-4 py-2.5 text-sm text-text-primary bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
           </div>
 
           {/* Tag */}
-
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
+            <label className="block text-sm font-medium text-text-primary mb-1.5">
               Tag
             </label>
-
             <select
               name="tag"
               value={formData.tag}
               onChange={handleChange}
-              className="w-full border border-slate-300 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-border-light rounded-xl px-4 py-2.5 text-sm text-text-primary bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             >
-              <option value="Frontend">
-                Frontend
-              </option>
-
-              <option value="Backend">
-                Backend
-              </option>
-
-              <option value="Bug">
-                Bug
-              </option>
-
-              <option value="Feature">
-                Feature
-              </option>
-
-              <option value="Research">
-                Research
-              </option>
-
-              <option value="Design">
-                Design
-              </option>
+              <option value="Frontend">Frontend</option>
+              <option value="Backend">Backend</option>
+              <option value="Bug">Bug</option>
+              <option value="Feature">Feature</option>
+              <option value="Research">Research</option>
+              <option value="Design">Design</option>
             </select>
           </div>
 
           {/* Footer */}
-
           <div className="flex justify-end gap-3 pt-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-3 rounded-xl border border-slate-300 hover:bg-slate-50"
+              className="px-4 py-2 rounded-xl border border-border-light text-text-secondary text-sm font-medium hover:bg-bg-light transition"
             >
               Cancel
             </button>
-
             <button
               type="submit"
-              className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium"
+              className="px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-white text-sm font-medium transition shadow-sm"
             >
               Create Task
             </button>

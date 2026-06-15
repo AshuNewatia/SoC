@@ -1,18 +1,24 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import connectDB from './config/db.js';
-import mongoose from 'mongoose';
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
+import http from "http";
+import { Server } from "socket.io";
 
-import authRoutes from './routes/authRoutes.js';
+import connectDB from "./config/db.js";
+
+import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import workspaceRoutes from "./routes/workspaceRoutes.js";
 
+<<<<<<< HEAD
 // Load env variables
+=======
+>>>>>>> 1e242c1af1d06c4e09b667156192ca1d8b3330cf
 dotenv.config();
 
 const app = express();
 
+<<<<<<< HEAD
 // --- CORS CONFIGURATION ---
 // This array tells Express exactly who is allowed to talk to the database.
 const allowedOrigins = [
@@ -35,21 +41,101 @@ app.use(cors({
 
 // Middleware
 app.use(express.json()); // Parses incoming JSON payloads
+=======
+/* ---------------- Middleware ---------------- */
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api', taskRoutes);
-app.use('/api', workspaceRoutes);
+app.use(cors());
 
-// MongoDB connection
+app.use(express.json());
+>>>>>>> 1e242c1af1d06c4e09b667156192ca1d8b3330cf
+
+/* ---------------- Routes ---------------- */
+
+app.use("/api/auth", authRoutes);
+app.use("/api", taskRoutes);
+app.use("/api", workspaceRoutes);
+
+/* ---------------- Health Check ---------------- */
+
+app.get("/", (req, res) => {
+  res.send("CampusFlow Backend Running 🚀");
+});
+
+/* ---------------- HTTP Server ---------------- */
+
+const server = http.createServer(app);
+
+/* ---------------- Socket.io ---------------- */
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
+
+/* ---------------- Online Users ---------------- */
+
+const onlineUsers = new Map();
+
+/* ---------------- Socket Events ---------------- */
+
+io.on("connection", (socket) => {
+  console.log(`🟢 User Connected: ${socket.id}`);
+
+  socket.on("userJoined", (user) => {
+    onlineUsers.set(socket.id, user);
+
+    io.emit(
+      "onlineUsers",
+      Array.from(onlineUsers.values())
+    );
+  });
+
+  socket.on("taskCreated", (task) => {
+    socket.broadcast.emit("taskCreated", task);
+  });
+
+  socket.on("taskUpdated", (task) => {
+    socket.broadcast.emit("taskUpdated", task);
+  });
+
+  socket.on("taskMoved", (task) => {
+    socket.broadcast.emit("taskMoved", task);
+  });
+
+  socket.on("taskDeleted", (task) => {
+    socket.broadcast.emit("taskDeleted", task);
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`🔴 User Disconnected: ${socket.id}`);
+
+    onlineUsers.delete(socket.id);
+
+    io.emit(
+      "onlineUsers",
+      Array.from(onlineUsers.values())
+    );
+  });
+});
+
+/* ---------------- Start Server ---------------- */
+
 const PORT = process.env.PORT || 5000;
 
 connectDB()
   .then(() => {
-      app.listen(PORT, () =>
-          console.log(`Server running on port ${PORT}`)
+    server.listen(PORT, () => {
+      console.log(
+        ` Server running on port ${PORT}`
       );
+    });
   })
   .catch((error) => {
+<<<<<<< HEAD
       console.error("Database connection failed:", error);
+=======
+    console.error(error);
+>>>>>>> 1e242c1af1d06c4e09b667156192ca1d8b3330cf
   });
