@@ -85,7 +85,7 @@ function App() {
             {/* Nested Workspace Routes */}
             <Route path="/workspace/:id" element={<WorkSpace />}>
               {/* Redirect /workspace/:id to /workspace/:id/overview automatically */}
-              <Route index element={<Navigate to="overview" replace />} />
+              <Route path="overview" element={<WorkspaceOverview />}/>
               <Route path="board" element={<WorkspaceBoard />} />
               <Route path="chat" element={<WorkspaceChat />} />
               <Route path="activity" element={<WorkspaceActivity />} />
