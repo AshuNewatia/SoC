@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API =
-  "http://localhost:5000/api/tasks";
+  "https://soc-1-z27z.onrender.com/api/tasks";
 
 export const getTasks = () =>
   axios.get(API);
