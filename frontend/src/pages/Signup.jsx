@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/authContext';
-import { User, Mail, Lock, UserPlus } from 'lucide-react';
+import { User, Mail, Lock, UserPlus, ArrowRight } from 'lucide-react';
 // Import official brand icons
 import { FaGoogle, FaGithub } from 'react-icons/fa'; 
 
