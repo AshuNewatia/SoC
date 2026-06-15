@@ -48,6 +48,7 @@ export const getTasks = async (req, res) => {
 
 };
 
+
 export const updateTaskStatus = async (req, res) => {
     try {
         const { taskId } = req.params;
@@ -92,7 +93,6 @@ export const deleteTask = async (req, res) => {
         res.status(200).json({
             message: "Task deleted"
         });
-
     } catch (error) {
         res.status(500).json({
             message: "Server Error"

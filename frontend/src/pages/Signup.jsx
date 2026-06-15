@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/authContext';
 import { User, Mail, Lock, UserPlus, ArrowRight } from 'lucide-react';
-import { FaGoogle, FaGithub } from 'react-icons/fa';
+// Import official brand icons
+import { FaGoogle, FaGithub } from 'react-icons/fa'; 
 
 function Signup() {
   const [name, setName] = useState('');
@@ -12,7 +13,17 @@ function Signup() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation(); // Added to read URL parameters
   const { signup } = useAuth();
+
+  // --- NEW: Catch errors passed via URL from OAuthCallback ---
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const urlError = searchParams.get('error');
+    if (urlError) {
+      setError(urlError);
+    }
+  }, [location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,22 +32,24 @@ function Signup() {
       return;
     }
     setError('');
-    setLoading(true);
+    setLoading(true); 
     try {
       await signup(name, email, password);
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Signup failed');
     } finally {
-      setLoading(false);
+      setLoading(false); 
     }
   };
 
+  // --- OAUTH INITIATORS ---
   const handleGoogleLogin = () => {
     const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
     const options = {
-      redirect_uri: 'https://soc-frontend.onrender.com/oauth/callback',
-      client_id: '504301300518-n1dds4ima2782diua2pfsft0q50o8bft.apps.googleusercontent.com',
+      // Dynamically uses localhost or Render depending on where the app is running
+      redirect_uri: `${window.location.origin}/oauth/callback`, 
+      client_id: '504301300518-n1dds4ima2782diua2pfsft0q50o8bft.apps.googleusercontent.com', 
       access_type: 'offline',
       response_type: 'code',
       prompt: 'consent',
@@ -52,8 +65,9 @@ function Signup() {
   const handleGithubLogin = () => {
     const rootUrl = 'https://github.com/login/oauth/authorize';
     const options = {
-      client_id: 'Ov23liAjvQDdoB6Ix9s4',
-      redirect_uri: 'https://soc-frontend.onrender.com/oauth/callback',
+      client_id: 'Ov23liAjvQDdoB6Ix9s4', 
+      // Dynamically uses localhost or Render depending on where the app is running
+      redirect_uri: `${window.location.origin}/oauth/callback`,
       scope: 'user:email',
     };
     const qs = new URLSearchParams(options).toString();

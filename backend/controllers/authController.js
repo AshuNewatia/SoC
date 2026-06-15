@@ -8,9 +8,12 @@ const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1d' });
 };
 
+// ==========================================
+// 1. STANDARD EMAIL/PASSWORD AUTHENTICATION
+// ==========================================
+
 // @desc    Register a new user
 // @route   POST /api/auth/signup
-// @access  Public
 export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -18,7 +21,7 @@ export const signup = async (req, res) => {
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: 'User already exists with this email' });
     }
 
     // Hash password (salt rounds = 10)
@@ -28,7 +31,8 @@ export const signup = async (req, res) => {
     const user = await User.create({
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      hasPassword: true // Mark that they have a local password
     });
 
     // Generate token
@@ -39,18 +43,18 @@ export const signup = async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        avatar: user.avatar
       }
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Signup Error:', error);
+    res.status(500).json({ message: 'Server error during signup' });
   }
 };
 
 // @desc    Login user
 // @route   POST /api/auth/login
-// @access  Public
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -59,6 +63,11 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Safety check: If they signed up with OAuth but never set a password
+    if (!user.password || !user.hasPassword) {
+      return res.status(401).json({ message: 'Please sign in using your Google or GitHub account.' });
     }
 
     // Compare password with hashed version
@@ -75,15 +84,22 @@ export const login = async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        avatar: user.avatar
       }
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Login Error:', error);
+    res.status(500).json({ message: 'Server error during login' });
   }
 };
 
+// ==========================================
+// 2. OAUTH AUTHENTICATION (GOOGLE & GITHUB)
+// ==========================================
+
+// @desc    Google OAuth Login/Signup
+// @route   POST /api/auth/google
 export const googleAuth = async (req, res) => {
   try {
     const { code } = req.body;
@@ -92,7 +108,8 @@ export const googleAuth = async (req, res) => {
       code,
       client_id: process.env.GOOGLE_CLIENT_ID,
       client_secret: process.env.GOOGLE_CLIENT_SECRET,
-      redirect_uri: 'http://localhost:5173/oauth/callback', // Must exactly match your frontend callback URI
+      // Dynamic environment variable!
+      redirect_uri: `${process.env.CLIENT_URL}/oauth/callback`, 
       grant_type: 'authorization_code',
     });
 
@@ -106,28 +123,34 @@ export const googleAuth = async (req, res) => {
 
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
+    // INTERCEPT: If user doesn't exist, they are signing up.
     if (!user) {
-      user = await User.create({
-        name,
-        email,
-        googleId,
-        avatar: picture,
+      // Create a short-lived temp token containing their Google info
+      const tempToken = jwt.sign(
+        { email, name, googleId, avatar: picture, provider: 'google' }, 
+        process.env.JWT_SECRET, 
+        { expiresIn: '15m' }
+      );
+      
+      // Tell the frontend to redirect to Create Profile
+      return res.status(200).json({
+        action: 'requires_profile_creation',
+        tempToken,
+        message: 'Redirecting to complete profile...'
       });
-    } else if (!user.googleId) {
+    } 
+    
+    // LOGIN: User already exists.
+    if (!user.googleId) {
       user.googleId = googleId;
       await user.save();
     }
 
     const token = generateToken(user._id);
-
-    res.status(200).json({
+    return res.status(200).json({
+      action: 'login',
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar
-      },
+      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar },
     });
   } catch (error) {
     console.error('Google Auth Error:', error.response?.data || error.message);
@@ -137,7 +160,6 @@ export const googleAuth = async (req, res) => {
 
 // @desc    GitHub OAuth Login/Signup
 // @route   POST /api/auth/github
-// @access  Public
 export const githubAuth = async (req, res) => {
   try {
     const { code } = req.body;
@@ -157,38 +179,86 @@ export const githubAuth = async (req, res) => {
     });
 
     const { id: githubId, login, avatar_url, email } = userResponse.data;
-    
-    // GitHub profile email can sometimes be null depending on user settings. 
-    // Fallback to username placeholder email if hidden.
     const userEmail = email || `${login}@github.user`; 
 
     let user = await User.findOne({ $or: [{ githubId }, { email: userEmail }] });
 
+    // INTERCEPT
     if (!user) {
-      user = await User.create({
-        name: login, // GitHub uses 'login' for username
-        email: userEmail,
-        githubId,
-        avatar: avatar_url,
+      const tempToken = jwt.sign(
+        { email: userEmail, name: login, githubId, avatar: avatar_url, provider: 'github' }, 
+        process.env.JWT_SECRET, 
+        { expiresIn: '15m' }
+      );
+      
+      return res.status(200).json({
+        action: 'requires_profile_creation',
+        tempToken,
+        message: 'Redirecting to complete profile...'
       });
-    } else if (!user.githubId) {
+    } 
+    
+    // LOGIN
+    if (!user.githubId) {
       user.githubId = githubId;
       await user.save();
     }
 
     const token = generateToken(user._id);
-
-    res.status(200).json({
+    return res.status(200).json({
+      action: 'login',
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar
-      },
+      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar },
     });
   } catch (error) {
     console.error('GitHub Auth Error:', error.response?.data || error.message);
     res.status(500).json({ message: 'GitHub authentication failed' });
+  }
+};
+
+// ==========================================
+// 3. PROFILE COMPLETION (OAUTH HANDOFF)
+// ==========================================
+
+// @desc    Complete OAuth profile with password
+// @route   POST /api/auth/complete-oauth
+export const completeOAuthProfile = async (req, res) => {
+  try {
+    const { tempToken, password, name } = req.body;
+
+    // Verify the temporary token
+    const decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+    
+    // Check if user already got created somehow
+    const existingUser = await User.findOne({ email: decoded.email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create the user using decoded data from Google/GitHub + new password
+    const user = await User.create({
+      name: name || decoded.name,
+      email: decoded.email,
+      password: hashedPassword,
+      hasPassword: true,
+      avatar: decoded.avatar,
+      googleId: decoded.provider === 'google' ? decoded.googleId : undefined,
+      githubId: decoded.provider === 'github' ? decoded.githubId : undefined,
+    });
+
+    // Generate the real session token
+    const token = generateToken(user._id);
+
+    res.status(201).json({
+      action: 'login',
+      token,
+      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar }
+    });
+
+  } catch (error) {
+    console.error('Profile Completion Error:', error);
+    res.status(400).json({ message: 'Invalid or expired token. Please try signing up again.' });
   }
 };

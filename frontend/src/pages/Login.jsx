@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/authContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, LogIn, ArrowRight } from 'lucide-react';
-import { FaGoogle, FaGithub } from 'react-icons/fa';
+// Import official brand icons
+import { FaGoogle, FaGithub } from 'react-icons/fa'; 
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -11,7 +12,17 @@ function Login() {
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); 
+  const location = useLocation(); // Added to read URL parameters
+
+  // --- NEW: Catch errors passed via URL from OAuthCallback ---
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const urlError = searchParams.get('error');
+    if (urlError) {
+      setError(urlError);
+    }
+  }, [location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,11 +40,13 @@ function Login() {
     }
   };
 
+  // --- OAUTH INITIATORS (Dynamically configured) ---
   const handleGoogleLogin = () => {
     const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
     const options = {
-      redirect_uri: 'http://localhost:5173/oauth/callback',
-      client_id: '504301300518-n1dds4ima2782diua2pfsft0q50o8bft.apps.googleusercontent.com',
+      // Dynamically uses localhost or Render depending on where the app is running
+      redirect_uri: `${window.location.origin}/oauth/callback`, 
+      client_id: '504301300518-n1dds4ima2782diua2pfsft0q50o8bft.apps.googleusercontent.com', 
       access_type: 'offline',
       response_type: 'code',
       prompt: 'consent',
@@ -49,8 +62,9 @@ function Login() {
   const handleGithubLogin = () => {
     const rootUrl = 'https://github.com/login/oauth/authorize';
     const options = {
-      client_id: 'Ov23liAjvQDdoB6Ix9s4',
-      redirect_uri: 'http://localhost:5173/oauth/callback',
+      client_id: 'Ov23liAjvQDdoB6Ix9s4', 
+      // Dynamically uses localhost or Render depending on where the app is running
+      redirect_uri: `${window.location.origin}/oauth/callback`, 
       scope: 'user:email',
     };
     const qs = new URLSearchParams(options).toString();

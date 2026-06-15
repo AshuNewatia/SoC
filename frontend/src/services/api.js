@@ -1,14 +1,15 @@
-import axios from "axios"
+import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
+// Dynamically use the .env variable, with a fallback to localhost
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const api = axios.create({
-  baseURL: API_URL,
+  // Adding /api here means all requests automatically go to /api/...
+  baseURL: `${API_URL}/api`, 
   headers: {
     'Content-Type': 'application/json'
   }
 });
-
 
 // Attach token to every request if it exists in localStorage
 api.interceptors.request.use(
