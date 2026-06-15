@@ -10,7 +10,6 @@ import Settings from "./pages/Settings";
 import WorkSpace from "./pages/WorkSpace";
 import MyBoard from "./pages/MyBoard";
 import OAuthCallback from "./pages/OAuthCallback";
-<<<<<<< HEAD
 // 1. Import the new CreateProfile component
 import CreateProfile from "./pages/CreateProfile"; 
 import KanbanBoard from "./pages/KanbanBoard";
@@ -20,15 +19,6 @@ import WorkspaceActivity from "./components/workspace/WorkspaceActivity";
 import WorkspaceOverview from "./components/workspace/WorkspaceOverview";
 import WorkspaceMembers from "./components/workspace/WorkspaceMembers";
 import WorkspaceBoard from "./components/workspace/WorkspaceBoard";
-=======
-
-import WorkspaceChat from "./components/workspace/WorkspaceChat";
-import WorkspaceActivity from "./components/workspace/WorkspaceActivity"
-import WorkspaceOverview from "./components/workspace/overview/WorkspaceOverview"
-import WorkspaceMembers from "./components/workspace/WorkspaceMembers"
-import WorkspaceBoard from "./components/workspace/WorkspaceBoard"
-// import KanbanBoard from "./components/workspace/KanbanBoard";
->>>>>>> 1e242c1af1d06c4e09b667156192ca1d8b3330cf
 
 import Sidebar from "./components/sidebar/Sidebar";
 import Header from "./components/header/Header";
@@ -81,7 +71,6 @@ function App() {
         {/* 2. Add the Create Profile route here, outside the ProtectedRoute */}
         <Route path="/create-profile" element={<CreateProfile />} />
 
-<<<<<<< HEAD
         {/* Protected Routes Wrapper */}
         <Route element={<ProtectedRoute />}>
           {/* Authenticated Layout Wrapper */}
@@ -91,63 +80,6 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/myboard" element={<MyBoard />} />
             <Route path="/kanban" element={<KanbanBoard />} />
-=======
-        {/* Protected Routes with both guards and the responsive layout */}
-        <Route
-          path="/dashboard"
-          element={
-            // <ProtectedRoute>
-            <AuthenticatedLayout>
-              <Dashboard />
-            </AuthenticatedLayout>
-            // </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/analytics"
-          element={
-            // <ProtectedRoute>
-            <AuthenticatedLayout>
-              <Analytics />
-            </AuthenticatedLayout>
-            // </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            // <ProtectedRoute>
-            <AuthenticatedLayout>
-              <Settings />
-            </AuthenticatedLayout>
-            // </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/myboard"
-          element={
-            // <ProtectedRoute>
-            <AuthenticatedLayout>
-              <MyBoard />
-            </AuthenticatedLayout>
-            // </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/workspace/:id"
-          element={
-            // <ProtectedRoute>
-              <AuthenticatedLayout>
-                <WorkSpace />
-              </AuthenticatedLayout>
-            // </ProtectedRoute>
-          }
-        >
-          <Route
-            path="overview"
-            element={<WorkspaceOverview />}
-          />
->>>>>>> 1e242c1af1d06c4e09b667156192ca1d8b3330cf
 
             {/* Nested Workspace Routes */}
             <Route path="/workspace/:id" element={<WorkSpace />}>
