@@ -12,11 +12,11 @@ import MyBoard from "./pages/MyBoard";
 import OAuthCallback from "./pages/OAuthCallback";
 // 1. Import the new CreateProfile component
 import CreateProfile from "./pages/CreateProfile"; 
-import KanbanBoard from "./pages/KanbanBoard";
+// import KanbanBoard from "./pages/KanbanBoard";
 
 import WorkspaceChat from "./components/workspace/WorkspaceChat";
 import WorkspaceActivity from "./components/workspace/WorkspaceActivity";
-import WorkspaceOverview from "./components/workspace/WorkspaceOverview";
+import WorkspaceOverview from "./components/workspace/overview/WorkspaceOverview";
 import WorkspaceMembers from "./components/workspace/WorkspaceMembers";
 import WorkspaceBoard from "./components/workspace/WorkspaceBoard";
 
