@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Plus } from "lucide-react";
-import axios from "axios";
 import { DragDropContext } from "@hello-pangea/dnd";
 import socket from "../../hooks/useSocket";
 import { useAuth } from "../../context/authContext";
@@ -12,7 +11,8 @@ import CreateTaskModal from "../kanban/CreateTaskModal";
 import EditTaskModal from "../kanban/EditTaskModal";
 import { boardData as initialBoard } from "../../data/mockBoard";
 
-const API_URL = import.meta.env.VITE_API_URL;
+import { getTasks, createTask, updateTask, deleteTask, updateTaskStatus, } from "../../services/taskServices";
+
 
 export default function KanbanBoard() {
   const { id: workspaceId } = useParams();
@@ -28,7 +28,7 @@ export default function KanbanBoard() {
 
   const fetchTasks = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/workspaces/${workspaceId}/tasks`);
+      const res = await getTasks(workspaceId)
       const tasks = res.data;
       setBoard({
         ...initialBoard,
@@ -81,10 +81,11 @@ export default function KanbanBoard() {
 
   const createTask = async (task) => {
     try {
-      const res = await axios.post(`${API_URL}/api/workspaces/${workspaceId}/tasks`, {
-        ...task,
-        status: targetColumn,
-      });
+      const res = await createTask(workspaceId,
+        {
+          ...task,
+          status: targetColumn,
+        });
       const savedTask = res.data;
       setBoard((prev) => ({
         ...prev,
@@ -105,7 +106,7 @@ export default function KanbanBoard() {
 
   const deleteTask = async (task) => {
     try {
-      await axios.delete(`${API_URL}/api/tasks/${task._id}`);
+      await deleteTask(task._id);
       fetchTasks();
       setDrawerOpen(false);
       setSelectedTask(null);
@@ -117,7 +118,7 @@ export default function KanbanBoard() {
 
   const handleEditTask = async (updatedTask) => {
     try {
-      await axios.put(`${API_URL}/api/tasks/${updatedTask._id}`, updatedTask);
+      await updateTask(task._id, updatedTask);
       fetchTasks();
       socket.emit("taskUpdated", updatedTask);
       setEditOpen(false);
@@ -162,7 +163,7 @@ export default function KanbanBoard() {
     setBoard(updatedBoard);
 
     try {
-      await axios.patch(`${API_URL}/api/tasks/${movedTask._id}/status`, {
+      await updateTaskStatus(task._id, {
         status: destination.droppableId,
       });
       socket.emit("taskMoved", movedTask);
