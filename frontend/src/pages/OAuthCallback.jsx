@@ -16,23 +16,33 @@ function OAuthCallback() {
         return;
       }
 
-      // Detect if the request came from Google or GitHub 
-      // Google search strings usually include a 'scope' parameter.
       const isGoogle = location.search.includes('scope');
+      
+      // Dynamic backend URL handling for Render and Localhost
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const backendUrl = isGoogle
-        ? 'http://localhost:5000/api/auth/google'
-        : 'http://localhost:5000/api/auth/github';
+        ? `${API_BASE_URL}/api/auth/google`
+        : `${API_BASE_URL}/api/auth/github`;
 
       try {
         const response = await axios.post(backendUrl, { code });
-        const { token, user } = response.data;
+        const { action, token, tempToken, user, message } = response.data;
 
-        // Save token and user details to localStorage (or hook into your useAuth() context)
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
+        // INTERCEPT: Route new users to Create Profile with their temporary token
+        if (action === 'requires_profile_creation') {
+          navigate('/create-profile', { 
+            state: { tempToken, message } 
+          });
+          return;
+        }
 
-        // Successful authentication redirect
-        navigate('/dashboard'); 
+        // LOGIN: Route existing users straight to the dashboard
+        if (action === 'login') {
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(user));
+          navigate('/dashboard'); 
+        }
+
       } catch (err) {
         console.error(err);
         const serverMessage = err.response?.data?.message || 'OAuth Verification Failed';
