@@ -57,7 +57,7 @@ function Signup() {
       scope: 'user:email',
     };
     const qs = new URLSearchParams(options).toString();
-    window.location.href = `${rootUrl}?${qs}`;
+    window.location.href = `${rootUrl}?${qs}` ;
   };
 
   return (
