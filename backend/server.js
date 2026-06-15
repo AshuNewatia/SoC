@@ -8,17 +8,33 @@ import authRoutes from './routes/authRoutes.js';
 import taskRoutes from "./routes/taskRoutes.js";
 import workspaceRoutes from "./routes/workspaceRoutes.js";
 
-
 // Load env variables
 dotenv.config();
-// console.log(process.env.MONGO_URI);
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(express.json()); // Parses incoming JSON payloads
+// --- CORS CONFIGURATION ---
+// This array tells Express exactly who is allowed to talk to the database.
+const allowedOrigins = [
+  'http://localhost:5173', // For your local testing
+  process.env.CLIENT_URL   // Your live Render frontend URL (Set this in Render's dashboard!)
+];
 
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests) 
+    // OR if the origin perfectly matches one of the URLs in our allowedOrigins array
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Blocked by CORS policy'));
+    }
+  },
+  credentials: true, // This allows secure cookies and tokens to be sent
+}));
+
+// Middleware
+app.use(express.json()); // Parses incoming JSON payloads
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -35,5 +51,5 @@ connectDB()
       );
   })
   .catch((error) => {
-      console.error(error);
+      console.error("Database connection failed:", error);
   });
