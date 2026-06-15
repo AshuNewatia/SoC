@@ -33,7 +33,7 @@ function Login() {
       await login(email, password);
       navigate('/dashboard');
     } catch (err) {
-      const message = err.response?.data?.message || 'Login failed';
+      const message = err.response?.data?.message || 'Login failed' ;
       setError(message);
     } finally {
       setLoading(false);
