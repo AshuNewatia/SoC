@@ -14,7 +14,7 @@ import CreateProfile from "./pages/CreateProfile";
 import ViewProfile from "./pages/ViewProfile";
 
 
-
+import WorkspaceOverview from "./components/workspace/overview/WorkspaceOverview"
 import WorkspaceChat from "./components/workspace/WorkspaceChat";
 import WorkspaceActivity from "./components/workspace/WorkspaceActivity";
 import WorkspaceMembers from "./components/workspace/WorkspaceMembers";
