@@ -9,16 +9,32 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { workspaces } from "../../data/workspaces";
+import { useAuth } from "../../context/authContext";
+import { useState } from 'react';
+import LogoutModal from '../common/LogoutModal';
 
 export default function Sidebar({ isOpen = false, onClose = () => { } }) {
-  // Helper function to get NavLink classes based on active state
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  
+  // State to manage the modal visibility
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Helper function for NavLink styles
   const getLinkClass = ({ isActive }) =>
     `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
       ? "bg-primary/15 text-primary font-semibold shadow-sm"
       : "hover:bg-slate-100 hover:shadow-sm text-text-primary"
     }`;
+
+  // Actual logout action triggered by the modal
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+    setShowLogoutModal(false);
+  };
 
   return (
     <>
@@ -29,6 +45,13 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
           onClick={onClose}
         />
       )}
+
+      {/* Logout Confirmation Modal */}
+      <LogoutModal 
+        isOpen={showLogoutModal} 
+        onClose={() => setShowLogoutModal(false)} 
+        onConfirm={handleLogout}
+      />
 
       <aside
         className={`
@@ -51,8 +74,8 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
           </button>
         </div>
 
-        {/* Desktop logo  */}
-        <div className="hidden md:flex h-18 px-6 items-center shrink-0">
+        {/* Desktop logo */}
+        <div className="hidden md:flex h-18 px-6 items-center shrink-0 mt-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-primary to-primary-hover flex items-center justify-center text-white font-bold text-lg shadow-md">
               C
@@ -64,11 +87,11 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
           </div>
         </div>
 
-        <div className="px-4 shrink-0">
+        <div className="px-4 shrink-0 mt-4">
           <div className="h-px bg-slate-200"></div>
         </div>
 
-        {/* Scrollable content inside the sidebar */}
+        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto minimalist-scrollbar">
           <div className="px-4 py-5 space-y-2">
             <NavLink to="/dashboard" className={getLinkClass} onClick={onClose}>
@@ -118,7 +141,7 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
           </div>
         </div>
 
-        {/* Bottom section (Stays anchored to the bottom) */}
+        {/* Bottom section */}
         <div className="px-4 pb-6 pt-3 border-t border-slate-200 bg-white shrink-0">
           <div className="space-y-2">
             <NavLink to="/Analytics" className={getLinkClass} onClick={onClose}>
@@ -129,9 +152,10 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
               <Settings size={18} />
               Settings
             </NavLink>
+            
             <button 
-              onClick={onClose}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all"
+              onClick={() => setShowLogoutModal(true)}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all text-left"
             >
               <LogOut size={18} />
               Logout

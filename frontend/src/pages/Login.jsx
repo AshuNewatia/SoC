@@ -1,21 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/authContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, LogIn } from 'lucide-react';
+import { Mail, Lock, LogIn, ArrowLeft } from 'lucide-react';
 // Import official brand icons
 import { FaGoogle, FaGithub } from 'react-icons/fa'; 
+import api from '../services/api'; // Added for the forgot-password API calls
 
 function Login() {
+  const [view, setView] = useState('login'); // 'login', 'forgot', 'otp'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState(''); // New state for OTP
+  const [newPassword, setNewPassword] = useState(''); // New state for New Password
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate(); 
-  const location = useLocation(); // Added to read URL parameters
+  const location = useLocation();
 
-  // --- NEW: Catch errors passed via URL from OAuthCallback ---
+  // --- Catch errors passed via URL from OAuthCallback ---
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const urlError = searchParams.get('error');
@@ -30,21 +34,32 @@ function Login() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      navigate('/dashboard');
+      if (view === 'login') {
+        await login(email, password);
+        navigate('/dashboard');
+      } else if (view === 'forgot') {
+        await api.post('/auth/forgot-password', { email });
+        setView('otp');
+      } else if (view === 'otp') {
+        await api.post('/auth/reset-password', { email, otp, newPassword });
+        alert("Password reset successfully! Please log in.");
+        setView('login');
+        setPassword('');
+        setOtp('');
+        setNewPassword('');
+      }
     } catch (err) {
-      const message = err.response?.data?.message || 'Login failed';
+      const message = err.response?.data?.message || 'Operation failed';
       setError(message);
     } finally {
       setLoading(false);
     }
   };
 
-  // --- OAUTH INITIATORS (Dynamically configured) ---
+  // --- OAUTH INITIATORS ---
   const handleGoogleLogin = () => {
     const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
     const options = {
-      // Dynamically uses localhost or Render depending on where the app is running
       redirect_uri: `${window.location.origin}/oauth/callback`, 
       client_id: '504301300518-n1dds4ima2782diua2pfsft0q50o8bft.apps.googleusercontent.com', 
       access_type: 'offline',
@@ -63,7 +78,6 @@ function Login() {
     const rootUrl = 'https://github.com/login/oauth/authorize';
     const options = {
       client_id: 'Ov23liAjvQDdoB6Ix9s4', 
-      // Dynamically uses localhost or Render depending on where the app is running
       redirect_uri: `${window.location.origin}/oauth/callback`, 
       scope: 'user:email',
     };
@@ -86,8 +100,12 @@ function Login() {
               <span className="text-white font-bold text-2xl">IIT </span>
               <span className="text-white font-bold text-2xl">Indore</span>
             </div>
-            <h1 className="text-white text-4xl font-bold tracking-tight">Welcome back</h1>
-            <p className="text-white/70 mt-2">Sign in to your collaborative workspace</p>
+            <h1 className="text-white text-4xl font-bold tracking-tight">
+              {view === 'login' ? 'Welcome back' : 'Reset Password'}
+            </h1>
+            <p className="text-white/70 mt-2">
+              {view === 'login' ? 'Sign in to your collaborative workspace' : 'Follow the steps to recover your account'}
+            </p>
           </div>
 
           {/* Glass card */}
@@ -100,37 +118,96 @@ function Login() {
             )}
 
             <form onSubmit={handleSubmit}>
-              {/* Email field with icon */}
-              <div className="mb-5">
-                <label className="block text-white/80 text-sm font-medium mb-2">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 w-5 h-5" />
-                  <input
-                    type="email"
-                    placeholder="you@iiti.ac.in"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition"
-                    required
-                  />
-                </div>
-              </div>
+              
+              {/* --- LOGIN VIEW --- */}
+              {view === 'login' && (
+                <>
+                  <div className="mb-5">
+                    <label className="block text-white/80 text-sm font-medium mb-2">Email Address</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 w-5 h-5" />
+                      <input
+                        type="email"
+                        placeholder="you@iiti.ac.in"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition"
+                        required
+                      />
+                    </div>
+                  </div>
 
-              {/* Password field with icon */}
-              <div className="mb-6">
-                <label className="block text-white/80 text-sm font-medium mb-2">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 w-5 h-5" />
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition"
-                    required
-                  />
+                  <div className="mb-2">
+                    <label className="block text-white/80 text-sm font-medium mb-2">Password</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 w-5 h-5" />
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end mb-6">
+                    <button type="button" onClick={() => setView('forgot')} className="text-sm text-white/70 hover:text-white hover:underline transition">
+                      Forgot Password?
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* --- FORGOT PASSWORD VIEW --- */}
+              {view === 'forgot' && (
+                <div className="mb-6">
+                  <label className="block text-white/80 text-sm font-medium mb-2">Registered Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 w-5 h-5" />
+                    <input
+                      type="email"
+                      placeholder="you@iiti.ac.in"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* --- OTP VERIFICATION VIEW --- */}
+              {view === 'otp' && (
+                <>
+                  <div className="mb-5">
+                    <label className="block text-white/80 text-sm font-medium mb-2">Enter OTP</label>
+                    <input
+                      type="text"
+                      placeholder="6-digit code"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition"
+                      required
+                    />
+                  </div>
+                  <div className="mb-6">
+                    <label className="block text-white/80 text-sm font-medium mb-2">New Password</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 w-5 h-5" />
+                      <input
+                        type="password"
+                        placeholder="••••••••"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition"
+                        required
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Submit button */}
               <button
@@ -139,45 +216,59 @@ function Login() {
                 className="w-full bg-white text-primary font-semibold py-3 rounded-xl hover:bg-white/90 transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <LogIn className="w-5 h-5" />
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Processing...' : view === 'login' ? 'Sign In' : 'Continue'}
               </button>
             </form>
 
-            {/* --- VISUAL DIVIDER AND OAUTH BUTTONS --- */}
-            <div className="relative my-6 flex items-center justify-center">
-              <div className="border-t border-white/20 w-full"></div>
-              <span className="absolute bg-transparent px-3 text-xs text-white/50 uppercase tracking-wider backdrop-blur-sm">
-                Or continue with
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium hover:bg-white/10 transition duration-200 text-sm"
+            {/* --- BACK BUTTON (Only shows during password reset) --- */}
+            {view !== 'login' && (
+              <button 
+                type="button" 
+                onClick={() => setView('login')} 
+                className="mt-6 w-full flex items-center justify-center gap-2 text-sm text-white/70 hover:text-white transition"
               >
-                <FaGoogle className="w-4 h-4 text-red-400" />
-                Google
+                <ArrowLeft size={16} /> Back to Login
               </button>
-              <button
-                type="button"
-                onClick={handleGithubLogin}
-                className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium hover:bg-white/10 transition duration-200 text-sm"
-              >
-                <FaGithub className="w-4 h-4" />
-                GitHub
-              </button>
-            </div>
-            {/* --- END OF OAUTH SECTION --- */}
+            )}
 
-            {/* Signup link */}
-            <p className="mt-6 text-center text-sm text-white/70">
-              Don't have an account?{' '}
-              <a href="/signup" className="text-white font-semibold hover:underline">
-                Create account
-              </a>
-            </p>
+            {/* --- OAUTH AND SIGNUP (Only shows on Login view) --- */}
+            {view === 'login' && (
+              <>
+                <div className="relative my-6 flex items-center justify-center">
+                  <div className="border-t border-white/20 w-full"></div>
+                  <span className="absolute bg-transparent px-3 text-xs text-white/50 uppercase tracking-wider backdrop-blur-sm">
+                    Or continue with
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium hover:bg-white/10 transition duration-200 text-sm"
+                  >
+                    <FaGoogle className="w-4 h-4 text-red-400" />
+                    Google
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleGithubLogin}
+                    className="flex items-center justify-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl text-white font-medium hover:bg-white/10 transition duration-200 text-sm"
+                  >
+                    <FaGithub className="w-4 h-4" />
+                    GitHub
+                  </button>
+                </div>
+
+                <p className="mt-6 text-center text-sm text-white/70">
+                  Don't have an account?{' '}
+                  <a href="/signup" className="text-white font-semibold hover:underline">
+                    Create account
+                  </a>
+                </p>
+              </>
+            )}
+
           </div>
 
           {/* Footer note */}

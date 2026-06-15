@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
+import nodemailer from 'nodemailer';
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -17,6 +18,11 @@ const generateToken = (userId) => {
 export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+    // --- DOMAIN GATEKEEPER ---
+    if (!email.endsWith('@iiti.ac.in')) {
+      return res.status(403).json({ message: 'Access denied. Only official @iiti.ac.in emails are allowed.' });
+    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -108,7 +114,6 @@ export const googleAuth = async (req, res) => {
       code,
       client_id: process.env.GOOGLE_CLIENT_ID,
       client_secret: process.env.GOOGLE_CLIENT_SECRET,
-      // Dynamic environment variable!
       redirect_uri: `${process.env.CLIENT_URL}/oauth/callback`, 
       grant_type: 'authorization_code',
     });
@@ -121,18 +126,21 @@ export const googleAuth = async (req, res) => {
 
     const { id: googleId, email, name, picture } = userResponse.data;
 
+    // --- DOMAIN GATEKEEPER ---
+    if (!email.endsWith('@iiti.ac.in')) {
+      return res.status(403).json({ message: 'Access denied. Please sign in with your official institute Google account.' });
+    }
+
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
     // INTERCEPT: If user doesn't exist, they are signing up.
     if (!user) {
-      // Create a short-lived temp token containing their Google info
       const tempToken = jwt.sign(
         { email, name, googleId, avatar: picture, provider: 'google' }, 
         process.env.JWT_SECRET, 
         { expiresIn: '15m' }
       );
       
-      // Tell the frontend to redirect to Create Profile
       return res.status(200).json({
         action: 'requires_profile_creation',
         tempToken,
@@ -181,6 +189,11 @@ export const githubAuth = async (req, res) => {
     const { id: githubId, login, avatar_url, email } = userResponse.data;
     const userEmail = email || `${login}@github.user`; 
 
+    // --- DOMAIN GATEKEEPER ---
+    if (!userEmail.endsWith('@iiti.ac.in')) {
+      return res.status(403).json({ message: 'Access denied. Please ensure your primary GitHub email is your official institute address.' });
+    }
+
     let user = await User.findOne({ $or: [{ githubId }, { email: userEmail }] });
 
     // INTERCEPT
@@ -217,19 +230,15 @@ export const githubAuth = async (req, res) => {
 };
 
 // ==========================================
-// 3. PROFILE COMPLETION (OAUTH HANDOFF)
+// 3. PROFILE COMPLETION & MANAGEMENT
 // ==========================================
 
-// @desc    Complete OAuth profile with password
-// @route   POST /api/auth/complete-oauth
 export const completeOAuthProfile = async (req, res) => {
   try {
     const { tempToken, password, name } = req.body;
 
-    // Verify the temporary token
     const decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
     
-    // Check if user already got created somehow
     const existingUser = await User.findOne({ email: decoded.email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
@@ -237,7 +246,6 @@ export const completeOAuthProfile = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create the user using decoded data from Google/GitHub + new password
     const user = await User.create({
       name: name || decoded.name,
       email: decoded.email,
@@ -248,7 +256,6 @@ export const completeOAuthProfile = async (req, res) => {
       githubId: decoded.provider === 'github' ? decoded.githubId : undefined,
     });
 
-    // Generate the real session token
     const token = generateToken(user._id);
 
     res.status(201).json({
@@ -260,5 +267,97 @@ export const completeOAuthProfile = async (req, res) => {
   } catch (error) {
     console.error('Profile Completion Error:', error);
     res.status(400).json({ message: 'Invalid or expired token. Please try signing up again.' });
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, year, branch, oldPassword, newPassword } = req.body;
+    
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (newPassword) {
+      if (!oldPassword) {
+        return res.status(400).json({ message: "Old password is required to set a new one" });
+      }
+
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Incorrect old password" });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+    }
+
+    if (name) user.name = name;
+    if (year) user.year = year;
+    if (branch) user.branch = branch;
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: { _id: user._id, name: user.name, year: user.year, branch: user.branch, email: user.email }
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("PROFILE UPDATE CRASH:", error);
+  }
+};
+
+// ==========================================
+// 4. PASSWORD RECOVERY
+// ==========================================
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+    });
+
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetOtp = otp;
+    user.otpExpires = Date.now() + 10 * 60 * 1000; 
+    await user.save();
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "CampusFlow - Password Reset OTP",
+      text: `Your OTP for password reset is ${otp}. It expires in 10 minutes.`
+    });
+
+    res.json({ message: "OTP sent to email" });
+  } catch (error) {
+    console.error("Forgot Password Error:", error);
+    res.status(500).json({ message: "Server error while sending email" });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    const user = await User.findOne({ email, resetOtp: otp, otpExpires: { $gt: Date.now() } });
+    
+    if (!user) return res.status(400).json({ message: "Invalid or expired OTP" });
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    user.resetOtp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+    
+    res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Reset Password Error:", error);
+    res.status(500).json({ message: "Server error during password reset" });
   }
 };

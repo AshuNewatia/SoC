@@ -12,11 +12,10 @@ import MyBoard from "./pages/MyBoard";
 import OAuthCallback from "./pages/OAuthCallback";
 // 1. Import the new CreateProfile component
 import CreateProfile from "./pages/CreateProfile"; 
-import KanbanBoard from "./pages/KanbanBoard";
+import ViewProfile from "./pages/ViewProfile";
 
 import WorkspaceChat from "./components/workspace/WorkspaceChat";
 import WorkspaceActivity from "./components/workspace/WorkspaceActivity";
-import WorkspaceOverview from "./components/workspace/WorkspaceOverview";
 import WorkspaceMembers from "./components/workspace/WorkspaceMembers";
 import WorkspaceBoard from "./components/workspace/WorkspaceBoard";
 
@@ -79,13 +78,12 @@ function App() {
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/myboard" element={<MyBoard />} />
-            <Route path="/kanban" element={<KanbanBoard />} />
+            <Route path="/profile" element={<ViewProfile />} />
 
             {/* Nested Workspace Routes */}
             <Route path="/workspace/:id" element={<WorkSpace />}>
               {/* Redirect /workspace/:id to /workspace/:id/overview automatically */}
               <Route index element={<Navigate to="overview" replace />} />
-              <Route path="overview" element={<WorkspaceOverview />} />
               <Route path="board" element={<WorkspaceBoard />} />
               <Route path="chat" element={<WorkspaceChat />} />
               <Route path="activity" element={<WorkspaceActivity />} />
