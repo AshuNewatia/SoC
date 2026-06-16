@@ -56,7 +56,7 @@ export default function Dashboard() {
     try {
       const res = await createWorkspace({
         ...data,
-        owner: user?._id,
+        owner: user.id,
       });
 
       // Notify Sidebar that a new workspace was created
