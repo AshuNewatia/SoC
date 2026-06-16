@@ -76,3 +76,57 @@ export const getWorkspaceById = async (req, res) => {
         });
     }
 };
+
+export const updateWorkspace = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    const { name, description } = req.body;
+
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) {
+      return res.status(404).json({
+        message: "Workspace not found",
+      });
+    }
+
+    workspace.name = name || workspace.name;
+    workspace.description = description || workspace.description;
+
+    await workspace.save();
+
+    res.status(200).json(workspace);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Server Error",
+    });
+  }
+};
+
+export const deleteWorkspace = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) {
+      return res.status(404).json({
+        message: "Workspace not found",
+      });
+    }
+
+    await Workspace.findByIdAndDelete(workspaceId);
+
+    res.status(200).json({
+      message: "Workspace deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Server Error",
+    });
+  }
+};

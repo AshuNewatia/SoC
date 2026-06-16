@@ -1,6 +1,6 @@
-import { FolderKanban } from "lucide-react";
+import { FolderKanban, Settings } from "lucide-react";
 
-export default function WorkspaceHero({ workspace }) {
+export default function WorkspaceHero({ workspace, onSettingsClick }) {
   if (!workspace) return null;
 
   const memberCount = workspace.members?.length || 0;
@@ -45,12 +45,19 @@ export default function WorkspaceHero({ workspace }) {
             Updated{" "}
             {workspace.updatedAt
               ? new Date(workspace.updatedAt).toLocaleDateString(undefined, {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
               : "Recently"}
           </div>
+          <button
+            onClick={onSettingsClick}
+            className="px-3 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary-hover transition"
+          >
+            <Settings size={14} className="inline mr-1" />
+            Settings
+          </button>
           {/* Active badge removed – backend does not provide `isActive` */}
         </div>
       </div>

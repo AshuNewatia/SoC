@@ -3,7 +3,9 @@ import express from "express";
 import {
   createWorkspace,
   getWorkspaces,
-  getWorkspaceById
+  getWorkspaceById,
+  deleteWorkspace,
+  updateWorkspace
 } from "../controllers/workspaceController.js";
 
 const router = express.Router();
@@ -21,6 +23,16 @@ router.get(
 router.get(
   "/workspaces/:workspaceId",
   getWorkspaceById
+);
+
+router.put(
+  "/workspaces/:workspaceId",
+  updateWorkspace
+);
+
+router.delete(
+  "/workspaces/:workspaceId",
+  deleteWorkspace
 );
 
 export default router;

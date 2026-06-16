@@ -39,7 +39,9 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
         ...data,
         owner: user.id,
       });
-
+      window.dispatchEvent(
+        new CustomEvent("workspaceListChanged")
+      );
       await fetchWorkspaces();
 
       setCreateOpen(false);
@@ -49,18 +51,19 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
   };
 
   useEffect(() => {
+    fetchWorkspaces();
     const refreshWorkspaces = () => {
       fetchWorkspaces();
     };
 
     window.addEventListener(
-      "workspaceCreated",
+      "workspaceListChanged",
       refreshWorkspaces
     );
 
     return () => {
       window.removeEventListener(
-        "workspaceCreated",
+        "workspaceListChanged",
         refreshWorkspaces
       );
     };
