@@ -37,7 +37,7 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
     try {
       await createWorkspace({
         ...data,
-        owner: user._id,
+        owner: user.id,
       });
 
       await fetchWorkspaces();
