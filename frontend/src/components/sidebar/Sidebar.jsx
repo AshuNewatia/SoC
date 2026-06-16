@@ -9,16 +9,63 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
+
+import { useEffect, useState } from "react";
+import api from "../../services/api";
 import { NavLink, useNavigate } from "react-router-dom";
-import { workspaces } from "../../data/workspaces";
 import { useAuth } from "../../context/authContext";
-import { useState } from 'react';
 import LogoutModal from '../common/LogoutModal';
+import CreateWorkspaceModal from "../workspace/CreateWorkspaceModal";
+import { createWorkspace } from "../../services/workspaceServices";
 
 export default function Sidebar({ isOpen = false, onClose = () => { } }) {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
-  
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [workspaces, setWorkspaces] = useState([]);
+
+  const fetchWorkspaces = async () => {
+    try {
+      const res = await api.get("/api/workspaces");
+      setWorkspaces(res.data);
+    } catch (err) {
+      console.error("Error fetching workspaces", err);
+    }
+  };
+  const handleCreateWorkspace = async (data) => {
+    try {
+      await createWorkspace({
+        ...data,
+        owner: user._id,
+      });
+
+      await fetchWorkspaces();
+
+      setCreateOpen(false);
+    } catch (err) {
+      console.error("Error creating workspace", err);
+    }
+  };
+
+  useEffect(() => {
+    const refreshWorkspaces = () => {
+      fetchWorkspaces();
+    };
+
+    window.addEventListener(
+      "workspaceCreated",
+      refreshWorkspaces
+    );
+
+    return () => {
+      window.removeEventListener(
+        "workspaceCreated",
+        refreshWorkspaces
+      );
+    };
+  }, []);
+
   // State to manage the modal visibility
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -47,10 +94,16 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
       )}
 
       {/* Logout Confirmation Modal */}
-      <LogoutModal 
-        isOpen={showLogoutModal} 
-        onClose={() => setShowLogoutModal(false)} 
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
         onConfirm={handleLogout}
+      />
+
+      <CreateWorkspaceModal
+        isOpen={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreate={handleCreateWorkspace}
       />
 
       <aside
@@ -107,31 +160,38 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
           <div className="px-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xs uppercase tracking-widest text-text-secondary">Workspaces</h3>
-              <button className="text-primary hover:bg-primary/10 p-1.5 rounded-lg transition">
+              <button
+                onClick={() => setCreateOpen(true)}
+                className="text-primary hover:bg-primary/10 p-1.5 rounded-lg transition">
                 <Plus size={16} />
               </button>
             </div>
             <div className="space-y-2">
-              {workspaces.map((workspace) => (
-                <NavLink
-                  key={workspace.id}
-                  to={`/workspace/${workspace.id}/overview`}
-                  onClick={onClose}
-                  className={({ isActive }) =>
-                    `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                      isActive
+              {workspaces.length === 0 ? (
+                <div className="text-sm text-slate-500 px-4 py-3">
+                  No workspaces found
+                </div>
+              ) : (
+                workspaces.map((workspace) => (
+                  <NavLink
+                    key={workspace._id}
+                    to={`/workspace/${workspace._id}/overview`}
+                    onClick={onClose}
+                    className={({ isActive }) =>
+                      `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
                         ? "bg-primary/15 text-primary font-semibold shadow-sm"
                         : "bg-slate-50 hover:bg-white hover:shadow-md hover:-translate-y-0.5 text-text-primary"
-                    }`
-                  }
-                >
-                  <FolderKanban size={18} />
-                  {workspace.name}
-                </NavLink>
-              ))}
+                      }`
+                    }
+                  >
+                    <FolderKanban size={18} />
+                    {workspace.name}
+                  </NavLink>
+                ))
+              )}
             </div>
 
-            <button 
+            <button
               className="mt-4 mb-6 text-primary font-medium flex items-center gap-2 hover:gap-3 transition-all"
               onClick={onClose}
             >
@@ -152,10 +212,11 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
               <Settings size={18} />
               Settings
             </NavLink>
-            
-            <button 
+
+            <button
               onClick={() => setShowLogoutModal(true)}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all text-left"
+
             >
               <LogOut size={18} />
               Logout

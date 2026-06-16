@@ -1,5 +1,6 @@
 import Workspace from "../models/Workspace.js"
 import User from "../models/User.js";
+import mongoose from "mongoose";
 
 export const createWorkspace = async (req, res) => {
     try {
@@ -29,12 +30,12 @@ export const createWorkspace = async (req, res) => {
         });
 
     } catch (error) {
-    console.error(error);
+        console.error(error);
 
-    res.status(500).json({
-        message: error.message
-    });
-}
+        res.status(500).json({
+            message: error.message
+        });
+    }
 };
 
 export const getWorkspaces = async (req, res) => {
@@ -51,14 +52,27 @@ export const getWorkspaces = async (req, res) => {
 export const getWorkspaceById = async (req, res) => {
     try {
         const { workspaceId } = req.params;
-        const workspace =
-            await Workspace.findById(workspaceId);
+        if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
+            return res.status(400).json({
+                message: "Invalid workspace id",
+            });
+        }
+        const workspace = await Workspace.findById(workspaceId)
+            .populate("owner", "name email")
+            .populate("members", "name email");
 
         if (!workspace) {
-            return res.status(404).json({message:"Workspace not found"})
+            return res.status(404).json({
+                message: "Workspace not found",
+            });
         }
+
         res.status(200).json(workspace);
     } catch (error) {
+        console.error(error);
 
+        res.status(500).json({
+            message: "Server Error",
+        });
     }
-}
+};

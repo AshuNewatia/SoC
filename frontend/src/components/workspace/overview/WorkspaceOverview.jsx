@@ -1,36 +1,58 @@
 // src/pages/WorkspaceOverview.jsx
-import { useEffect, useState, useMemo } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import socket from "../../../hooks/useSocket";
 import Overview from "../overview/Overview";
 import WorkspaceHero from "../WorkspaceHero";
-import { workspaces } from "../../../data/workspaces";
+import { getTasks } from "../../../services/taskServices";
+import api from "../../../services/api";
+import { useAuth } from "../../../context/authContext";
+import { useLocation } from "react-router-dom";
 
 export default function WorkspaceOverview() {
   const { id } = useParams();
-  const workspace = workspaces.find((w) => w.id === id);
-
-  // Stats state
   const [tasks, setTasks] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const [currentUser] = useState(() => ({
-    name: `User-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
-  }));
+  const location = useLocation();
+  const [workspace, setWorkspace] = useState(
+    location.state?.workspace || null
+  );
+  const { user } = useAuth();
+  const currentUserName = user?.name || user?.email || "Guest";
 
+  // Fetch workspace details
+  useEffect(() => {
+    const fetchWorkspace = async () => {
+      try {
+        const res = await api.get(`/api/workspaces/${id}`);
+        setWorkspace(res.data);
+      } catch (error) {
+        console.error("Error fetching workspace:", error);
+      }
+    };
+    fetchWorkspace();
+  }, [id]);
+
+  // Fetch tasks
   const fetchTasks = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/tasks");
+      const res = await getTasks(id);
       setTasks(res.data);
     } catch (err) {
       console.error("Error fetching tasks:", err);
     }
   };
 
+  // Socket setup
   useEffect(() => {
+    if (socket.connected) {
+      socket.emit("userJoined", { id: socket.id, name: currentUserName, workspaceId: id });
+    }
+
     socket.on("connect", () => {
-      socket.emit("userJoined", { id: socket.id, name: currentUser.name });
+      socket.emit("userJoined", { id: socket.id, name: currentUserName, workspaceId: id });
     });
+
     socket.on("onlineUsers", (users) => setOnlineUsers(users));
     socket.on("taskMoved", fetchTasks);
     socket.on("taskCreated", fetchTasks);
@@ -47,29 +69,28 @@ export default function WorkspaceOverview() {
       socket.off("taskUpdated");
       socket.off("taskDeleted");
     };
-  }, [currentUser.name]);
+  }, [currentUserName, id]);   // ✅ fixed dependency
 
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter((t) => t.status === "done").length;
+  const completedTasks = tasks.filter((t) => t.status === "completed").length;
 
   const handleCreateTask = () => {
-    // Emit an event that the KanbanBoard can listen to
     window.dispatchEvent(new CustomEvent("openCreateTaskModal"));
   };
 
   return (
     <div className="space-y-4 p-1.5">
-      <WorkspaceHero workspace={workspace} />
-
-      {/* Real‑time Sync Board (stats + create button) */}
+      {workspace ? (
+        <WorkspaceHero workspace={workspace} />
+      ) : (
+        <div className="h-32 rounded-2xl bg-slate-100 animate-pulse" />
+      )}
       <Overview
         onlineUsers={onlineUsers}
         totalTasks={totalTasks}
         completedTasks={completedTasks}
         onCreateTask={handleCreateTask}
       />
-
-      
     </div>
   );
 }
