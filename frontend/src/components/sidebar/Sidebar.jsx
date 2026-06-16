@@ -49,6 +49,7 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
   };
 
   useEffect(() => {
+    fetchWorkspaces();
     const refreshWorkspaces = () => {
       fetchWorkspaces();
     };
