@@ -83,7 +83,7 @@ function Login() {
   };
 
   return (
-    <div className="h-screen relative overflow-hidden bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50">
+    <div className="h-screen relative overflow-hidden bg-linear-to-br from-blue-50 via-sky-50 to-indigo-50">
       
       {/* Premium gradient mesh background */}
       <div className="absolute inset-0 overflow-hidden">

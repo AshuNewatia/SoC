@@ -72,7 +72,7 @@ function App() {
         <Route path="/create-profile" element={<CreateProfile />} />
 
         {/* Protected Routes Wrapper */}
-        <Route element={<ProtectedRoute />}>
+        {/* <Route element={<ProtectedRoute />}> */}
           {/* Authenticated Layout Wrapper */}
           <Route element={<AuthenticatedLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
@@ -92,7 +92,7 @@ function App() {
               <Route path="members" element={<WorkspaceMembers />} />
             </Route>
           </Route>
-        </Route>
+        {/* </Route> */}
 
         {/* Catch-all Fallback (404 / Redirect) */}
         <Route path="*" element={<Navigate to="/" replace />} />
