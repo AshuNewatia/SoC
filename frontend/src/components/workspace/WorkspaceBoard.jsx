@@ -9,7 +9,7 @@ import Column from "../kanban/Column";
 import TaskDrawer from "../kanban/TaskDrawer";
 import CreateTaskModal from "../kanban/CreateTaskModal";
 import EditTaskModal from "../kanban/EditTaskModal";
-import { boardData as initialBoard } from "../../data/mockBoard";
+
 
 import {
   getTasks,
@@ -19,15 +19,36 @@ import {
   updateTaskStatus as updateTaskStatusApi,
 } from "../../services/taskServices";
 
+const emptyBoard = {
+  columns: {
+    todo: {
+      id: "todo",
+      title: "To Do",
+      tasks: [],
+    },
+    progress: {
+      id: "progress",
+      title: "In Progress",
+      tasks: [],
+    },
+    completed: {
+      id: "completed",
+      title: "Completed",
+      tasks: [],
+    },
+  },
+};
+
 export default function KanbanBoard() {
   const { id: workspaceId } = useParams();
   const { user } = useAuth();
-  const [board, setBoard] = useState(initialBoard);
+  const [board, setBoard] = useState(emptyBoard);
   const [selectedTask, setSelectedTask] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [targetColumn, setTargetColumn] = useState("todo");
+  const [loading, setLoading] = useState(true);
 
   const currentUserName = user?.name || user?.email?.split("@")[0] || "Guest";
 
@@ -35,25 +56,30 @@ export default function KanbanBoard() {
     try {
       const res = await getTasks(workspaceId);
       const tasks = res.data;
+
       setBoard({
-        ...initialBoard,
         columns: {
           todo: {
-            ...initialBoard.columns.todo,
+            id: "todo",
+            title: "To Do",
             tasks: tasks.filter((t) => t.status === "todo"),
           },
           progress: {
-            ...initialBoard.columns.progress,
+            id: "progress",
+            title: "In Progress",
             tasks: tasks.filter((t) => t.status === "progress"),
           },
           completed: {
-            ...initialBoard.columns.completed,
+            id: "completed",
+            title: "Completed",
             tasks: tasks.filter((t) => t.status === "completed"),
           },
         },
       });
     } catch (err) {
       console.error("Error fetching tasks:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -90,7 +116,7 @@ export default function KanbanBoard() {
       const res = await createTaskApi(workspaceId, {
         ...task,
         status: targetColumn,
-        createdBy: user?._id,
+        createdBy: user.id,
         assignedTo: [],
       });
       const savedTask = res.data;
@@ -182,6 +208,14 @@ export default function KanbanBoard() {
     setTargetColumn("todo");
     setCreateOpen(true);
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border p-10">
+        Loading board...
+      </div>
+    );
+  }
 
   return (
     <>
