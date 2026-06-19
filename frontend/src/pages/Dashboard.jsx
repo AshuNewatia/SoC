@@ -65,7 +65,7 @@ export default function Dashboard() {
       });
 
       // Notify Sidebar that a new workspace was created
-      window.dispatchEvent(new CustomEvent("workspaceCreated"));
+      window.dispatchEvent(new CustomEvent("workspaceListChanged"));
 
       // Navigate to the newly created workspace overview page
       navigate(`/workspace/${res.data.workspace._id}/overview`);
