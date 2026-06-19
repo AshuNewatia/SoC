@@ -8,30 +8,32 @@ import {
   updateWorkspace
 } from "../controllers/workspaceController.js";
 
+import { protect } from "../middleware/authMiddleware.js";
+
 const router = express.Router();
 
 router.post(
-  "/workspaces",
+  "/workspaces",protect,
   createWorkspace
 );
 
 router.get(
-  "/workspaces",
+  "/workspaces",protect,
   getWorkspaces
 );
 
 router.get(
-  "/workspaces/:workspaceId",
+  "/workspaces/:workspaceId",protect,
   getWorkspaceById
 );
 
 router.put(
-  "/workspaces/:workspaceId",
+  "/workspaces/:workspaceId",protect,
   updateWorkspace
 );
 
 router.delete(
-  "/workspaces/:workspaceId",
+  "/workspaces/:workspaceId",protect,
   deleteWorkspace
 );
 

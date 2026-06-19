@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
+import { initializeSocket } from "./socket/socketHandler.js";
 
 import connectDB from "./config/db.js";
 
@@ -60,40 +61,7 @@ const io = new Server(server, {
   },
 });
 
-/* ---------------- Online Users ---------------- */
-const onlineUsers = new Map();
-
-/* ---------------- Socket Events ---------------- */
-io.on("connection", (socket) => {
-  console.log(`🟢 User Connected: ${socket.id}`);
-
-  socket.on("userJoined", (user) => {
-    onlineUsers.set(socket.id, user);
-    io.emit("onlineUsers", Array.from(onlineUsers.values()));
-  });
-
-  socket.on("taskCreated", (task) => {
-    socket.broadcast.emit("taskCreated", task);
-  });
-
-  socket.on("taskUpdated", (task) => {
-    socket.broadcast.emit("taskUpdated", task);
-  });
-
-  socket.on("taskMoved", (task) => {
-    socket.broadcast.emit("taskMoved", task);
-  });
-
-  socket.on("taskDeleted", (task) => {
-    socket.broadcast.emit("taskDeleted", task);
-  });
-
-  socket.on("disconnect", () => {
-    console.log(`🔴 User Disconnected: ${socket.id}`);
-    onlineUsers.delete(socket.id);
-    io.emit("onlineUsers", Array.from(onlineUsers.values()));
-  });
-});
+initializeSocket(io);
 
 /* ---------------- Start Server ---------------- */
 const PORT = process.env.PORT || 5000;
