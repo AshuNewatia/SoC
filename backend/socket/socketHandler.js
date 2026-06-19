@@ -51,12 +51,24 @@ export const initializeSocket = (io) => {
     socket.on("disconnect", () => {
       console.log(`🔴 User Disconnected: ${socket.id}`);
 
-      onlineUsers.delete(socket.id);
+      const disconnectedUser = onlineUsers.get(socket.id);
 
-      io.to(user.workspaceId).emit(
-        "onlineUsers",
-        workspaceUsers
-      );
+      if (disconnectedUser) {
+        onlineUsers.delete(socket.id);
+
+        const workspaceUsers = Array.from(
+          onlineUsers.values()
+        ).filter(
+          (u) =>
+            u.workspaceId ===
+            disconnectedUser.workspaceId
+        );
+
+        io.to(disconnectedUser.workspaceId).emit(
+          "onlineUsers",
+          workspaceUsers
+        );
+      }
     });
   });
 };
