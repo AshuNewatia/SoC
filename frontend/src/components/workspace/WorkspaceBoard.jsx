@@ -110,7 +110,7 @@ export default function KanbanBoard() {
     };
   }, [workspaceId, currentUserName]);
 
-  // ✅ Bug #3 fixed: use user?._id (lowercase) instead of User._id
+
   const createTask = async (task) => {
     try {
       const res = await createTaskApi(workspaceId, {
