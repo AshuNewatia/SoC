@@ -23,6 +23,10 @@ const allowedOrigins = [
   process.env.CLIENT_URL   // Your live frontend URL
 ];
 
+console.log("========== SERVER STARTING ==========");
+console.log("CLIENT_URL =", process.env.CLIENT_URL);
+console.log("Allowed Origins =", allowedOrigins);
+
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests) 
