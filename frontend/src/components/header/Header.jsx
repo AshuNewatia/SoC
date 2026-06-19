@@ -56,7 +56,7 @@ export default function Header({ title = "Overview", onMenuClick }) {
           onClick={() => navigate('/profile')} 
           className="flex items-center gap-2 md:gap-3 pl-2 pr-3 py-1.5 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all duration-200"
         >
-          <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center text-white font-semibold text-sm">
+          <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-linear-to-br from-primary to-primary-hover flex items-center justify-center text-white font-semibold text-sm">
             {user?.name?.charAt(0) || 'U'}
           </div>
           <p className="text-sm font-semibold text-gray-800 hidden md:block">{user?.name || "User"}</p>

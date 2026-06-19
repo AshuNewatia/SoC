@@ -131,7 +131,7 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
         </div>
 
         {/* Desktop logo */}
-        <div className="hidden md:flex h-18 px-6 items-center shrink-0 mt-4">
+        <div className="hidden md:flex h-18 px-6 items-center shrink-0 mt-0">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-primary to-primary-hover flex items-center justify-center text-white font-bold text-lg shadow-md">
               C
@@ -143,7 +143,7 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
           </div>
         </div>
 
-        <div className="px-4 shrink-0 mt-4">
+        <div className="px-4 shrink-0 mt-0">
           <div className="h-px bg-slate-200"></div>
         </div>
 
