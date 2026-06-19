@@ -18,7 +18,7 @@ export const createTask = async (req, res) => {
         const task = new Task({ title, description, priority, dueDate, assignedTo, createdBy, workspace: workspaceId, status: status || "todo" });
         await task.save();
 
-        res.status(201).json({ message: "Task Created Sucessfully", task });
+        res.status(201).json(task);
 
     } catch (error) {
         console.error(error);
