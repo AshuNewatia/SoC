@@ -23,6 +23,7 @@ const allowedOrigins = [
   process.env.CLIENT_URL   // Your live frontend URL
 ];
 
+console.log("========== SERVER STARTING ==========");
 console.log("CLIENT_URL =", process.env.CLIENT_URL);
 console.log("Allowed Origins =", allowedOrigins);
 
