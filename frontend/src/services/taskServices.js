@@ -20,9 +20,9 @@ export const deleteTask = (taskId) =>
 
 export const updateTaskStatus = (
   taskId,
-  status
+  data
 ) =>
   api.patch(
     `/api/tasks/${taskId}/status`,
-    { status }
+    data
   );
