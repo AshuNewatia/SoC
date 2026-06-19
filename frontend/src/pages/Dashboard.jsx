@@ -53,6 +53,11 @@ export default function Dashboard() {
   else greeting = "Good Evening";
 
   const handleCreateWorkspace = async (data) => {
+    console.log("USER =", user);
+    console.log({
+  ...data,
+  owner: user.id,
+});
     try {
       const res = await createWorkspace({
         ...data,
