@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
+import api from '../../services/api'; // ✅ adjust relative path to your services folder
 
 export default function WorkspaceMembers() {
   const { id } = useParams();
@@ -10,16 +11,18 @@ export default function WorkspaceMembers() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/workspaces/${id}/members`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setMembers(data);
-        setLoading(false);
-      })
-      .catch((err) => {
+    const fetchMembers = async () => {
+      try {
+        const res = await api.get(`/api/workspaces/${id}/members`);
+        setMembers(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
         console.error('Failed to fetch members:', err);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchMembers();
 
     if (socket) {
       socket.on("member_added", (newMember) => {
@@ -32,11 +35,11 @@ export default function WorkspaceMembers() {
     };
   }, [id, socket]);
 
+  // Filtering and rendering unchanged
   const filteredMembers = members.filter((member) =>
     member.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Updated role badges to match light theme
   const getRoleStyle = (role) => {
     if (role === 'Owner') return 'bg-blue-50 text-primary border border-blue-200';
     return 'bg-bg-light text-text-secondary border border-border-light';
@@ -48,7 +51,6 @@ export default function WorkspaceMembers() {
   };
 
   return (
-    // Updated container styling
     <div className="w-full max-w-4xl mx-auto bg-surface border border-border-light rounded-[var(--radius-xl)] shadow-sm overflow-hidden font-sans">
       <div className="flex items-center justify-between p-6 border-b border-border-light">
         <div className="flex items-center gap-3">
@@ -71,7 +73,6 @@ export default function WorkspaceMembers() {
             placeholder="Search members..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            // Updated input styling
             className="w-full bg-bg-light border border-border-light rounded-lg pl-9 pr-4 py-2.5 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
           />
         </div>
@@ -86,11 +87,9 @@ export default function WorkspaceMembers() {
           filteredMembers.map((member) => (
             <div key={member._id} className="flex items-center justify-between p-4 hover:bg-bg-light transition-colors">
               <div className="flex items-center gap-4">
-                {/* Changed avatar to primary color so it pops on white background */}
                 <div className="w-12 h-12 rounded-full font-bold flex items-center justify-center text-lg bg-primary text-white shadow-sm">
                   {getInitials(member.name)}
                 </div>
-                
                 <div>
                   <h4 className="font-semibold text-text-primary text-base">{member.name}</h4>
                   <div className="flex items-center gap-3 mt-1">
@@ -100,7 +99,6 @@ export default function WorkspaceMembers() {
                   </div>
                 </div>
               </div>
-
               <div className="flex items-center gap-2">
                 <button className="text-text-secondary hover:text-text-primary hover:bg-surface rounded-lg transition-colors p-2 text-lg border border-transparent hover:border-border-light shadow-none hover:shadow-sm">
                   ✉️

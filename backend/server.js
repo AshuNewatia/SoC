@@ -64,9 +64,11 @@ const server = http.createServer(app);
 /* ---------------- Socket.io ---------------- */
 const io = new Server(server, {
   cors: {
-    // We are allowing all origins for WebSockets here, 
-    // but you can restrict this to allowedOrigins later for stricter security!
-    origin: "*", 
+    origin: [
+      "http://localhost:5173",
+      process.env.CLIENT_URL,
+    ],
+    credentials: true,
     methods: ["GET", "POST"],
   },
 });
