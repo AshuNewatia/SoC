@@ -14,7 +14,7 @@ import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authContext";
 // 👇 1. Import the new Workspace Context
-import { useWorkspaces } from "../../context/WorkspaceContext"; 
+import { useWorkspaces } from "../../context/workspaceContext"; 
 import LogoutModal from "../common/LogoutModal";
 import CreateWorkspaceModal from "../workspace/CreateWorkspaceModal";
 import { createWorkspace } from "../../services/workspaceServices";
