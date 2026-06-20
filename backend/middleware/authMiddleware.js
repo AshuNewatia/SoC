@@ -1,46 +1,34 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js'; 
-export const protect = async (req, res, next) => {
-  console.log("==== PROTECT RUNNING ====");
-  console.log(req.headers.authorization);
 
+export const protect = async (req, res, next) => {
   let token;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
-
-    console.log("TOKEN FOUND");
-
+  // Check if token exists in the Authorization header
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET
-      );
+      // Get token from header
+      token = req.headers.authorization.split(' ')[1];
 
-      console.log("DECODED =", decoded);
+      // Verify token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      req.user = await User.findById(decoded.userId);
+      // FIX 1: Use decoded.userId (Matches your authController generateToken function)
+      req.user = await User.findById(decoded.userId).select('-password');
 
-      console.log("USER =", req.user?._id);
+      // FIX 2: Check if the user was deleted from the database
+      if (!req.user) {
+        return res.status(401).json({ message: 'Not authorized, user no longer exists' });
+      }
 
       next();
-    } catch (err) {
-      console.log("JWT ERROR =", err.message);
-
-      return res.status(401).json({
-        message: "token failed"
-      });
+    } catch (error) {
+      console.error("JWT Verification Error:", error.message);
+      res.status(401).json({ message: 'Not authorized, token failed' });
     }
   }
 
   if (!token) {
-    console.log("NO TOKEN");
-
-    return res.status(401).json({
-      message: "no token"
-    });
+    res.status(401).json({ message: 'Not authorized, no token' });
   }
 };
