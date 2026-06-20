@@ -1,40 +1,32 @@
 import express from "express";
-
 import {
-  createWorkspace,
-  getWorkspaces,
+  getUserWorkspaces,
   getWorkspaceById,
+  createWorkspace,
+  updateWorkspace,
   deleteWorkspace,
-  updateWorkspace
 } from "../controllers/workspaceController.js";
 
-import { protect } from "../middleware/authMiddleware.js";
+// Import your auth middleware (adjust the path based on your project structure)
+// import { protect } from "../middleware/authMiddleware.js"; 
 
 const router = express.Router();
 
-router.post(
-  "/workspaces",protect,
-  createWorkspace
-);
+// --------------------------------------------------------
+// Important: Apply your `protect` middleware to these routes 
+// so `req.user.id` is available in the controller!
+// Example: router.route("/").get(protect, getUserWorkspaces)
+// --------------------------------------------------------
 
-router.get(
-  "/workspaces",protect,
-  getWorkspaces
-);
+router
+  .route("/")
+  .get(getUserWorkspaces)    // GET /api/workspaces
+  .post(createWorkspace);    // POST /api/workspaces
 
-router.get(
-  "/workspaces/:workspaceId",protect,
-  getWorkspaceById
-);
-
-router.put(
-  "/workspaces/:workspaceId",protect,
-  updateWorkspace
-);
-
-router.delete(
-  "/workspaces/:workspaceId",protect,
-  deleteWorkspace
-);
+router
+  .route("/:id")
+  .get(getWorkspaceById)     // GET /api/workspaces/:id
+  .put(updateWorkspace)      // PUT /api/workspaces/:id
+  .delete(deleteWorkspace);  // DELETE /api/workspaces/:id
 
 export default router;

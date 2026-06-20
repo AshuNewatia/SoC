@@ -10,73 +10,48 @@ import {
   X,
 } from "lucide-react";
 
-import { useEffect, useState } from "react";
-import api from "../../services/api";
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authContext";
-import LogoutModal from '../common/LogoutModal';
+// 👇 1. Import the new Workspace Context
+import { useWorkspaces } from "../../context/WorkspaceContext"; 
+import LogoutModal from "../common/LogoutModal";
 import CreateWorkspaceModal from "../workspace/CreateWorkspaceModal";
 import { createWorkspace } from "../../services/workspaceServices";
 
-export default function Sidebar({ isOpen = false, onClose = () => { } }) {
+export default function Sidebar({ isOpen = false, onClose = () => {} }) {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  
+  // 👇 2. Grab workspaces and the fetch function from Context instead of local state
+  const { workspaces, fetchWorkspaces } = useWorkspaces();
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [workspaces, setWorkspaces] = useState([]);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const fetchWorkspaces = async () => {
-    try {
-      const res = await api.get("/api/workspaces");
-      setWorkspaces(res.data);
-    } catch (err) {
-      console.error("Error fetching workspaces", err);
-    }
-  };
+  // Handle new workspace creation from the Sidebar's '+' button
   const handleCreateWorkspace = async (data) => {
     try {
       await createWorkspace({
         ...data,
         owner: user.id,
       });
-      window.dispatchEvent(
-        new CustomEvent("workspaceListChanged")
-      );
+      
+      // 👇 3. Fetch workspaces to update the global context state instantly
       await fetchWorkspaces();
-
+      
       setCreateOpen(false);
     } catch (err) {
       console.error("Error creating workspace", err);
     }
   };
 
-  useEffect(() => {
-    fetchWorkspaces();
-    const refreshWorkspaces = () => {
-      fetchWorkspaces();
-    };
-
-    window.addEventListener(
-      "workspaceListChanged",
-      refreshWorkspaces
-    );
-
-    return () => {
-      window.removeEventListener(
-        "workspaceListChanged",
-        refreshWorkspaces
-      );
-    };
-  }, []);
-
-  // State to manage the modal visibility
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-
   // Helper function for NavLink styles
   const getLinkClass = ({ isActive }) =>
-    `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-      ? "bg-primary/15 text-primary font-semibold shadow-sm"
-      : "hover:bg-slate-100 hover:shadow-sm text-text-primary"
+    `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+      isActive
+        ? "bg-primary/15 text-primary font-semibold shadow-sm"
+        : "hover:bg-slate-100 hover:shadow-sm text-text-primary"
     }`;
 
   // Actual logout action triggered by the modal
@@ -103,6 +78,7 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
         onConfirm={handleLogout}
       />
 
+      {/* Create Workspace Modal */}
       <CreateWorkspaceModal
         isOpen={createOpen}
         onClose={() => setCreateOpen(false)}
@@ -165,10 +141,13 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
               <h3 className="text-xs uppercase tracking-widest text-text-secondary">Workspaces</h3>
               <button
                 onClick={() => setCreateOpen(true)}
-                className="text-primary hover:bg-primary/10 p-1.5 rounded-lg transition">
+                className="text-primary hover:bg-primary/10 p-1.5 rounded-lg transition"
+              >
                 <Plus size={16} />
               </button>
             </div>
+            
+            {/* Dynamic Workspace List */}
             <div className="space-y-2">
               {workspaces.length === 0 ? (
                 <div className="text-sm text-slate-500 px-4 py-3">
@@ -181,9 +160,10 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
                     to={`/workspace/${workspace._id}/overview`}
                     onClick={onClose}
                     className={({ isActive }) =>
-                      `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                        ? "bg-primary/15 text-primary font-semibold shadow-sm"
-                        : "bg-slate-50 hover:bg-white hover:shadow-md hover:-translate-y-0.5 text-text-primary"
+                      `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                        isActive
+                          ? "bg-primary/15 text-primary font-semibold shadow-sm"
+                          : "bg-slate-50 hover:bg-white hover:shadow-md hover:-translate-y-0.5 text-text-primary"
                       }`
                     }
                   >
@@ -219,7 +199,6 @@ export default function Sidebar({ isOpen = false, onClose = () => { } }) {
             <button
               onClick={() => setShowLogoutModal(true)}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-all text-left"
-
             >
               <LogOut size={18} />
               Logout

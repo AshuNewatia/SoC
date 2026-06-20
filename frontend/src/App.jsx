@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { WorkspaceProvider } from "./context/WorkspaceContext";
 
 import Landing from "./pages/LandingPage";
 import Login from "./pages/Login";
@@ -43,6 +44,7 @@ function AuthenticatedLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
+   <WorkspaceProvider>
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       
@@ -55,6 +57,7 @@ function AuthenticatedLayout() {
         </main>
       </div>
     </div>
+   </WorkspaceProvider>  
   );
 }
 
@@ -85,6 +88,7 @@ function App() {
             {/* Nested Workspace Routes */}
             <Route path="/workspace/:id" element={<WorkSpace />}>
               {/* Redirect /workspace/:id to /workspace/:id/overview automatically */}
+              <Route index element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<WorkspaceOverview />}/>
               <Route path="board" element={<WorkspaceBoard />} />
               <Route path="chat" element={<WorkspaceChat />} />
