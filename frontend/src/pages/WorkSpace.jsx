@@ -4,11 +4,12 @@ import { io } from "socket.io-client";
 
 import WorkspaceNav from "../components/workspace/WorkspaceNav";
 import WorkspaceHero from "../components/workspace/WorkspaceHero";
+import api from "../services/api"; // ✅ authenticated axios instance
 
-// Establish socket outside component to avoid reconnects on every render
+// Socket instance (reused, autoConnect false)
 const socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", {
   withCredentials: true,
-  autoConnect: false, // We'll connect it manually in the useEffect
+  autoConnect: false,
 });
 
 export default function Workspace() {
@@ -20,17 +21,14 @@ export default function Workspace() {
   useEffect(() => {
     if (!id) return;
 
-    // 1. Fetch initial workspace data
     const fetchWorkspace = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/workspaces/${id}`);
-        if (!response.ok) throw new Error("Workspace not found");
-        
-        const data = await response.json();
-        setWorkspace(data);
+        // ✅ use api.get – token automatically added
+        const res = await api.get(`/api/workspaces/${id}`);
+        setWorkspace(res.data);
       } catch (err) {
         console.error("Failed to fetch workspace:", err);
-        setError(err.message);
+        setError(err.response?.data?.message || err.message);
       } finally {
         setLoading(false);
       }
@@ -38,25 +36,23 @@ export default function Workspace() {
 
     fetchWorkspace();
 
-    // 2. Connect Socket and Join Room
+    // Socket connection
     socket.connect();
     socket.emit("join_workspace", id);
 
-    // 3. Listen for real-time workspace updates (e.g., name changes)
     socket.on("workspace_updated", (updatedData) => {
       setWorkspace((prev) => ({ ...prev, ...updatedData }));
     });
 
-    // 4. Cleanup on unmount
     return () => {
       socket.emit("leave_workspace", id);
       socket.disconnect();
     };
   }, [id]);
 
+  // Loading & error states (same as before)
   if (loading) {
     return (
-      // Updated to use bg-light and text-secondary
       <div className="flex h-[50vh] items-center justify-center text-text-secondary bg-bg-light">
         <span className="animate-pulse flex items-center gap-2 font-medium">
           <span className="w-2 h-2 bg-primary rounded-full"></span> Loading workspace...
@@ -67,7 +63,6 @@ export default function Workspace() {
 
   if (error || !workspace) {
     return (
-      // Updated to use surface, rounded-xl, and red text alerts
       <div className="p-10 text-center text-red-500 bg-surface rounded-[var(--radius-xl)] border border-red-200 max-w-2xl mx-auto mt-10 shadow-sm">
         <h3 className="font-bold text-lg">Error Loading Workspace</h3>
         <p className="text-sm mt-2 font-medium">{error}</p>
@@ -76,14 +71,9 @@ export default function Workspace() {
   }
 
   return (
-    // Updated container to use bg-light and text-primary
     <div className="p-6 space-y-4 font-sans bg-bg-light min-h-screen text-text-primary">
       <WorkspaceHero workspace={workspace} />
       <WorkspaceNav workspace={workspace} />
-
-      {/* Pass both the workspace data and the active socket instance to child routes!
-        This allows Activity and Members to listen to their specific real-time events.
-      */}
       <Outlet context={{ workspace, socket }} />
     </div>
   );
