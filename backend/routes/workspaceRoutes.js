@@ -10,10 +10,11 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/workspaces", protect, createWorkspace);
-router.get("/workspaces", protect, getWorkspaces);
-router.get("/workspaces/:workspaceId", protect, getWorkspaceById);
-router.put("/workspaces/:workspaceId", protect, updateWorkspace);
-router.delete("/workspaces/:workspaceId", protect, deleteWorkspace);
+router.post("/", protect, createWorkspace);
+router.get("/", protect, getWorkspaces);
+
+router.get("/:workspaceId", protect, getWorkspaceById);
+router.put("/:workspaceId", protect, updateWorkspace);
+router.delete("/:workspaceId", protect, deleteWorkspace);
 
 export default router;
