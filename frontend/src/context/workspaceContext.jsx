@@ -5,7 +5,7 @@ import { useAuth } from './authContext';
 
 const WorkspaceContext = createContext();
 
-export function WorkspaceProvider({ children }) {
+export default function WorkspaceProvider({ children }) {
   const [workspaces, setWorkspaces] = useState([]);
   const { user } = useAuth(); // Only fetch if user is logged in
 

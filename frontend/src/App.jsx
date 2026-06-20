@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
-import { WorkspaceProvider } from "./context/WorkspaceContext";
+import { WorkspaceProvider } from "./context/workspaceContext";
 
 import Landing from "./pages/LandingPage";
 import Login from "./pages/Login";
