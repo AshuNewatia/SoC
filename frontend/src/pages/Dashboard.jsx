@@ -6,7 +6,9 @@ import { useAuth } from "../context/authContext";
 import StatsGrid from "../components/dashboard/StatsGrid";
 import Hero from "../components/dashboard/Hero";
 import CreateWorkspaceModal from "../components/workspace/CreateWorkspaceModal";
-import { createWorkspace } from "../services/workspaceServices";
+
+
+
 
 const workspaceStat = [
   {
@@ -39,6 +41,7 @@ export default function Dashboard() {
   const [createOpen, setCreateOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  console.log(user);
 
   const displayUser = {
     name: user?.name || "User",

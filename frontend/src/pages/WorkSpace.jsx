@@ -26,6 +26,7 @@ export default function Workspace() {
         // ✅ use api.get – token automatically added
         const res = await api.get(`/api/workspaces/${id}`);
         setWorkspace(res.data);
+
       } catch (err) {
         console.error("Failed to fetch workspace:", err);
         setError(err.response?.data?.message || err.message);
@@ -63,7 +64,9 @@ export default function Workspace() {
 
   if (error || !workspace) {
     return (
-      <div className="p-10 text-center text-red-500 bg-surface rounded-[var(--radius-xl)] border border-red-200 max-w-2xl mx-auto mt-10 shadow-sm">
+      // Updated to use surface, rounded-xl, and red text alerts
+      <div className="p-10 text-center text-red-500 bg-surface rounded-(--rounded-xl) border border-red-200 max-w-2xl mx-auto mt-10 shadow-sm">
+
         <h3 className="font-bold text-lg">Error Loading Workspace</h3>
         <p className="text-sm mt-2 font-medium">{error}</p>
       </div>
@@ -72,7 +75,11 @@ export default function Workspace() {
 
   return (
     <div className="p-6 space-y-4 font-sans bg-bg-light min-h-screen text-text-primary">
-      <WorkspaceHero workspace={workspace} />
+      {workspace ? (
+        <WorkspaceHero workspace={workspace} onSettingsClick={() => setSettingsOpen(true)} />
+      ) : (
+        <div className="h-32 rounded-2xl bg-slate-100 animate-pulse" />
+      )}
       <WorkspaceNav workspace={workspace} />
       <Outlet context={{ workspace, socket }} />
     </div>
