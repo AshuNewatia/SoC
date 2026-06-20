@@ -1,73 +1,71 @@
 export const initializeSocket = (io) => {
-  const onlineUsers = new Map();
+  // Structure: Map<workspaceId, Map<socketId, userData>>
+  const workspaceStreams = new Map();
+  // Quick lookup to find a user's workspace on disconnect: Map<socketId, workspaceId>
+  const socketToWorkspace = new Map();
 
   io.on("connection", (socket) => {
     console.log(`🟢 User Connected: ${socket.id}`);
 
     socket.on("userJoined", (user) => {
-      onlineUsers.set(socket.id, user);
+      const { workspaceId } = user;
+      if (!workspaceId) return;
 
-      // Join workspace room
-      if (user.workspaceId) {
-        socket.join(user.workspaceId);
+      // 1. Join the Socket.io room for broadcasting
+      socket.join(workspaceId);
+      socketToWorkspace.set(socket.id, workspaceId);
+
+      // 2. Initialize the workspace map if it doesn't exist
+      if (!workspaceStreams.has(workspaceId)) {
+        workspaceStreams.set(workspaceId, new Map());
       }
+      
+      // 3. Add user to the specific workspace pool
+      workspaceStreams.get(workspaceId).set(socket.id, user);
 
-      const workspaceUsers = Array.from(onlineUsers.values()).filter((e) => e.workspaceId === user.workspaceId);
-
-      io.to(user.workspaceId).emit(
-        "onlineUsers",
-        workspaceUsers
-      );
+      // 4. Send back ONLY this workspace's online users
+      const workspaceUsers = Array.from(workspaceStreams.get(workspaceId).values());
+      io.to(workspaceId).emit("onlineUsers", workspaceUsers);
     });
 
+    // --- Task Event Handlers ---
+    // Note: Consider verifying if socket.rooms.has(task.workspace) for security
     socket.on("taskCreated", (task) => {
-      io.to(task.workspace).emit(
-        "taskCreated",
-        task
-      );
+      if (task?.workspace) io.to(task.workspace).emit("taskCreated", task);
     });
 
     socket.on("taskUpdated", (task) => {
-      io.to(task.workspace).emit(
-        "taskUpdated",
-        task
-      );
+      if (task?.workspace) io.to(task.workspace).emit("taskUpdated", task);
     });
 
     socket.on("taskMoved", (task) => {
-      io.to(task.workspace).emit(
-        "taskMoved",
-        task
-      );
+      if (task?.workspace) io.to(task.workspace).emit("taskMoved", task);
     });
 
     socket.on("taskDeleted", (task) => {
-      io.to(task.workspace).emit(
-        "taskDeleted",
-        task
-      );
+      if (task?.workspace) io.to(task.workspace).emit("taskDeleted", task);
     });
 
+    // --- Disconnect Handler ---
     socket.on("disconnect", () => {
       console.log(`🔴 User Disconnected: ${socket.id}`);
 
-      const disconnectedUser = onlineUsers.get(socket.id);
+      const workspaceId = socketToWorkspace.get(socket.id);
 
-      if (disconnectedUser) {
-        onlineUsers.delete(socket.id);
+      if (workspaceId && workspaceStreams.has(workspaceId)) {
+        const usersInWorkspace = workspaceStreams.get(workspaceId);
+        
+        // Remove the user from the workspace map
+        usersInWorkspace.delete(socket.id);
+        socketToWorkspace.delete(socket.id);
 
-        const workspaceUsers = Array.from(
-          onlineUsers.values()
-        ).filter(
-          (u) =>
-            u.workspaceId ===
-            disconnectedUser.workspaceId
-        );
-
-        io.to(disconnectedUser.workspaceId).emit(
-          "onlineUsers",
-          workspaceUsers
-        );
+        // If no one is left in the workspace, clear the memory entirely
+        if (usersInWorkspace.size === 0) {
+          workspaceStreams.delete(workspaceId);
+        } else {
+          // Otherwise, notify remaining members with the updated list
+          io.to(workspaceId).emit("onlineUsers", Array.from(usersInWorkspace.values()));
+        }
       }
     });
   });

@@ -53,22 +53,26 @@ export default function Dashboard() {
   else greeting = "Good Evening";
 
   const handleCreateWorkspace = async (data) => {
-    console.log("USER =", user);
-    console.log({
-  ...data,
-  owner: user.id,
-});
     try {
       const res = await createWorkspace({
         ...data,
         owner: user.id,
       });
 
+      // Let's log the actual response so you can see its exact shape!
+      console.log("Workspace Created Response:", res);
+
       // Notify Sidebar that a new workspace was created
       window.dispatchEvent(new CustomEvent("workspaceListChanged"));
 
-      // Navigate to the newly created workspace overview page
-      navigate(`/workspace/${res.data.workspace._id}/overview`);
+      // Bullet-proof way to grab the ID (checks multiple common response structures)
+      const newWorkspaceId = res?.data?.workspace?._id || res?.data?._id || res?._id;
+
+      if (newWorkspaceId) {
+        navigate(`/workspace/${newWorkspaceId}/overview`);
+      } else {
+        console.warn("Could not find workspace ID in the response to redirect!");
+      }
 
       setCreateOpen(false);
     } catch (err) {

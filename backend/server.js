@@ -4,12 +4,16 @@ import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
 import { initializeSocket } from "./socket/socketHandler.js";
+import workspaceRoutes from "./routes/workspaceRoutes.js";
+import memberRoutes from "./routes/memberRoutes.js";
+import activityRoutes from "./routes/activityRoutes.js";
+
 
 import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
-import workspaceRoutes from "./routes/workspaceRoutes.js";
+
 
 // Load env variables
 dotenv.config();
@@ -45,7 +49,9 @@ app.use(express.json()); // Parses incoming JSON payloads
 /* ---------------- Routes ---------------- */
 app.use("/api/auth", authRoutes);
 app.use("/api", taskRoutes);
-app.use("/api", workspaceRoutes);
+app.use("/api/workspaces", workspaceRoutes);
+app.use("/api/workspaces", memberRoutes);
+app.use("/api/workspaces", activityRoutes);
 
 /* ---------------- Health Check ---------------- */
 app.get("/", (req, res) => {
