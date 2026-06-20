@@ -49,7 +49,7 @@ export default function WorkspaceMembers() {
 
   return (
     // Updated container styling
-    <div className="w-full max-w-4xl mx-auto bg-surface border border-border-light rounded-(--radius-xl) shadow-sm overflow-hidden font-sans">
+    <div className="w-full max-w-4xl mx-auto bg-surface border border-border-light rounded-[var(--radius-xl)] shadow-sm overflow-hidden font-sans">
       <div className="flex items-center justify-between p-6 border-b border-border-light">
         <div className="flex items-center gap-3">
           <span className="text-primary text-xl">👥</span>
