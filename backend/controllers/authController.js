@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken';
 import axios from 'axios';
 import nodemailer from 'nodemailer';
 
+import { getRoleFromEmail } from "../utils/getRoleFromEmail.js";
+
 // Generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1d' });
@@ -33,12 +35,15 @@ export const signup = async (req, res) => {
     // Hash password (salt rounds = 10)
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const role = getRoleFromEmail(email);
+
     // Create user
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      hasPassword: true // Mark that they have a local password
+      hasPassword: true,   // Mark that they have a local password
+      role
     });
 
     // Generate token
@@ -50,7 +55,8 @@ export const signup = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        avatar: user.avatar
+        avatar: user.avatar,
+        role: user.role
       }
     });
   } catch (error) {
@@ -91,7 +97,8 @@ export const login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        avatar: user.avatar
+        avatar: user.avatar,
+        role: user.role
       }
     });
   } catch (error) {
@@ -153,12 +160,12 @@ export const googleAuth = async (req, res) => {
       user.googleId = googleId;
       await user.save();
     }
-
+    const role = getRoleFromEmail(email);
     const token = generateToken(user._id);
     return res.status(200).json({
       action: 'login',
       token,
-      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar },
+      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, user: user.role },
     });
   } catch (error) {
     console.error('Google Auth Error:', error.response?.data || error.message);
@@ -204,6 +211,7 @@ export const githubAuth = async (req, res) => {
         { expiresIn: '15m' }
       );
       
+      
       return res.status(200).json({
         action: 'requires_profile_creation',
         tempToken,
@@ -216,12 +224,12 @@ export const githubAuth = async (req, res) => {
       user.githubId = githubId;
       await user.save();
     }
-
+    const role = getRoleFromEmail(email);
     const token = generateToken(user._id);
     return res.status(200).json({
       action: 'login',
       token,
-      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar },
+      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, user: user.role },
     });
   } catch (error) {
     console.error('GitHub Auth Error:', error.response?.data || error.message);
@@ -254,14 +262,15 @@ export const completeOAuthProfile = async (req, res) => {
       avatar: decoded.avatar,
       googleId: decoded.provider === 'google' ? decoded.googleId : undefined,
       githubId: decoded.provider === 'github' ? decoded.githubId : undefined,
+      role: getRoleFromEmail(decoded.email),
     });
-
+    const role = getRoleFromEmail(email);
     const token = generateToken(user._id);
 
     res.status(201).json({
       action: 'login',
       token,
-      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar }
+      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, role: user.role }
     });
 
   } catch (error) {
