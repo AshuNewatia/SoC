@@ -25,7 +25,7 @@ export default function Workspace() {
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/workspaces/${id}`);
         if (!response.ok) throw new Error("Workspace not found");
-        
+
         const data = await response.json();
         setWorkspace(data);
       } catch (err) {
@@ -68,7 +68,7 @@ export default function Workspace() {
   if (error || !workspace) {
     return (
       // Updated to use surface, rounded-xl, and red text alerts
-      <div className="p-10 text-center text-red-500 bg-surface rounded-[var(--radius-xl)] border border-red-200 max-w-2xl mx-auto mt-10 shadow-sm">
+      <div className="p-10 text-center text-red-500 bg-surface rounded-(--rounded-xl) border border-red-200 max-w-2xl mx-auto mt-10 shadow-sm">
         <h3 className="font-bold text-lg">Error Loading Workspace</h3>
         <p className="text-sm mt-2 font-medium">{error}</p>
       </div>
@@ -78,7 +78,11 @@ export default function Workspace() {
   return (
     // Updated container to use bg-light and text-primary
     <div className="p-6 space-y-4 font-sans bg-bg-light min-h-screen text-text-primary">
-      <WorkspaceHero workspace={workspace} />
+      {workspace ? (
+        <WorkspaceHero workspace={workspace} onSettingsClick={() => setSettingsOpen(true)} />
+      ) : (
+        <div className="h-32 rounded-2xl bg-slate-100 animate-pulse" />
+      )}
       <WorkspaceNav workspace={workspace} />
 
       {/* Pass both the workspace data and the active socket instance to child routes!

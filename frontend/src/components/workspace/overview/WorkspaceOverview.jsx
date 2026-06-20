@@ -123,11 +123,6 @@ export default function WorkspaceOverview() {
         onDelete={handleDeleteWorkspace}
       />
       <div className="space-y-4 p-1.5">
-        {workspace ? (
-          <WorkspaceHero workspace={workspace} onSettingsClick={() => setSettingsOpen(true)}/>
-        ) : (
-          <div className="h-32 rounded-2xl bg-slate-100 animate-pulse" />
-        )}
         <Overview
           onlineUsers={onlineUsers}
           totalTasks={totalTasks}
