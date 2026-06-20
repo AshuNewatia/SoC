@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
+import api from '../../services/api'; // ✅ adjust path
 
 export default function WorkspaceActivity() {
   const { id } = useParams();
@@ -10,16 +11,18 @@ export default function WorkspaceActivity() {
   const [activeFilter, setActiveFilter] = useState('All');
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/workspaces/${id}/activity`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setActivities(data);
-        setLoading(false);
-      })
-      .catch((err) => {
+    const fetchActivities = async () => {
+      try {
+        const res = await api.get(`/api/workspaces/${id}/activity`);
+        setActivities(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
         console.error('Failed to fetch activity log:', err);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchActivities();
 
     if (socket) {
       socket.on("new_activity", (newActivity) => {
@@ -32,6 +35,7 @@ export default function WorkspaceActivity() {
     };
   }, [id, socket]);
 
+  // Filters and helpers unchanged
   const filters = ['All', 'Tasks', 'Members', 'Files'];
 
   const getActionIcon = (actionType) => {
@@ -50,13 +54,11 @@ export default function WorkspaceActivity() {
   };
 
   return (
-    // Updated container to use surface, border-light, and text-primary
     <div className="w-full max-w-5xl mx-auto bg-surface border border-border-light rounded-[var(--radius-xl)] shadow-sm overflow-hidden font-sans text-text-primary">
       <div className="flex items-center justify-between p-5 border-b border-border-light bg-surface">
         <div className="flex items-center gap-4">
           <div className="text-primary text-xl font-bold">≡</div>
           <h2 className="text-xl font-semibold text-text-primary">Activity Log</h2>
-          {/* Updated LIVE badge to use success color */}
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-50 text-success border border-green-200 text-xs font-semibold">
             <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span> LIVE
           </span>
@@ -89,11 +91,9 @@ export default function WorkspaceActivity() {
         ) : (
           activities.map((item) => (
             <div key={item._id} className="flex gap-4 p-5 hover:bg-bg-light transition-colors">
-              {/* Updated icon circle */}
               <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-bg-light border border-border-light flex items-center justify-center text-text-secondary shadow-sm">
                 {getActionIcon(item.actionType)}
               </div>
-
               <div className="flex flex-col flex-grow justify-center">
                 <p className="text-sm text-text-primary leading-relaxed">
                   <span className="text-primary font-semibold">{item.userId?.name || 'A user'}</span>{' '}
