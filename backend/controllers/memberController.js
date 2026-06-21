@@ -9,7 +9,7 @@ export const getWorkspaceMembers = async (req, res) => {
     const { workspaceId } = req.params;
 
     // Fetch the workspace and fully populate both the owner and members arrays
-    const workspace = await Workspace.findById(id)
+    const workspace = await Workspace.findById(workspaceId)
       .populate("owner", "name email avatar")
       .populate("members", "name email avatar");
 
@@ -61,7 +61,7 @@ export const getWorkspaceMembers = async (req, res) => {
 // @route   POST /api/workspaces/:id/members
 export const addMemberToWorkspace = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { workspaceId } = req.params;
     const { email } = req.body;
 
     // 1. Find the user they are trying to invite
@@ -71,7 +71,7 @@ export const addMemberToWorkspace = async (req, res) => {
     }
 
     // 2. Find the workspace
-    const workspace = await Workspace.findById(id);
+    const workspace = await Workspace.findById(workspaceId);
     if (!workspace) {
       return res.status(404).json({ message: "Workspace not found" });
     }
