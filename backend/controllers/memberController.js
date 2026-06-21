@@ -28,15 +28,20 @@ export const getWorkspaceMembers = async (req, res) => {
     };
 
     // Format the standard members
-    const membersData = workspace.members.map((member) => ({
-      _id: member._id,
-      name: member.name,
-      email: member.email,
-      avatar: member.avatar,
-      role: "Member",
-      tasksCompleted: 0
-    }));
-
+    const membersData = workspace.members
+      .filter(
+        member =>
+          member._id.toString() !==
+          workspace.owner._id.toString()
+      )
+      .map((member) => ({
+        _id: member._id,
+        name: member.name,
+        email: member.email,
+        avatar: member.avatar,
+        role: "Member",
+        tasksCompleted: 0
+      }));
     // Combine into one array for the React frontend
     const allMembers = [ownerData, ...membersData];
 
@@ -52,7 +57,7 @@ export const getWorkspaceMembers = async (req, res) => {
 export const addMemberToWorkspace = async (req, res) => {
   try {
     const { id } = req.params;
-    const { email } = req.body; 
+    const { email } = req.body;
 
     // 1. Find the user they are trying to invite
     const userToAdd = await User.findOne({ email });
@@ -82,17 +87,17 @@ export const addMemberToWorkspace = async (req, res) => {
 
     // 6. Log the activity 
     // (Assuming req.user.id is the person who sent the invite, provided by auth middleware)
-    const actionUserId = req.user?.id || workspace.owner; 
-    
+    const actionUserId = req.user?.id || workspace.owner;
+
     await logActivity(
-      workspace._id, 
-      actionUserId, 
-      "MEMBER_ADDED", 
+      workspace._id,
+      actionUserId,
+      "MEMBER_ADDED",
       `Added ${userToAdd.name} to the workspace`
     );
 
-    res.status(200).json({ 
-      message: "Member added successfully", 
+    res.status(200).json({
+      message: "Member added successfully",
       member: {
         _id: userToAdd._id,
         name: userToAdd.name,
@@ -100,7 +105,7 @@ export const addMemberToWorkspace = async (req, res) => {
         avatar: userToAdd.avatar,
         role: "Member",
         tasksCompleted: 0
-      } 
+      }
     });
   } catch (error) {
     console.error("Error adding member:", error);
