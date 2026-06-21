@@ -9,6 +9,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import workspaceRoutes from "./routes/workspaceRoutes.js";
+import personalTaskRoutes from "./routes/personalTaskRoutes.js";
 
 // Load env variables
 dotenv.config();
@@ -41,6 +42,7 @@ app.use(express.json()); // Parses incoming JSON payloads
 app.use("/api/auth", authRoutes);
 app.use("/api", taskRoutes);
 app.use("/api", workspaceRoutes);
+app.use("/api/myboard", personalTaskRoutes);
 
 /* ---------------- Health Check ---------------- */
 app.get("/", (req, res) => {

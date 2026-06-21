@@ -20,3 +20,10 @@ export const updateTask = (
     `${API}/${id}`,
     task
   );
+
+  export const deleteTask = (
+  id
+) =>
+  axios.delete(
+    `${API}/${id}`
+  );
