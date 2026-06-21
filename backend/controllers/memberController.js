@@ -6,7 +6,7 @@ import { logActivity } from "./activityController.js";
 // @route   GET /api/workspaces/:id/members
 export const getWorkspaceMembers = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { workspaceId } = req.params;
 
     // Fetch the workspace and fully populate both the owner and members arrays
     const workspace = await Workspace.findById(id)
