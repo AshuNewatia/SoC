@@ -15,6 +15,7 @@ export const createWorkspace = async (req, res) => {
       name: name.trim(),
       description: description || "",
       owner,
+      admins: [],
       members: [owner], // owner is automatically a member
     });
 

@@ -165,7 +165,7 @@ export const googleAuth = async (req, res) => {
     return res.status(200).json({
       action: 'login',
       token,
-      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, user: user.role },
+      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, role: user.role },
     });
   } catch (error) {
     console.error('Google Auth Error:', error.response?.data || error.message);
@@ -229,7 +229,7 @@ export const githubAuth = async (req, res) => {
     return res.status(200).json({
       action: 'login',
       token,
-      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, user: user.role },
+      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, role: user.role },
     });
   } catch (error) {
     console.error('GitHub Auth Error:', error.response?.data || error.message);
