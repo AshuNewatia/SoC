@@ -2,6 +2,33 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import api from '../../services/api'; // ✅ adjust relative path to your services folder
 
+const handleInvite = async () => {
+      try {
+        await api.post(
+          `/api/workspaces/${id}/members`,
+          {
+            email: inviteEmail,
+          }
+        );
+
+        const res = await api.get(
+          `/api/workspaces/${id}/members`
+        );
+
+        setMembers(res.data);
+
+        setInviteEmail("");
+        setInviteOpen(false);
+
+      } catch (err) {
+        console.error(err);
+        alert(
+          err.response?.data?.message ||
+          "Failed to invite member"
+        );
+      }
+    };
+
 export default function WorkspaceMembers() {
   const { id } = useParams();
   const { socket } = useOutletContext();
@@ -24,33 +51,6 @@ export default function WorkspaceMembers() {
         setLoading(false);
       }
     };
-
-    const handleInvite = async () => {
-  try {
-    await api.post(
-      `/api/workspaces/${id}/members`,
-      {
-        email: inviteEmail,
-      }
-    );
-
-    const res = await api.get(
-      `/api/workspaces/${id}/members`
-    );
-
-    setMembers(res.data);
-
-    setInviteEmail("");
-    setInviteOpen(false);
-
-  } catch (err) {
-    console.error(err);
-    alert(
-      err.response?.data?.message ||
-      "Failed to invite member"
-    );
-  }
-};
 
     fetchMembers();
 
@@ -148,40 +148,40 @@ export default function WorkspaceMembers() {
         )}
       </div>
       {inviteOpen && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-    <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-      <h3 className="text-lg font-bold mb-4">
-        Invite Member
-      </h3>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <h3 className="text-lg font-bold mb-4">
+              Invite Member
+            </h3>
 
-      <input
-        type="email"
-        placeholder="Enter IITI Email"
-        value={inviteEmail}
-        onChange={(e) =>
-          setInviteEmail(e.target.value)
-        }
-        className="w-full border border-slate-300 rounded-lg px-4 py-2"
-      />
+            <input
+              type="email"
+              placeholder="Enter IITI Email"
+              value={inviteEmail}
+              onChange={(e) =>
+                setInviteEmail(e.target.value)
+              }
+              className="w-full border border-slate-300 rounded-lg px-4 py-2"
+            />
 
-      <div className="flex justify-end gap-3 mt-5">
-        <button
-          onClick={() => setInviteOpen(false)}
-          className="px-4 py-2 rounded-lg border"
-        >
-          Cancel
-        </button>
+            <div className="flex justify-end gap-3 mt-5">
+              <button
+                onClick={() => setInviteOpen(false)}
+                className="px-4 py-2 rounded-lg border"
+              >
+                Cancel
+              </button>
 
-        <button
-          onClick={handleInvite}
-          className="px-4 py-2 rounded-lg bg-primary text-white"
-        >
-          Invite
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+              <button
+                onClick={handleInvite}
+                className="px-4 py-2 rounded-lg bg-primary text-white"
+              >
+                Invite
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
