@@ -6,52 +6,58 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
+import { launchConfetti } from "../utils/confetti";
 import CreateTaskModal from "../components/myboard/CreateTaskModal";
 import { DragDropContext } from "@hello-pangea/dnd";
 import BoardColumn from "../components/myboard/BoardColumn";
 import TaskDetailsModal from "../components/myboard/TaskDetailsModal";
 import DeadlineCalendar from "../components/myboard/DeadlineCalendar";
 
+import {
+  getMyTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+} from "../api/personalTaskApi";
+
 const STORAGE_KEY = "myboard_tasks";
 
-const initialTasks = {
-  todo: [
-    {
-      id: 1,
-      title: "Research GitHub Webhooks",
-      priority: "High",
-      dueDate: "2026-06-10",
-      tag: "Backend",
-      status: "todo",
-    },
-  ],
-  progress: [
-    {
-      id: 2,
-      title: "Build Task Modal",
-      priority: "Medium",
-      dueDate: "2026-06-08",
-      tag: "Frontend",
-      status: "progress",
-    },
-  ],
-  completed: [
-    {
-      id: 3,
-      title: "Project Planning",
-      priority: "Low",
-      dueDate: "2026-06-05",
-      tag: "Management",
-      status: "completed",
-    },
-  ],
-};
+
 
 export default function MyBoard() {
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : initialTasks;
-  });
+
+ const loadTasks = async () => {
+  try {
+    const { data } = await getMyTasks();
+
+    const grouped = {
+      todo: [],
+      progress: [],
+      completed: [],
+    };
+
+    data.forEach((task) => {
+      if (grouped[task.status]) {
+        grouped[task.status].push(task);
+      }
+    });
+
+    setTasks(grouped);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+useEffect(() => {
+  loadTasks();
+}, []);
+
+  const [tasks, setTasks] = useState({
+  todo: [],
+  progress: [],
+  completed: [],
+});
+
   const [showModal, setShowModal] = useState(false);
 
   const handleCreateTask = (newTask) => {
@@ -102,6 +108,23 @@ export default function MyBoard() {
         },
       ],
     };
+
+if (
+  destination.droppableId === "completed" &&
+  source.droppableId !== "completed"
+) {
+  launchConfetti();
+
+  setCompletedTaskName(movedTask.title);
+  setShowToast(true);
+
+  addActivity(`🎉 Completed "${movedTask.title}"`);
+
+  setTimeout(() => {
+    setShowToast(false);
+  }, 3000);
+}
+
 
     destinationColumn.splice(destination.index, 0, updatedTask);
 
@@ -192,9 +215,6 @@ export default function MyBoard() {
     completed: tasks.completed.length,
   };
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-  }, [tasks]);
 
   const totalTasks =
     tasks.todo.length + tasks.progress.length + tasks.completed.length;
@@ -287,6 +307,9 @@ export default function MyBoard() {
       ...prev.slice(0, 19),
     ]);
   };
+
+  const [showToast, setShowToast] = useState(false);
+const [completedTaskName, setCompletedTaskName] = useState("");
 
   return (
     <div className="p-5.75 ">
@@ -550,6 +573,19 @@ export default function MyBoard() {
           </div>
         </DragDropContext>
       </div>
+
+      {showToast && (
+  <div className="fixed top-5 right-5 z-50 animate-bounce">
+    <div className="bg-green-500 text-white px-5 py-4 rounded-xl shadow-xl">
+      <div className="font-semibold">
+        🎉 Task Completed!
+      </div>
+      <div className="text-sm opacity-90">
+        {completedTaskName}
+      </div>
+    </div>
+  </div>
+)}
 
       <TaskDetailsModal
         task={selectedTask}

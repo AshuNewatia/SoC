@@ -7,12 +7,12 @@ export default function CreateTaskModal({
   onCreateTask,
 }) {
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    priority: "Medium",
-    dueDate: "",
-    tag: "Frontend",
-  });
+  title: "",
+  description: "",
+  priority: "Medium",
+  dueDate: "",
+  tag: "",
+});
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -45,12 +45,12 @@ export default function CreateTaskModal({
     onCreateTask(newTask);
 
     setFormData({
-      title: "",
-      description: "",
-      priority: "Medium",
-      dueDate: "",
-      tag: "Frontend",
-    });
+  title: "",
+  description: "",
+  priority: "Medium",
+  dueDate: "",
+  tag: "",
+});
 
     onClose();
   };
@@ -119,7 +119,6 @@ export default function CreateTaskModal({
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
                 <option value="High">High</option>
-                <option value="Critical">Critical</option>
               </select>
             </div>
             <div>
@@ -141,19 +140,15 @@ export default function CreateTaskModal({
             <label className="block text-sm font-medium text-text-primary mb-1.5">
               Tag
             </label>
-            <select
-              name="tag"
-              value={formData.tag}
-              onChange={handleChange}
-              className="w-full border border-border-light rounded-xl px-4 py-2.5 text-sm text-text-primary bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-            >
-              <option value="Frontend">Frontend</option>
-              <option value="Backend">Backend</option>
-              <option value="Bug">Bug</option>
-              <option value="Feature">Feature</option>
-              <option value="Research">Research</option>
-              <option value="Design">Design</option>
-            </select>
+           <input
+  type="text"
+  name="tag"
+  value={formData.tag}
+  onChange={handleChange}
+  placeholder="Enter a tag (e.g. Frontend, Bug, Research)"
+  className="w-full border border-border-light rounded-xl px-4 py-2.5 text-sm text-text-primary bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+/>
+
           </div>
 
           {/* Footer */}
