@@ -15,6 +15,23 @@ export const createTask = async (req, res) => {
             return res.status(404).json({ message: "Workspace not found!" });
         }
 
+        const isOwner =
+            workspace.owner.toString() ===
+            req.user._id.toString();
+
+        const isAdmin =
+            workspace.admins.some(
+                admin =>
+                    admin.toString() ===
+                    req.user._id.toString()
+            );
+
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({
+                message: "Not authorized"
+            });
+        }
+
         const task = new Task({ title, description, priority, dueDate, assignedTo, createdBy, workspace: workspaceId, status: status || "todo" });
         await task.save();
 
@@ -84,6 +101,23 @@ export const deleteTask = async (req, res) => {
 
         const deletedTask = await Task.findByIdAndDelete(taskId);
 
+        const isOwner =
+            workspace.owner.toString() ===
+            req.user._id.toString();
+
+        const isAdmin =
+            workspace.admins.some(
+                admin =>
+                    admin.toString() ===
+                    req.user._id.toString()
+            );
+
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({
+                message: "Not authorized"
+            });
+        }
+
         if (!deletedTask) {
             return res.status(404).json({
                 message: "Task not found"
@@ -103,6 +137,23 @@ export const deleteTask = async (req, res) => {
 export const updateTask = async (req, res) => {
     try {
         const { taskId } = req.params;
+
+        const isOwner =
+            workspace.owner.toString() ===
+            req.user._id.toString();
+
+        const isAdmin =
+            workspace.admins.some(
+                admin =>
+                    admin.toString() ===
+                    req.user._id.toString()
+            );
+
+        if (!isOwner && !isAdmin) {
+            return res.status(403).json({
+                message: "Not authorized"
+            });
+        }
 
         const updatedTask =
             await Task.findByIdAndUpdate(
