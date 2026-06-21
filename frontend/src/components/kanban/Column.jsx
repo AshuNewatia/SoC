@@ -46,8 +46,8 @@ export default function Column({ column, onCreateTask, onTaskClick }) {
             )}
             {column.tasks.map((task, index) => (
               <Draggable
-                key={task._id || task.id}
-                draggableId={String(task._id || task.id)}
+                key={task._id || task._id}
+                draggableId={String(task._id || task._id)}
                 index={index}
               >
                 {(provided, snapshot) => (

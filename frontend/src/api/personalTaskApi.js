@@ -17,7 +17,7 @@ export const getMyTasks = async () => {
   return response.data;
 };
 
-export const createTask = async (taskData) => {
+export const createPersonalTask = async (taskData) => {
   const response = await axios.post(
     `${API_URL}/tasks`,
     taskData,
@@ -27,7 +27,7 @@ export const createTask = async (taskData) => {
   return response.data;
 };
 
-export const updateTask = async (taskId, updates) => {
+export const updatePersonalTask = async (taskId, updates) => {
   const response = await axios.put(
     `${API_URL}/tasks/${taskId}`,
     updates,
@@ -37,7 +37,7 @@ export const updateTask = async (taskId, updates) => {
   return response.data;
 };
 
-export const deleteTask = async (taskId) => {
+export const deletePersonalTask = async (taskId) => {
   const response = await axios.delete(
     `${API_URL}/tasks/${taskId}`,
     getAuthHeaders()

@@ -73,7 +73,7 @@ export default function TaskCard({ task, onDelete, onOpen }) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onDelete(task.id);
+              onDelete(task._id);
             }}
             className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition"
           >
