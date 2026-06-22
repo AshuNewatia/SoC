@@ -15,7 +15,10 @@ import api from '../../services/api';
 
 export default function WorkspaceMembers() {
   const { id } = useParams(); // ✅ moved inside component
-  const { socket } = useOutletContext();
+  const outletContext = useOutletContext();
+// console.log("OUTLET =", outletContext);
+
+const socket = outletContext?.socket;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [members, setMembers] = useState([]);
