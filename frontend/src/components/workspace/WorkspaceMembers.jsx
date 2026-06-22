@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import {
   MoreVertical,
@@ -6,7 +6,6 @@ import {
   User,
   UserMinus,
   UserPlus,
-  Mail,
   X,
   Search,
   Users,
@@ -14,23 +13,17 @@ import {
 import api from '../../services/api';
 
 export default function WorkspaceMembers() {
-  const { id } = useParams(); // ✅ moved inside component
-  const outletContext = useOutletContext();
-// console.log("OUTLET =", outletContext);
-
-const socket = outletContext?.socket;
+  const { id } = useParams();
+  const { socket } = useOutletContext();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Invite modal state
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
 
-  // Dropdown menu state
   const [openMenu, setOpenMenu] = useState(null);
-  const menuRef = useRef(null);
 
   // Fetch members
   useEffect(() => {
@@ -70,15 +63,11 @@ const socket = outletContext?.socket;
     };
   }, [id, socket]);
 
-  // Close dropdown on outside click
+  // Close dropdown on any click outside
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setOpenMenu(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    const closeMenu = () => setOpenMenu(null);
+    document.addEventListener('click', closeMenu);
+    return () => document.removeEventListener('click', closeMenu);
   }, []);
 
   // Handlers
@@ -97,7 +86,7 @@ const socket = outletContext?.socket;
 
   const handlePromote = async (memberId) => {
     try {
-      await api.put(`/api/workspaces/${id}/members/${memberId}/role`, { role: 'Admin' });
+      await api.post(`/api/workspaces/${id}/admins/${memberId}`);
       const res = await api.get(`/api/workspaces/${id}/members`);
       setMembers(res.data);
       setOpenMenu(null);
@@ -109,7 +98,7 @@ const socket = outletContext?.socket;
 
   const handleDemote = async (memberId) => {
     try {
-      await api.put(`/api/workspaces/${id}/members/${memberId}/role`, { role: 'Member' });
+      await api.delete(`/api/workspaces/${id}/admins/${memberId}`);
       const res = await api.get(`/api/workspaces/${id}/members`);
       setMembers(res.data);
       setOpenMenu(null);
@@ -132,12 +121,10 @@ const socket = outletContext?.socket;
     }
   };
 
-  // Filter
   const filteredMembers = members.filter((member) =>
     member.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Role badge styles
   const getRoleStyle = (role) => {
     if (role === 'Owner')
       return 'bg-purple-50 text-purple-700 border border-purple-200';
@@ -157,11 +144,12 @@ const socket = outletContext?.socket;
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden font-sans">
+    // ✅ overflow-visible to show dropdown properly
+    <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-sm font-sans overflow-visible">
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-slate-200">
         <div className="flex items-center gap-3">
-          <Users className="text-indigo-500" size={22} />
+          <Users className="text-primary" size={22} />
           <h2 className="text-xl font-bold text-slate-800">Workspace Members</h2>
           <span className="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-lg text-xs font-bold">
             {members.length}
@@ -169,7 +157,7 @@ const socket = outletContext?.socket;
         </div>
         <button
           onClick={() => setInviteOpen(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition shadow-sm"
+          className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition shadow-sm"
         >
           <UserPlus size={18} />
           Invite
@@ -185,7 +173,7 @@ const socket = outletContext?.socket;
             placeholder="Search members..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+            className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
           />
         </div>
       </div>
@@ -203,7 +191,7 @@ const socket = outletContext?.socket;
               className="flex items-center justify-between p-4 hover:bg-slate-50 transition"
             >
               <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-full font-bold flex items-center justify-center text-lg bg-indigo-600 text-white shadow-sm">
+                <div className="w-11 h-11 rounded-full font-bold flex items-center justify-center text-lg bg-primary text-white shadow-sm">
                   {getInitials(member.name)}
                 </div>
                 <div>
@@ -222,28 +210,24 @@ const socket = outletContext?.socket;
 
               {/* Action buttons */}
               <div className="flex items-center gap-2">
-                {/* Email icon – always visible */}
-                <button
-                  className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
-                  onClick={() => alert(`Email to ${member.email}`)} // or integrate with your mailto
-                >
-                  <Mail size={18} />
-                </button>
-
-                {/* Three-dot menu – only for non-owners */}
+                {/* Three‑dot menu – only for non‑owners */}
                 {member.role !== 'Owner' && (
-                  <div className="relative" ref={menuRef}>
+                  <div className="relative">
                     <button
-                      onClick={() =>
-                        setOpenMenu(openMenu === member._id ? null : member._id)
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation(); // prevent immediate closing
+                        setOpenMenu(openMenu === member._id ? null : member._id);
+                      }}
                       className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
                     >
                       <MoreVertical size={18} />
                     </button>
 
                     {openMenu === member._id && (
-                      <div className="absolute right-0 top-10 bg-white border border-slate-200 rounded-xl shadow-lg min-w-[180px] z-50 overflow-hidden">
+                      <div
+                        className="absolute right-0 top-10 bg-white border border-slate-200 rounded-xl shadow-lg min-w-[180px] z-50 overflow-hidden"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         {member.role === 'Member' && (
                           <button
                             onClick={() => handlePromote(member._id)}
@@ -300,7 +284,7 @@ const socket = outletContext?.socket;
               placeholder="Enter email address"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              className="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
 
             <div className="flex justify-end gap-3 mt-5">
@@ -312,7 +296,7 @@ const socket = outletContext?.socket;
               </button>
               <button
                 onClick={handleInvite}
-                className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
+                className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90"
               >
                 Invite
               </button>
