@@ -16,7 +16,7 @@ import {
   updateTask as updateTaskApi,
   deleteTask as deleteTaskApi,
   updateTaskStatus as updateTaskStatusApi,
-} from "../../services/taskServices";
+} from "../../api/taskApi";
 
 const emptyBoard = {
   columns: {
@@ -101,15 +101,19 @@ export default function KanbanBoard() {
       const res = await createTaskApi(workspaceId, {
         ...task,
         status: targetColumn,
-        createdBy: user.id,
         assignedTo: [],
+        // We let the backend handle 'createdBy' securely via the token!
       });
+      
       const savedTask = res.data;
-      await fetchTasks();
-      socket.emit("taskCreated", savedTask);
-      setCreateOpen(false);
+      await fetchTasks(); // Refresh the board
+      socket.emit("taskCreated", savedTask); // Update teammates
+      setCreateOpen(false); // Close the modal
+      
     } catch (err) {
       console.error("Error creating task:", err);
+      // 👇 This alert will pop up and tell us EXACTLY what broke if it fails!
+      alert(`Task Creation Failed: ${err.response?.data?.message || err.message}`);
     }
   };
 
