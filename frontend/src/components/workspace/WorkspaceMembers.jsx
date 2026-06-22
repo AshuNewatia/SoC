@@ -14,18 +14,16 @@ import {
 import api from '../../services/api';
 
 export default function WorkspaceMembers() {
-  const { id } = useParams(); // ✅ moved inside component
+  const { id } = useParams();
   const { socket } = useOutletContext();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Invite modal state
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
 
-  // Dropdown menu state
   const [openMenu, setOpenMenu] = useState(null);
   const menuRef = useRef(null);
 
@@ -129,12 +127,10 @@ export default function WorkspaceMembers() {
     }
   };
 
-  // Filter
   const filteredMembers = members.filter((member) =>
     member.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Role badge styles
   const getRoleStyle = (role) => {
     if (role === 'Owner')
       return 'bg-purple-50 text-purple-700 border border-purple-200';
@@ -154,11 +150,12 @@ export default function WorkspaceMembers() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden font-sans">
+    // Full width, consistent with Nav and Hero
+    <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-sm font-sans">
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-slate-200">
         <div className="flex items-center gap-3">
-          <Users className="text-indigo-500" size={22} />
+          <Users className="text-primary" size={22} />
           <h2 className="text-xl font-bold text-slate-800">Workspace Members</h2>
           <span className="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-lg text-xs font-bold">
             {members.length}
@@ -166,7 +163,7 @@ export default function WorkspaceMembers() {
         </div>
         <button
           onClick={() => setInviteOpen(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition shadow-sm"
+          className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition shadow-sm"
         >
           <UserPlus size={18} />
           Invite
@@ -182,7 +179,7 @@ export default function WorkspaceMembers() {
             placeholder="Search members..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+            className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition"
           />
         </div>
       </div>
@@ -200,7 +197,7 @@ export default function WorkspaceMembers() {
               className="flex items-center justify-between p-4 hover:bg-slate-50 transition"
             >
               <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-full font-bold flex items-center justify-center text-lg bg-indigo-600 text-white shadow-sm">
+                <div className="w-11 h-11 rounded-full font-bold flex items-center justify-center text-lg bg-primary text-white shadow-sm">
                   {getInitials(member.name)}
                 </div>
                 <div>
@@ -219,15 +216,14 @@ export default function WorkspaceMembers() {
 
               {/* Action buttons */}
               <div className="flex items-center gap-2">
-                {/* Email icon – always visible */}
                 <button
                   className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
-                  onClick={() => alert(`Email to ${member.email}`)} // or integrate with your mailto
+                  onClick={() => alert(`Email to ${member.email}`)}
                 >
                   <Mail size={18} />
                 </button>
 
-                {/* Three-dot menu – only for non-owners */}
+                {/* Three-dot menu – only for non‑owners */}
                 {member.role !== 'Owner' && (
                   <div className="relative" ref={menuRef}>
                     <button
@@ -297,7 +293,7 @@ export default function WorkspaceMembers() {
               placeholder="Enter email address"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              className="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
 
             <div className="flex justify-end gap-3 mt-5">
@@ -309,7 +305,7 @@ export default function WorkspaceMembers() {
               </button>
               <button
                 onClick={handleInvite}
-                className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700"
+                className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90"
               >
                 Invite
               </button>
