@@ -7,12 +7,12 @@ import { initializeSocket } from "./socket/socketHandler.js";
 import workspaceRoutes from "./routes/workspaceRoutes.js";
 import memberRoutes from "./routes/memberRoutes.js";
 import activityRoutes from "./routes/activityRoutes.js";
+import taskRoutes from "./routes/taskRoutes.js";
 
 
 import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
-import taskRoutes from "./routes/taskRoutes.js";
 
 
 // Load env variables
@@ -48,6 +48,8 @@ app.use("/api", taskRoutes);
 app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/workspaces", memberRoutes);
 app.use("/api/workspaces", activityRoutes);
+app.use('/api', taskRoutes);
+
 
 /* ---------------- Health Check ---------------- */
 app.get("/", (req, res) => {

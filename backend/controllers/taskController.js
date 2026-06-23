@@ -1,21 +1,11 @@
-import Task from "../models/Task.js"
-import Workspace from "../models/Workspace.js"
-// import User from "../models/User.js";
-
+import Task from "../models/Task.js";
+import Workspace from "../models/Workspace.js";
+import { createGithubIssue, updateGithubIssueState } from "../services/githubService.js";
 
 export const createTask = async (req, res) => {
     try {
-        const {
-            title,
-            description,
-            priority,
-            dueDate,
-            assignedTo,
-            status,
-        } = req.body;
-
-        const createdBy = req.user._id;
-
+        const { title, description, priority, dueDate, assignedTo, status } = req.body;
+        const createdBy = req.body.createdBy || req.user._id; 
         const { workspaceId } = req.params;
 
         const existingWorkspace =
@@ -44,17 +34,34 @@ export const createTask = async (req, res) => {
             });
         }
 
-        const task = new Task({
-            title,
-            description,
-            priority,
-            dueDate,
-            assignedTo,
-            createdBy,
-            workspace: workspaceId,
-            status: status || "todo",
-        });
+        let issueNumber = null;
+        if (existingWorkspace.githubToken && existingWorkspace.githubRepo) {
+            try {
+                // We wrap this in its own try/catch so if GitHub fails, the app survives!
+                issueNumber = await createGithubIssue(
+                    existingWorkspace.githubToken,
+                    existingWorkspace.githubRepo,
+                    title,
+                    description
+                );
+            } catch (githubError) {
+                console.error("⚠️ GitHub Sync Failed:", githubError.message);
+                // Notice we DO NOT 'return' here. We let the code continue down to task.save()!
+            }
+        }
 
+        const task = new Task({ 
+            title, 
+            description, 
+            priority, 
+            dueDate, 
+            assignedTo, 
+            createdBy, 
+            workspace: workspaceId, 
+            status: status || "todo",
+            githubIssueNumber: issueNumber // 👇 Save the GitHub issue ID!
+        });
+        
         await task.save();
 
         res.status(201).json(task);
@@ -84,13 +91,9 @@ export const getTasks = async (req, res) => {
         res.status(200).json(tasks);
 
     } catch (error) {
-        res.status(500).json({
-            message: "Server Error"
-        });
+        res.status(500).json({ message: "Server Error" });
     }
-
 };
-
 
 export const updateTaskStatus = async (req, res) => {
     try {
@@ -104,20 +107,31 @@ export const updateTaskStatus = async (req, res) => {
         );
 
         if (!updatedTask) {
-            return res.status(404).json({
-                message: "Task not found"
-            });
+            return res.status(404).json({ message: "Task not found" });
         }
+
+        // ==========================================
+        // GITHUB INTEGRATION: Close/Reopen Issue
+        // ==========================================
+        if (updatedTask.githubIssueNumber) {
+            const workspace = await Workspace.findById(updatedTask.workspace);
+            if (workspace && workspace.githubToken && workspace.githubRepo) {
+                await updateGithubIssueState(
+                    workspace.githubToken,
+                    workspace.githubRepo,
+                    updatedTask.githubIssueNumber,
+                    status
+                );
+            }
+        }
+
         res.status(200).json({
             message: "Task status updated",
             task: updatedTask
         });
     } catch (error) {
         console.error(error);
-
-        res.status(500).json({
-            message: "Server Error"
-        });
+        res.status(500).json({ message: "Server Error" });
     }
 }
 
@@ -125,52 +139,34 @@ export const deleteTask = async (req, res) => {
     try {
         const { taskId } = req.params;
 
-        const task = await Task.findById(taskId);
-
-        if (!task) {
-            return res.status(404).json({
-                message: "Task not found",
-            });
+        // 👇 BUG FIX: Fetch the task and workspace first before checking roles!
+        const taskToDelete = await Task.findById(taskId);
+        if (!taskToDelete) {
+            return res.status(404).json({ message: "Task not found" });
         }
 
-        const workspace = await Workspace.findById(task.workspace);
-
-        if (!workspace) {
-            return res.status(404).json({
-                message: "Workspace not found",
-            });
-        }
+        const workspace = await Workspace.findById(taskToDelete.workspace);
 
         const isOwner =
             workspace.owner.toString() ===
             req.user._id.toString();
 
         const isAdmin =
-            workspace.admins.some(
-                (admin) =>
+            workspace.admins?.some(
+                admin =>
                     admin.toString() ===
                     req.user._id.toString()
             );
 
         if (!isOwner && !isAdmin) {
-            return res.status(403).json({
-                message: "Not authorized",
-            });
+            return res.status(403).json({ message: "Not authorized" });
         }
 
         await Task.findByIdAndDelete(taskId);
 
-        res.status(200).json({
-            message: "Task deleted successfully",
-        });
-
+        res.status(200).json({ message: "Task deleted" });
     } catch (error) {
-        console.error("DELETE TASK ERROR:");
-        console.error(error);
-
-        res.status(500).json({
-            message: "Server Error",
-        });
+        res.status(500).json({ message: "Server Error" });
     }
 };
 
@@ -178,51 +174,38 @@ export const updateTask = async (req, res) => {
     try {
         const { taskId } = req.params;
 
-        const task = await Task.findById(taskId);
-
-        if (!task) {
-            return res.status(404).json({
-                message: "Task not found",
-            });
+        // 👇 BUG FIX: Fetch the task and workspace first before checking roles!
+        const taskToUpdate = await Task.findById(taskId);
+        if (!taskToUpdate) {
+            return res.status(404).json({ message: "Task not found" });
         }
 
-        const workspace = await Workspace.findById(task.workspace);
-
-        if (!workspace) {
-            return res.status(404).json({
-                message: "Workspace not found",
-            });
-        }
+        const workspace = await Workspace.findById(taskToUpdate.workspace);
 
         const isOwner =
             workspace.owner.toString() ===
             req.user._id.toString();
 
         const isAdmin =
-            workspace.admins.some(
+            workspace.admins?.some(
                 admin =>
                     admin.toString() ===
                     req.user._id.toString()
             );
 
         if (!isOwner && !isAdmin) {
-            return res.status(403).json({
-                message: "Not authorized"
-            });
+            return res.status(403).json({ message: "Not authorized" });
         }
 
-        const updatedTask =
-            await Task.findByIdAndUpdate(
-                taskId,
-                req.body,
-                { new: true }
-            );
+        const updatedTask = await Task.findByIdAndUpdate(
+            taskId,
+            req.body,
+            { new: true }
+        );
 
         res.status(200).json(updatedTask);
 
     } catch (error) {
-        res.status(500).json({
-            message: "Server Error"
-        });
+        res.status(500).json({ message: "Server Error" });
     }
 }
