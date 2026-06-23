@@ -13,7 +13,6 @@ import taskRoutes from "./routes/taskRoutes.js";
 import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
-import taskRoutes from "./routes/taskRoutes.js";
 import personalTaskRoutes from "./routes/personalTaskRoutes.js";
 import quickNoteRoutes from "./routes/quickNoteRoutes.js";
 import personalActivityRoutes from "./routes/personalActivityRoutes.js";
