@@ -9,7 +9,6 @@ export default function TaskCard({ task, onDelete, onOpen }) {
     Low: "bg-green-100 text-green-700",
     Medium: "bg-yellow-100 text-yellow-700",
     High: "bg-red-100 text-red-700",
-    Critical: "bg-purple-100 text-purple-700",
   };
 
   const tagStyles = {
@@ -52,7 +51,13 @@ export default function TaskCard({ task, onDelete, onOpen }) {
       <div className="flex items-center gap-1.5 text-xs text-text-secondary mb-3">
         <Calendar size={12} />
         <span className={isOverdue ? "text-red-500 font-medium" : ""}>
-          {task.dueDate || "No due date"}
+          {task.dueDate
+  ? new Date(task.dueDate).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })
+  : "No due date"}
         </span>
       </div>
 

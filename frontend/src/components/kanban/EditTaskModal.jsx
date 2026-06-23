@@ -241,10 +241,6 @@ export default function EditTaskModal({
                 <option value="High">
                   High
                 </option>
-
-                <option value="Critical">
-                  Critical
-                </option>
               </select>
 
               <input
