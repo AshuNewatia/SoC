@@ -14,6 +14,8 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import personalTaskRoutes from "./routes/personalTaskRoutes.js";
+import quickNoteRoutes from "./routes/quickNoteRoutes.js";
+import personalActivityRoutes from "./routes/personalActivityRoutes.js";
 
 // Load env variables
 dotenv.config();
@@ -53,6 +55,8 @@ app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/workspaces", memberRoutes);
 app.use("/api/workspaces", activityRoutes);
 app.use("/api/myboard", personalTaskRoutes);
+app.use("/api/notes", quickNoteRoutes);
+app.use("/api/personal-activity", personalActivityRoutes);
 
 /* ---------------- Health Check ---------------- */
 app.get("/", (req, res) => {
