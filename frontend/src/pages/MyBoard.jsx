@@ -20,6 +20,18 @@ import {
   deletePersonalTask,
 } from "../api/personalTaskApi";
 
+import {
+  getMyNotes,
+  createNote as createNoteApi,
+  deleteNote as deleteNoteApi,
+  updateNote as updateNoteApi,
+} from "../api/quickNoteApi";
+
+import {
+  getPersonalActivities,
+  createPersonalActivity,
+} from "../api/personalActivityApi";
+
 const STORAGE_KEY = "myboard_tasks";
 
 
@@ -28,7 +40,7 @@ export default function MyBoard() {
 
  const loadTasks = async () => {
   try {
-    const { data } = await getMyTasks();
+    const data = await getMyTasks();
 
     const grouped = {
       todo: [],
@@ -62,7 +74,7 @@ useEffect(() => {
 
 const handleCreateTask = async (newTask) => {
   try {
-    const { data } = await createPersonalTask({
+    const data = await createPersonalTask({
       title: newTask.title,
       description: newTask.description,
       priority: newTask.priority,
@@ -186,22 +198,18 @@ const handleDeleteTask = async (taskId) => {
   }
 };
 
-  const [notes, setNotes] = useState(() => {
-    const saved = localStorage.getItem("myboard_notes");
-    return saved
-      ? JSON.parse(saved)
-      : [
-          {
-            id: 1,
-            title: "Welcome Note",
-            content: "Create your first note using the button below.",
-          },
-        ];
-  });
+ const [notes, setNotes] = useState([]);
 
-  useEffect(() => {
-    localStorage.setItem("myboard_notes", JSON.stringify(notes));
-  }, [notes]);
+ useEffect(() => {
+  const loadNotes = async () => {
+    const data = await getMyNotes();
+    setNotes(data);
+  };
+
+  loadNotes();
+}, []);
+
+
 
   const stats = {
     total:
@@ -230,10 +238,10 @@ const handleDeleteTask = async (taskId) => {
     1
   );
 
-  const upcomingTasks = [...tasks.todo, ...tasks.progress]
-    .filter((task) => task.dueDate)
-    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
-    .slice(0, 5);
+ const upcomingTasks = [...tasks.todo, ...tasks.progress]
+  .filter((task) => task.dueDate)
+  .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+  .slice(0, 5);
 
   const allTasks = [...tasks.todo, ...tasks.progress, ...tasks.completed];
 
@@ -259,20 +267,53 @@ const handleDeleteTask = async (taskId) => {
     return { badge: `${days} days left`, className: "bg-green-100 text-green-700 border-green-200" };
   };
 
-  const createNote = () => {
-    const newNote = { id: Date.now(), title: "New Note", content: "" };
-    setNotes((prev) => [newNote, ...prev]);
-  };
+  const handleCreateNote = async () => {
+  try {
+    const note = await createNoteApi({
+      title: "New Note",
+      content: " ",
+    });
 
-  const updateNote = (id, field, value) => {
+    setNotes((prev) => [note, ...prev]);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const handleUpdateNote = async (id, field, value) => {
+  const updatedNotes = notes.map((note) =>
+    note._id === id
+      ? { ...note, [field]: value }
+      : note
+  );
+
+  setNotes(updatedNotes);
+
+  const updatedNote = updatedNotes.find(
+    (note) => note._id === id
+  );
+
+  try {
+    await updateNoteApi(id, {
+      title: updatedNote.title,
+      content: updatedNote.content,
+    });
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+  const handleDeleteNote = async (id) => {
+  try {
+    await deleteNoteApi(id);
+
     setNotes((prev) =>
-      prev.map((note) => (note.id === id ? { ...note, [field]: value } : note))
+      prev.filter((note) => note._id !== id)
     );
-  };
-
-  const deleteNote = (id) => {
-    setNotes((prev) => prev.filter((note) => note.id !== id));
-  };
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   const [searchTerm, setSearchTerm] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("All");
@@ -287,65 +328,94 @@ const handleDeleteTask = async (taskId) => {
     });
   };
 
-  const [activities, setActivities] = useState(() => {
-    const saved = localStorage.getItem("myboard_activity");
-    return saved ? JSON.parse(saved) : [];
-  });
+const [activities, setActivities] = useState([]);
 
-  useEffect(() => {
-    localStorage.setItem("myboard_activity", JSON.stringify(activities));
-  }, [activities]);
+useEffect(() => {
+  loadActivities();
+}, []);
 
-  const addActivity = (text) => {
-    setActivities((prev) => [
-      { id: Date.now(), text, time: new Date().toLocaleString() },
-      ...prev.slice(0, 19),
-    ]);
-  };
+const loadActivities = async () => {
+  try {
+    const data = await getPersonalActivities();
+    setActivities(data);
+  } catch (error) {
+    console.error(error);
+  }
+};
 
-  const [showAllActivities, setShowAllActivities] = useState(false);
+  const addActivity = async (text) => {
+  try {
+    const activity = await createPersonalActivity({
+      action: text,
+    });
 
-  const [showToast, setShowToast] = useState(false);
+    setActivities((prev) => [activity, ...prev]);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const [showToast, setShowToast] = useState(false);
 const [completedTaskName, setCompletedTaskName] = useState("");
 
-{showAllActivities && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-    <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[80vh] overflow-hidden">
 
-      {/* Header */}
-      <div className="flex items-center justify-between p-5 border-b">
-        <h2 className="text-xl font-semibold">
-          Activity History
-        </h2>
+const getActivityStyle = (action) => {
+  const text = action.toLowerCase();
 
-        <button
-          onClick={() => setShowAllActivities(false)}
-          className="text-slate-500 hover:text-slate-700"
-        >
-          ✕
-        </button>
-      </div>
+  if (text.includes("created")) {
+    return {
+      icon: "🟢",
+      bg: "bg-green-100",
+      text: "text-green-700",
+    };
+  }
 
-      {/* Activity List */}
-      <div className="overflow-y-auto max-h-[65vh] p-4 space-y-3">
-        {activities.map((activity) => (
-          <div
-            key={activity.id}
-            className="border border-slate-200 rounded-xl p-3"
-          >
-            <p className="text-sm font-medium">
-              {activity.text}
-            </p>
+  if (text.includes("updated")) {
+    return {
+      icon: "🔵",
+      bg: "bg-blue-100",
+      text: "text-blue-700",
+    };
+  }
 
-            <p className="text-xs text-slate-500 mt-1">
-              {activity.time}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-)}
+  if (text.includes("deleted")) {
+    return {
+      icon: "🔴",
+      bg: "bg-red-100",
+      text: "text-red-700",
+    };
+  }
+
+  return {
+    icon: "⚪",
+    bg: "bg-slate-100",
+    text: "text-slate-700",
+  };
+};
+
+const formatActivityTime = (date) => {
+  const now = new Date();
+  const activity = new Date(date);
+
+  const diff = Math.floor((now - activity) / 1000);
+
+  if (diff < 60) return "Just now";
+
+  if (diff < 3600)
+    return `${Math.floor(diff / 60)} min ago`;
+
+  if (diff < 86400)
+    return `${Math.floor(diff / 3600)} hr ago`;
+
+  if (diff < 172800) return "Yesterday";
+
+  return activity.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 
   return (
     <div className="p-5.75 ">
@@ -375,139 +445,341 @@ const [completedTaskName, setCompletedTaskName] = useState("");
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-        <div className="bg-surface rounded-xl p-4 shadow-sm border border-border-light flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <Clock3 size={18} className="text-primary" />
-          </div>
-          <div>
-            <p className="text-text-secondary text-xs uppercase tracking-wide">Total Tasks</p>
-            <p className="text-2xl font-bold text-text-primary">{stats.total}</p>
-          </div>
-        </div>
-        <div className="bg-surface rounded-xl p-4 shadow-sm border border-border-light flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
-            <AlertCircle size={18} className="text-orange-500" />
-          </div>
-          <div>
-            <p className="text-text-secondary text-xs uppercase tracking-wide">Active Tasks</p>
-            <p className="text-2xl font-bold text-text-primary">{stats.active}</p>
-          </div>
-        </div>
-        <div className="bg-surface rounded-xl p-4 shadow-sm border border-border-light flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
-            <CheckCircle2 size={18} className="text-success" />
-          </div>
-          <div>
-            <p className="text-text-secondary text-xs uppercase tracking-wide">Completed</p>
-            <p className="text-2xl font-bold text-text-primary">{stats.completed}</p>
-          </div>
-        </div>
+      <div className="grid grid-cols-3 gap-4 mb-6">
+  {/* Total */}
+  <div className="group rounded-2xl border border-border-light bg-surface px-5 py-4 transition-all duration-300 hover:border-blue-300 hover:shadow-md">
+    <div className="h-1 w-12 rounded-full bg-blue-500 mb-4 transition-all duration-300 group-hover:w-20"></div>
+
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-3xl font-bold text-text-primary">
+          {stats.total}
+        </p>
+
+        <p className="mt-1 text-sm text-text-secondary">
+          Total Tasks
+        </p>
       </div>
 
+      <Clock3
+        size={22}
+        className="text-blue-500 opacity-70 group-hover:scale-110 transition-transform"
+      />
+    </div>
+  </div>
+
+  {/* Active */}
+  <div className="group rounded-2xl border border-border-light bg-surface px-5 py-4 transition-all duration-300 hover:border-orange-300 hover:shadow-md">
+    <div className="h-1 w-12 rounded-full bg-orange-500 mb-4 transition-all duration-300 group-hover:w-20"></div>
+
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-3xl font-bold text-text-primary">
+          {stats.active}
+        </p>
+
+        <p className="mt-1 text-sm text-text-secondary">
+          Active Tasks
+        </p>
+      </div>
+
+      <AlertCircle
+        size={22}
+        className="text-orange-500 opacity-70 group-hover:scale-110 transition-transform"
+      />
+    </div>
+  </div>
+
+  {/* Completed */}
+  <div className="group rounded-2xl border border-border-light bg-surface px-5 py-4 transition-all duration-300 hover:border-green-300 hover:shadow-md">
+    <div className="h-1 w-12 rounded-full bg-green-500 mb-4 transition-all duration-300 group-hover:w-20"></div>
+
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-3xl font-bold text-text-primary">
+          {stats.completed}
+        </p>
+
+        <p className="mt-1 text-sm text-text-secondary">
+          Completed
+        </p>
+      </div>
+
+      <CheckCircle2
+        size={22}
+        className="text-green-500 opacity-70 group-hover:scale-110 transition-transform"
+      />
+    </div>
+  </div>
+</div>
       {/* Productivity Widgets */}
       <div className="grid lg:grid-cols-3 gap-5 mb-6">
         {/* Upcoming Deadlines */}
-        <div className="bg-surface rounded-xl p-4 shadow-sm border border-border-light h-87.5 flex flex-col">
-          <h2 className="font-semibold text-text-primary mb-3 text-base">Upcoming Deadlines</h2>
-          {upcomingTasks.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center">
-              <div className="text-5xl mb-3">📅</div>
-              <h3 className="font-medium text-text-primary">No Upcoming Deadlines</h3>
-              <p className="text-sm text-text-secondary mt-1">Tasks with due dates will appear here.</p>
+        <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-5 h-[350px] flex flex-col">
+  <div className="flex items-center justify-between mb-4">
+    <h2 className="text-lg font-semibold text-text-primary">
+      Upcoming Deadlines
+    </h2>
+
+    <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-medium">
+      {upcomingTasks.length} Tasks
+    </span>
+  </div>
+
+  {upcomingTasks.length === 0 ? (
+    <div className="flex-1 flex flex-col items-center justify-center text-center">
+      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl mb-4">
+        📅
+      </div>
+
+      <h3 className="font-semibold text-text-primary">
+        No Upcoming Deadlines
+      </h3>
+
+      <p className="text-sm text-text-secondary mt-2 max-w-xs leading-relaxed">
+        Tasks with due dates will automatically appear here.
+      </p>
+    </div>
+  ) : (
+    <div className="space-y-3 overflow-y-auto flex-1 pr-1">
+      {upcomingTasks.map((task) => {
+        const status = getDeadlineStyle(task.dueDate);
+
+        const priorityColor = {
+          Low: "bg-green-500",
+          Medium: "bg-yellow-500",
+          High: "bg-orange-500",
+        };
+
+        return (
+          <div
+            key={task._id}
+            className="group relative overflow-hidden rounded-2xl border border-border-light bg-gradient-to-br from-white to-slate-50 p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
+          >
+            {/* Priority Accent */}
+            <div
+              className={`absolute left-0 top-0 h-full w-1 ${
+                priorityColor[task.priority] || "bg-primary"
+              }`}
+            />
+
+            <div className="flex justify-between items-start gap-3">
+              <div className="flex-1">
+                <h3 className="font-semibold text-text-primary text-sm">
+                  {task.title}
+                </h3>
+
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600">
+                    {task.tag || "General"}
+                  </span>
+
+                  <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                    {task.priority}
+                  </span>
+                </div>
+
+                <p className="text-xs text-text-secondary mt-3 flex items-center gap-1">
+                  📅{" "}
+                  {new Date(task.dueDate).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${status.className}`}
+              >
+                {status.badge}
+              </span>
             </div>
-          ) : (
-            <div className="space-y-2 overflow-y-auto flex-1 pr-2">
-              {upcomingTasks.map((task) => {
-                const status = getDeadlineStyle(task.dueDate);
-                return (
-                  <div key={task._id} className="border border-border-light rounded-lg p-2.5">
-                    <div className="flex justify-between items-start gap-2">
-                      <div>
-                        <h3 className="font-medium text-text-primary text-sm">{task.title}</h3>
-                        <p className="text-xs text-text-secondary mt-0.5">Due: {task.dueDate}</p>
-                      </div>
-                      <span className={`px-2 py-0.5 text-xs rounded-md border ${status.className}`}>
-                        {status.badge}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+          </div>
+        );
+      })}
+    </div>
+  )}
+</div>
 
         {/* Quick Notes */}
         <div className="bg-surface rounded-xl p-4 shadow-sm border border-border-light h-87.5 flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-text-primary text-base">Quick Notes</h2>
             <button
-              onClick={createNote}
-              className="flex items-center gap-1 text-xs bg-primary text-white px-2.5 py-1.5 rounded-lg"
+             onClick={handleCreateNote}
+              className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/30"
             >
               <Plus size={12} />
               New Note
             </button>
           </div>
           <div className="overflow-y-auto flex-1 pr-2">
-            {notes.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center">
-                <div className="text-5xl mb-3">📝</div>
-                <h3 className="font-medium text-text-primary">No Notes Yet</h3>
-                <p className="text-sm text-text-secondary mt-1 max-w-xs">
-                  Capture ideas, reminders, meeting points, or anything important for later.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {notes.map((note) => (
-                  <div key={note.id} className="border border-border-light rounded-lg p-2.5">
-                    <div className="flex justify-between items-center mb-1">
-                      <input
-                        value={note.title}
-                        onChange={(e) => updateNote(note.id, "title", e.target.value)}
-                        className="font-medium text-sm w-full outline-none bg-transparent text-text-primary"
-                        placeholder="Title"
-                      />
-                      <button onClick={() => deleteNote(note.id)} className="text-red-400 hover:text-red-600">
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                    <textarea
-                      rows={2}
-                      value={note.content}
-                      onChange={(e) => updateNote(note.id, "content", e.target.value)}
-                      placeholder="Write something..."
-                      className="w-full resize-none outline-none text-xs text-text-secondary bg-transparent"
-                    />
-                  </div>
-                ))}
-              </div>
+           {notes.length === 0 ? (
+  <div className="h-full flex flex-col items-center justify-center text-center">
+    <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl mb-4">
+      📝
+    </div>
+    <h3 className="font-semibold text-text-primary">
+      No Notes Yet
+    </h3>
+    <p className="text-sm text-text-secondary mt-2 max-w-xs leading-relaxed">
+      Capture ideas, reminders, meeting notes and anything
+      important throughout your day.
+    </p>
+  </div>
+) : (
+  <div className="space-y-4">
+    {notes.map((note) => (
+      <div
+        key={note._id}
+        className="group relative overflow-hidden rounded-2xl border border-border-light bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
+      >
+        {/* Accent */}
+        <div className="absolute left-0 top-0 h-full w-1 bg-primary rounded-l-2xl"></div>
+
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <input
+            value={note.title}
+            onChange={(e) =>
+              handleUpdateNote(
+                note._id,
+                "title",
+                e.target.value
+              )
+            }
+            placeholder="Untitled Note"
+            className="w-full bg-transparent text-base font-semibold text-text-primary outline-none placeholder:text-slate-400"
+          />
+
+          <button
+            onClick={() => handleDeleteNote(note._id)}
+            className="opacity-0 group-hover:opacity-100 transition text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <textarea
+          rows={2}
+          value={note.content}
+          onChange={(e) =>
+            handleUpdateNote(
+              note._id,
+              "content",
+              e.target.value
+            )
+          }
+          placeholder="Write your thoughts..."
+          className="w-full resize-none bg-transparent outline-none text-sm text-text-secondary leading-6 placeholder:text-slate-400"
+        />
+
+        {/* Footer */}
+        <div className="mt-3 pt-3 border-t border-border-light flex justify-between items-center">
+          <span className="text-xs text-text-secondary">
+            Last updated
+          </span>
+
+          <span className="text-xs font-medium text-primary">
+            {new Date(note.updatedAt).toLocaleDateString(
+              "en-IN",
+              {
+                day: "numeric",
+                month: "short",
+              }
             )}
+          </span>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
           </div>
         </div>
 
         {/* Task Distribution */}
-        <div className="bg-surface rounded-xl p-4 shadow-sm border border-border-light h-87.5">
-          <h2 className="font-semibold text-text-primary mb-3 text-base">Task Distribution</h2>
-          <div className="space-y-4">
-            {taskDistribution.map((item) => (
-              <div key={item.label}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-text-secondary">{item.label}</span>
-                  <span className="text-text-primary">{item.count}</span>
-                </div>
-                <div className="h-2 bg-border-light rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary"
-                    style={{ width: `${(item.count / maxTasks) * 100}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+        <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-5 h-[350px] flex flex-col">
+  {/* Header */}
+  <div className="flex items-center justify-between mb-5">
+    <div>
+      <h2 className="text-lg font-semibold text-text-primary">
+        Task Distribution
+      </h2>
+      <p className="text-sm text-text-secondary mt-1">
+        Overview of your current workload
+      </p>
+    </div>
+
+    <div className="text-xs font-medium px-3 py-1 rounded-full bg-primary/10 text-primary">
+      {stats.total} Total
+    </div>
+  </div>
+
+  {/* Distribution */}
+  <div className="space-y-5 flex-1">
+    {taskDistribution.map((item) => {
+      const colors = {
+        "To Do": {
+          dot: "bg-slate-400",
+          bar: "bg-slate-400",
+          light: "bg-slate-400",
+        },
+        "In Progress": {
+          dot: "bg-blue-500",
+          bar: "bg-blue-500",
+          light: "bg-blue-100",
+        },
+        Completed: {
+          dot: "bg-green-500",
+          bar: "bg-green-500",
+          light: "bg-green-100",
+        },
+      };
+
+      const color = colors[item.label];
+
+      return (
+        <div key={item.label}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-3 h-3 rounded-full ${color.dot}`}
+              />
+
+              <span className="font-medium text-text-primary">
+                {item.label}
+              </span>
+            </div>
+
+            <span
+              className={`text-xs font-semibold px-2.5 py-1 rounded-full ${color.light}`}
+            >
+              {item.count}
+            </span>
+          </div>
+
+          <div className="relative h-2 rounded-full bg-border-light overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-700 ${color.bar}`}
+              style={{
+                width: `${maxTasks ? (item.count / maxTasks) * 100 : 0}%`,
+              }}
+            />
+          </div>
+
+          <div className="mt-1 text-right text-xs text-text-secondary">
+            {stats.total
+              ? Math.round((item.count / stats.total) * 100)
+              : 0}
+            %
           </div>
         </div>
+      );
+    })}
+  </div>
+</div>
       </div>
 
       {/* Deadline Calendar */}
@@ -515,7 +787,59 @@ const [completedTaskName, setCompletedTaskName] = useState("");
         <DeadlineCalendar tasks={allTasks} />
       </div>
 
-      {/* Personal Kanban */}
+
+             {/* Recent Activity */}
+      <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-6 mb-8">
+          <div className="flex items-center justify-between">
+  <h3 className="text-lg font-semibold text-text-primary">Recent Activity</h3>
+</div>
+          <div className="space-y-3 max-h-60 overflow-y-auto">
+            {activities.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="text-5xl mb-3">📊</div>
+                <h3 className="font-medium text-text-primary">No Activity Yet</h3>
+                <p className="text-sm text-text-secondary mt-1">Task actions will be recorded here.</p>
+              </div>
+            ) : (
+              activities.slice(0, 10).map((activity, index) => {
+  const style = getActivityStyle(activity.action);
+
+  return (
+    <div
+      key={activity._id}
+      className="group relative flex gap-4 rounded-xl p-3 transition-all duration-300 hover:bg-slate-50 hover:shadow-sm"
+    >
+      {/* Timeline */}
+      <div className="relative flex flex-col items-center">
+        <div
+          className={`w-10 h-10 rounded-full ${style.bg} flex items-center justify-center text-lg`}
+        >
+          {style.icon}
+        </div>
+
+        {index !== activities.length - 1 && (
+          <div className="w-0.5 flex-1 bg-border-light mt-2"></div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 pb-5">
+        <p className="text-sm font-medium text-text-primary leading-6">
+          {activity.action}
+        </p>
+
+        <p className="text-xs text-text-secondary mt-1">
+          {formatActivityTime(activity.createdAt)}
+        </p>
+      </div>
+    </div>
+  );
+})
+            )}
+          </div>
+        </div>
+
+        {/* Percentage */}
       <div>
         <div className="bg-surface rounded-xl p-4 shadow-sm border border-border-light mb-5">
           <div className="flex justify-between items-center mb-2">
@@ -528,38 +852,9 @@ const [completedTaskName, setCompletedTaskName] = useState("");
               style={{ width: `${completionPercentage}%` }}
             />
           </div>
-        </div>
+        </div>     
 
-        <div className="bg-surface rounded-xl p-4 shadow-sm border border-border-light mb-8">
-          <div className="flex items-center justify-between">
-  <h3 className="font-semibold">Recent Activity</h3>
-
-  {activities.length > 10 && (
-    <button
-      onClick={() => setShowAllActivities(true)}
-      className="text-primary text-sm font-medium hover:underline"
-    >
-      View All →
-    </button>
-  )}
-</div>
-          <div className="space-y-3 max-h-60 overflow-y-auto">
-            {activities.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="text-5xl mb-3">📊</div>
-                <h3 className="font-medium text-text-primary">No Activity Yet</h3>
-                <p className="text-sm text-text-secondary mt-1">Task actions will be recorded here.</p>
-              </div>
-            ) : (
-              activities.slice(0, 10).map((activity) => (
-                <div key={activity.id} className="border-b border-border-light pb-2 last:border-0">
-                  <p className="text-sm text-text-primary">{activity.text}</p>
-                  <p className="text-xs text-text-secondary">{activity.time}</p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+                   {/* Search */}
 
         <div className="flex flex-col md:flex-row gap-3 mb-5">
           <input
@@ -580,6 +875,8 @@ const [completedTaskName, setCompletedTaskName] = useState("");
             <option>High</option>
           </select>
         </div>
+
+        {/* Personal Kanban */}
 
         <h2 className="text-lg font-semibold text-text-primary mb-4">Personal Tasks</h2>
         <DragDropContext onDragEnd={handleDragEnd}>

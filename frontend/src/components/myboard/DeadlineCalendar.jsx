@@ -5,11 +5,13 @@ export default function DeadlineCalendar({ tasks }) {
     (acc, task) => {
       if (!task.dueDate) return acc;
 
-      if (!acc[task.dueDate]) {
-        acc[task.dueDate] = [];
-      }
+      const key = new Date(task.dueDate).toISOString().split("T")[0];
 
-      acc[task.dueDate].push(task);
+if (!acc[key]) {
+  acc[key] = [];
+}
+
+acc[key].push(task);
 
       return acc;
     },
@@ -17,6 +19,14 @@ export default function DeadlineCalendar({ tasks }) {
   );
 
   const dates = Object.keys(groupedTasks).sort();
+
+  const formatDate = (date) => {
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
 
   return (
     <div className="bg-surface rounded-xl p-5 border border-border-light shadow-sm">
@@ -34,7 +44,7 @@ export default function DeadlineCalendar({ tasks }) {
         <div className="space-y-4">
           {dates.map((date) => (
             <div key={date} className="border-l-4 border-primary pl-4">
-              <h3 className="font-medium text-text-primary">{date}</h3>
+              <h3 className="font-medium text-text-primary">{formatDate(date)}</h3>
               <ul className="mt-2 space-y-1">
                 {groupedTasks[date].map((task) => (
                   <li key={task._id} className="text-sm text-text-secondary">

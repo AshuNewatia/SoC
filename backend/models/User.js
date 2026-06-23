@@ -11,7 +11,12 @@ const userSchema = new mongoose.Schema({
   resetOtp: String,
   otpExpires: Date,
   year: { type: String }, // or Number
-  branch: { type: String }
+  branch: { type: String },
+  role: {
+  type: String,
+  enum: ["student", "professor"],
+  default: "student"
+}
 });
 
 export default mongoose.model('User', userSchema);
