@@ -2,11 +2,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FolderKanban, CheckSquare, CalendarClock, BadgeCheck } from "lucide-react";
+import api from "../services/api";
 import { useAuth } from "../context/authContext";
 import StatsGrid from "../components/dashboard/StatsGrid";
 import Hero from "../components/dashboard/Hero";
 import CreateWorkspaceModal from "../components/workspace/CreateWorkspaceModal";
-import { createWorkspace } from "../services/workspaceServices";
+
+
+
 
 const workspaceStat = [
   {
@@ -39,6 +42,7 @@ export default function Dashboard() {
   const [createOpen, setCreateOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  console.log(user);
 
   const displayUser = {
     name: user?.name || "User",
@@ -53,26 +57,27 @@ export default function Dashboard() {
   else greeting = "Good Evening";
 
   const handleCreateWorkspace = async (data) => {
-    console.log("USER =", user);
-    console.log({
-  ...data,
-  owner: user.id,
-});
     try {
-      const res = await createWorkspace({
-        ...data,
-        owner: user.id,
-      });
+      // ✅ Use api.post directly to ensure your JWT token is attached!
+      const res = await api.post("/api/workspaces", data);
 
-      // Notify Sidebar that a new workspace was created
-      window.dispatchEvent(new CustomEvent("workspaceCreated"));
+      console.log("Workspace Created Response:", res);
 
-      // Navigate to the newly created workspace overview page
-      navigate(`/workspace/${res.data.workspace._id}/overview`);
+      window.dispatchEvent(new CustomEvent("workspaceListChanged"));
+
+      const newWorkspaceId = res?.data?.workspace?._id || res?.data?._id || res?._id;
+
+      if (newWorkspaceId) {
+        navigate(`/workspace/${newWorkspaceId}/overview`);
+      } else {
+        console.warn("Could not find workspace ID in the response to redirect!");
+      }
 
       setCreateOpen(false);
     } catch (err) {
       console.error("Error creating workspace", err);
+      // Let's pop up an alert so if it fails, it tells us exactly why!
+      alert(`Failed to create workspace: ${err.response?.data?.message || err.message}`);
     }
   };
 

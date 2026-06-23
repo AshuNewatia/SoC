@@ -1,15 +1,40 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const workspaceSchema = new mongoose.Schema(
-    {
-    name: { type: String, required: true },
-    description: { type: String },
-    owner: {type: mongoose.Schema.Types.ObjectId, ref: "User", required:true},
-    members: [{type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  {
+    name: { 
+      type: String, 
+      required: true,
+      trim: true
     },
-    {
-        timestamps : true
-    }
-)
+    description: { 
+      type: String,
+      trim: true 
+    },
+    owner: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "User", 
+      required: true 
+    },
+    admins: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    }],
+    members: [{ 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "User" 
+    }],
+    githubRepo: { 
+      type: String, 
+      default: "" 
+},
+    githubToken: { 
+      type: String, 
+      default: "" 
+},
+  },
+  
+  { timestamps: true }
+);
 
-export default mongoose.model("Workspace",workspaceSchema);
+export default mongoose.model("Workspace", workspaceSchema);

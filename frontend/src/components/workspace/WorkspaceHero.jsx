@@ -1,6 +1,6 @@
-import { FolderKanban } from "lucide-react";
+import { FolderKanban, Settings, GitBranch } from "lucide-react";
 
-export default function WorkspaceHero({ workspace }) {
+export default function WorkspaceHero({ workspace, onSettingsClick }) {
   if (!workspace) return null;
 
   const memberCount = workspace.members?.length || 0;
@@ -33,9 +33,18 @@ export default function WorkspaceHero({ workspace }) {
             <div className="px-3 py-1.5 bg-white rounded-lg border border-slate-200 shadow-sm flex items-center gap-1.5">
               <span>📋</span> {taskCount} {taskCount === 1 ? "Task" : "Tasks"}
             </div>
-            <div className="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg border border-amber-200/60 flex items-center gap-1.5 text-xs">
-              GitHub Integration Coming Soon
-            </div>
+            
+            {/* Dynamic GitHub Badge */}
+            {workspace.githubRepo ? (
+              <div className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg border border-green-200 flex items-center gap-1.5 text-xs font-semibold">
+                <GitBranch size={14} /> 
+                {workspace.githubRepo.split('/')[1] || workspace.githubRepo} Linked
+              </div>
+            ) : (
+              <div className="px-3 py-1.5 bg-slate-50 text-slate-500 rounded-lg border border-slate-200 flex items-center gap-1.5 text-xs">
+                <GitBranch size={14} /> Not Linked
+              </div>
+            )}
           </div>
         </div>
 
@@ -45,13 +54,19 @@ export default function WorkspaceHero({ workspace }) {
             Updated{" "}
             {workspace.updatedAt
               ? new Date(workspace.updatedAt).toLocaleDateString(undefined, {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
               : "Recently"}
           </div>
-          {/* Active badge removed – backend does not provide `isActive` */}
+          <button
+            onClick={onSettingsClick}
+            className="px-3 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary-hover transition"
+          >
+            <Settings size={14} className="inline mr-1" />
+            Settings
+          </button>
         </div>
       </div>
     </div>

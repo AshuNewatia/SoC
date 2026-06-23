@@ -8,6 +8,9 @@ import { getTasks } from "../../../services/taskServices";
 import api from "../../../services/api";
 import { useAuth } from "../../../context/authContext";
 import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import WorkspaceSettingsModal from "../WorkspaceSettingModal";
+import { updateWorkspace, deleteWorkspace, } from "../../../services/workspaceServices";
 
 export default function WorkspaceOverview() {
   const { id } = useParams();
@@ -19,6 +22,8 @@ export default function WorkspaceOverview() {
   );
   const { user } = useAuth();
   const currentUserName = user?.name || user?.email || "Guest";
+  const navigate = useNavigate();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // Fetch workspace details
   useEffect(() => {
@@ -69,7 +74,37 @@ export default function WorkspaceOverview() {
       socket.off("taskUpdated");
       socket.off("taskDeleted");
     };
-  }, [currentUserName, id]);   // ✅ fixed dependency
+  }, [currentUserName, id]);
+
+  const handleUpdateWorkspace = async (data) => {
+    try {
+      const res = await updateWorkspace(id, data);
+
+      setWorkspace(res.data);
+
+      setSettingsOpen(false);
+
+      window.dispatchEvent(
+        new CustomEvent("workspaceListChanged")
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteWorkspace = async () => {
+    try {
+      await deleteWorkspace(id);
+
+      window.dispatchEvent(
+        new CustomEvent("workspaceListChanged")
+      );
+
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter((t) => t.status === "completed").length;
@@ -79,18 +114,22 @@ export default function WorkspaceOverview() {
   };
 
   return (
-    <div className="space-y-4 p-1.5">
-      {workspace ? (
-        <WorkspaceHero workspace={workspace} />
-      ) : (
-        <div className="h-32 rounded-2xl bg-slate-100 animate-pulse" />
-      )}
-      <Overview
-        onlineUsers={onlineUsers}
-        totalTasks={totalTasks}
-        completedTasks={completedTasks}
-        onCreateTask={handleCreateTask}
+    <>
+      <WorkspaceSettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        workspace={workspace}
+        onSave={handleUpdateWorkspace}
+        onDelete={handleDeleteWorkspace}
       />
-    </div>
+      <div className="space-y-4 p-1.5">
+        <Overview
+          onlineUsers={onlineUsers}
+          totalTasks={totalTasks}
+          completedTasks={completedTasks}
+          onCreateTask={handleCreateTask}
+        />
+      </div>
+    </>
   );
 }

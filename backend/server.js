@@ -3,13 +3,17 @@ import dotenv from "dotenv";
 import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
+import { initializeSocket } from "./socket/socketHandler.js";
+import workspaceRoutes from "./routes/workspaceRoutes.js";
+import memberRoutes from "./routes/memberRoutes.js";
+import activityRoutes from "./routes/activityRoutes.js";
+import taskRoutes from "./routes/taskRoutes.js";
+
 
 import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
-import taskRoutes from "./routes/taskRoutes.js";
-import workspaceRoutes from "./routes/workspaceRoutes.js";
-import personalTaskRoutes from "./routes/personalTaskRoutes.js";
+
 
 // Load env variables
 dotenv.config();
@@ -41,8 +45,11 @@ app.use(express.json()); // Parses incoming JSON payloads
 /* ---------------- Routes ---------------- */
 app.use("/api/auth", authRoutes);
 app.use("/api", taskRoutes);
-app.use("/api", workspaceRoutes);
-app.use("/api/myboard", personalTaskRoutes);
+app.use("/api/workspaces", workspaceRoutes);
+app.use("/api/workspaces", memberRoutes);
+app.use("/api/workspaces", activityRoutes);
+app.use('/api', taskRoutes);
+
 
 /* ---------------- Health Check ---------------- */
 app.get("/", (req, res) => {
@@ -55,47 +62,16 @@ const server = http.createServer(app);
 /* ---------------- Socket.io ---------------- */
 const io = new Server(server, {
   cors: {
-    // We are allowing all origins for WebSockets here, 
-    // but you can restrict this to allowedOrigins later for stricter security!
-    origin: "*", 
+    origin: [
+      "http://localhost:5173",
+      process.env.CLIENT_URL,
+    ],
+    credentials: true,
     methods: ["GET", "POST"],
   },
 });
 
-/* ---------------- Online Users ---------------- */
-const onlineUsers = new Map();
-
-/* ---------------- Socket Events ---------------- */
-io.on("connection", (socket) => {
-  console.log(`🟢 User Connected: ${socket.id}`);
-
-  socket.on("userJoined", (user) => {
-    onlineUsers.set(socket.id, user);
-    io.emit("onlineUsers", Array.from(onlineUsers.values()));
-  });
-
-  socket.on("taskCreated", (task) => {
-    socket.broadcast.emit("taskCreated", task);
-  });
-
-  socket.on("taskUpdated", (task) => {
-    socket.broadcast.emit("taskUpdated", task);
-  });
-
-  socket.on("taskMoved", (task) => {
-    socket.broadcast.emit("taskMoved", task);
-  });
-
-  socket.on("taskDeleted", (task) => {
-    socket.broadcast.emit("taskDeleted", task);
-  });
-
-  socket.on("disconnect", () => {
-    console.log(`🔴 User Disconnected: ${socket.id}`);
-    onlineUsers.delete(socket.id);
-    io.emit("onlineUsers", Array.from(onlineUsers.values()));
-  });
-});
+initializeSocket(io);
 
 /* ---------------- Start Server ---------------- */
 const PORT = process.env.PORT || 5000;

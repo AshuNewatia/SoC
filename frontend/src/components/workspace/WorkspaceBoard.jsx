@@ -10,32 +10,19 @@ import TaskDrawer from "../kanban/TaskDrawer";
 import CreateTaskModal from "../kanban/CreateTaskModal";
 import EditTaskModal from "../kanban/EditTaskModal";
 
-
 import {
   getTasks,
   createTask as createTaskApi,
   updateTask as updateTaskApi,
   deleteTask as deleteTaskApi,
   updateTaskStatus as updateTaskStatusApi,
-} from "../../services/taskServices";
+} from "../../api/taskApi";
 
 const emptyBoard = {
   columns: {
-    todo: {
-      id: "todo",
-      title: "To Do",
-      tasks: [],
-    },
-    progress: {
-      id: "progress",
-      title: "In Progress",
-      tasks: [],
-    },
-    completed: {
-      id: "completed",
-      title: "Completed",
-      tasks: [],
-    },
+    todo: { id: "todo", title: "To Do", tasks: [] },
+    progress: { id: "progress", title: "In Progress", tasks: [] },
+    completed: { id: "completed", title: "Completed", tasks: [] },
   },
 };
 
@@ -56,7 +43,6 @@ export default function KanbanBoard() {
     try {
       const res = await getTasks(workspaceId);
       const tasks = res.data;
-
       setBoard({
         columns: {
           todo: {
@@ -110,28 +96,31 @@ export default function KanbanBoard() {
     };
   }, [workspaceId, currentUserName]);
 
-  // ✅ Bug #3 fixed: use user?._id (lowercase) instead of User._id
   const createTask = async (task) => {
     try {
       const res = await createTaskApi(workspaceId, {
         ...task,
         status: targetColumn,
-        createdBy: user.id,
         assignedTo: [],
+        // We let the backend handle 'createdBy' securely via the token!
       });
+      
       const savedTask = res.data;
-      await fetchTasks();               // ✅ await refresh
-      socket.emit("taskCreated", savedTask);
-      setCreateOpen(false);
+      await fetchTasks(); // Refresh the board
+      socket.emit("taskCreated", savedTask); // Update teammates
+      setCreateOpen(false); // Close the modal
+      
     } catch (err) {
       console.error("Error creating task:", err);
+      // 👇 This alert will pop up and tell us EXACTLY what broke if it fails!
+      alert(`Task Creation Failed: ${err.response?.data?.message || err.message}`);
     }
   };
 
   const deleteTask = async (task) => {
     try {
       await deleteTaskApi(task._id);
-      await fetchTasks();               // ✅ await refresh
+      await fetchTasks();
       setDrawerOpen(false);
       setSelectedTask(null);
       socket.emit("taskDeleted", task);
@@ -140,15 +129,11 @@ export default function KanbanBoard() {
     }
   };
 
-  // ✅ Bug #1 fixed: use selectedTask._id instead of task._id
   const handleEditTask = async (updatedTask) => {
     try {
       await updateTaskApi(selectedTask._id, updatedTask);
-      await fetchTasks();                // ✅ await refresh
-      socket.emit("taskUpdated", {
-        ...selectedTask,
-        ...updatedTask,
-      });
+      await fetchTasks();
+      socket.emit("taskUpdated", { ...selectedTask, ...updatedTask });
       setEditOpen(false);
     } catch (err) {
       console.error("Error updating task:", err);
@@ -190,7 +175,6 @@ export default function KanbanBoard() {
 
     setBoard(updatedBoard);
 
-    // ✅ Bug #2 fixed: use movedTask._id instead of task._id
     try {
       await updateTaskStatusApi(movedTask._id, {
         status: destination.droppableId,
@@ -198,7 +182,7 @@ export default function KanbanBoard() {
       socket.emit("taskMoved", movedTask);
     } catch (err) {
       console.error("Error moving task:", err);
-      await fetchTasks();   // rollback on error
+      await fetchTasks();
     }
   };
 
@@ -210,11 +194,7 @@ export default function KanbanBoard() {
   };
 
   if (loading) {
-    return (
-      <div className="bg-white rounded-2xl shadow-sm border p-10">
-        Loading board...
-      </div>
-    );
+    return <div className="bg-white rounded-2xl shadow-sm border p-10">Loading board...</div>;
   }
 
   return (
@@ -260,12 +240,12 @@ export default function KanbanBoard() {
         </div>
       </div>
 
-      {/* Kanban Columns */}
+      {/* Kanban Columns – now responsive: vertical on small screens, side‑by‑side on larger */}
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="overflow-x-auto">
-          <div className="flex justify-between gap-6 min-w-max px-1">
+        <div className="w-full">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {columns.map((column) => (
-              <div key={column.id} className="w-90 shrink-0">
+              <div key={column.id} className="w-full">
                 <Column
                   column={column}
                   onCreateTask={handleCreateTask}
