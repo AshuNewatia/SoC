@@ -111,7 +111,11 @@ export const getTasks = async (req, res) => {
         }
         const tasks = await Task.find({
             workspace: workspaceId
-        });
+        })
+        .populate(
+            "assignedTo",
+            "name email"
+        );
         res.status(200).json(tasks);
 
     } catch (error) {

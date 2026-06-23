@@ -101,8 +101,6 @@ export default function KanbanBoard() {
       const res = await createTaskApi(workspaceId, {
         ...task,
         status: targetColumn,
-        assignedTo: [],
-        // We let the backend handle 'createdBy' securely via the token!
       });
       
       const savedTask = res.data;

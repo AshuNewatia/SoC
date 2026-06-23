@@ -122,7 +122,7 @@ export default function WorkspaceOverview() {
         onSave={handleUpdateWorkspace}
         onDelete={handleDeleteWorkspace}
       />
-      <div className="space-y-4 p-1.5">
+      <div className="space-y-4 p-1.35">
         <Overview
           onlineUsers={onlineUsers}
           totalTasks={totalTasks}

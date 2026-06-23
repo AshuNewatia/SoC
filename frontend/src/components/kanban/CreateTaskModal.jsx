@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
+import api from "../../services/api";
+import { useParams } from "react-router-dom";
 
 const initialForm = {
   title: "",
@@ -10,16 +12,58 @@ const initialForm = {
   dueDate: "",
   githubIssue: "",
   status: "todo",
+  assignedTo: [],
 };
 
 export default function CreateTaskModal({ isOpen, onClose, onCreate, defaultStatus = "todo" }) {
   const [form, setForm] = useState(initialForm);
+  const [members, setMembers] = useState([]);
+  const [searchMember, setSearchMember] = useState("");
+  const { id: workspaceId } = useParams();
+
+  const filteredMembers =
+    members.filter(member =>
+      member.name
+        .toLowerCase()
+        .includes(
+          searchMember.toLowerCase()
+        )
+    );
+
+  const toggleMember = (memberId) => {
+    setForm(prev => ({
+      ...prev,
+      assignedTo:
+        prev.assignedTo.includes(memberId)
+          ? prev.assignedTo.filter(
+            id => id !== memberId
+          )
+          : [...prev.assignedTo, memberId]
+    }));
+  };
 
   useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const res = await api.get(
+          `/api/workspaces/${workspaceId}/members`
+        );
+
+        setMembers(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
     if (isOpen) {
-      setForm((prev) => ({ ...initialForm, status: defaultStatus }));
+      fetchMembers();
+
+      setForm({
+        ...initialForm,
+        status: defaultStatus,
+      });
     }
-  }, [isOpen, defaultStatus]);
+  }, [isOpen, defaultStatus, workspaceId]);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -33,6 +77,7 @@ export default function CreateTaskModal({ isOpen, onClose, onCreate, defaultStat
       description: form.description,
       priority: form.priority,
       dueDate: form.dueDate,
+      assignedTo: form.assignedTo,
       // comments: 0,
       // attachments: 0,
       // githubIssue: `#${Math.floor(Math.random() * 100)}`,
@@ -96,6 +141,49 @@ export default function CreateTaskModal({ isOpen, onClose, onCreate, defaultStat
                 onChange={(e) => handleChange("dueDate", e.target.value)}
                 className="w-full border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-slate-900"
               />
+              <div className="space-y-3">
+                <label className="font-medium">
+                  Assign Members
+                </label>
+
+                <input
+                  type="text"
+                  placeholder="Search members..."
+                  value={searchMember}
+                  onChange={(e) =>
+                    setSearchMember(e.target.value)
+                  }
+                  className="w-full border border-slate-200 rounded-xl p-3"
+                />
+
+                <div className="max-h-48 overflow-y-auto border rounded-xl">
+                  {filteredMembers.map((member) => {
+                    const selected =
+                      form.assignedTo.includes(
+                        member._id
+                      );
+
+                    return (
+                      <button
+                        key={member._id}
+                        type="button"
+                        onClick={() =>
+                          toggleMember(member._id)
+                        }
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50"
+                      >
+                        <span>
+                          {member.name}
+                        </span>
+
+                        <span>
+                          {selected ? "✅" : "⬜"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               {/* <input
                 placeholder="GitHub Issue (optional)"
                 value={form.githubIssue}
