@@ -6,75 +6,83 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
+import { launchConfetti } from "../utils/confetti";
 import CreateTaskModal from "../components/myboard/CreateTaskModal";
 import { DragDropContext } from "@hello-pangea/dnd";
 import BoardColumn from "../components/myboard/BoardColumn";
 import TaskDetailsModal from "../components/myboard/TaskDetailsModal";
 import DeadlineCalendar from "../components/myboard/DeadlineCalendar";
 
+import {
+  getMyTasks,
+  createPersonalTask,
+  updatePersonalTask,
+  deletePersonalTask,
+} from "../api/personalTaskApi";
+
 const STORAGE_KEY = "myboard_tasks";
 
-const initialTasks = {
-  todo: [
-    {
-      id: 1,
-      title: "Research GitHub Webhooks",
-      priority: "High",
-      dueDate: "2026-06-10",
-      tag: "Backend",
-      status: "todo",
-    },
-  ],
-  progress: [
-    {
-      id: 2,
-      title: "Build Task Modal",
-      priority: "Medium",
-      dueDate: "2026-06-08",
-      tag: "Frontend",
-      status: "progress",
-    },
-  ],
-  completed: [
-    {
-      id: 3,
-      title: "Project Planning",
-      priority: "Low",
-      dueDate: "2026-06-05",
-      tag: "Management",
-      status: "completed",
-    },
-  ],
-};
+
 
 export default function MyBoard() {
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : initialTasks;
-  });
+
+ const loadTasks = async () => {
+  try {
+    const { data } = await getMyTasks();
+
+    const grouped = {
+      todo: [],
+      progress: [],
+      completed: [],
+    };
+
+    data.forEach((task) => {
+      if (grouped[task.status]) {
+        grouped[task.status].push(task);
+      }
+    });
+
+    setTasks(grouped);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+useEffect(() => {
+  loadTasks();
+}, []);
+
+  const [tasks, setTasks] = useState({
+  todo: [],
+  progress: [],
+  completed: [],
+});
+
   const [showModal, setShowModal] = useState(false);
 
-  const handleCreateTask = (newTask) => {
-    const taskWithStatus = {
-      ...newTask,
+const handleCreateTask = async (newTask) => {
+  try {
+    const { data } = await createPersonalTask({
+      title: newTask.title,
+      description: newTask.description,
+      priority: newTask.priority,
+      tag: newTask.tag,
+      dueDate: newTask.dueDate,
       status: "todo",
-      activity: [
-        {
-          action: "Task Created",
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    };
+    });
 
     setTasks((prev) => ({
       ...prev,
-      todo: [taskWithStatus, ...prev.todo],
+      todo: [data, ...prev.todo],
     }));
 
-    addActivity(`Created task "${newTask.title}"`);
-  };
+    addActivity(`Created task "${data.title}"`);
+  } catch (error) {
+    console.error(error);
+  }
+};
 
-  const handleDragEnd = (result) => {
+  const handleDragEnd = async (result) => {
     const { source, destination } = result;
     if (!destination) return;
     if (
@@ -103,6 +111,31 @@ export default function MyBoard() {
       ],
     };
 
+if (
+  destination.droppableId === "completed" &&
+  source.droppableId !== "completed"
+) {
+  launchConfetti();
+
+  setCompletedTaskName(movedTask.title);
+  setShowToast(true);
+
+  addActivity(`🎉 Completed "${movedTask.title}"`);
+
+  setTimeout(() => {
+    setShowToast(false);
+  }, 3000);
+}
+
+
+try {
+  await updatePersonalTask(movedTask._id, {
+    status: destination.droppableId,
+  });
+} catch (error) {
+  console.error(error);
+}
+
     destinationColumn.splice(destination.index, 0, updatedTask);
 
     setTasks((prev) => ({
@@ -115,58 +148,43 @@ export default function MyBoard() {
   const [selectedTask, setSelectedTask] = useState(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
 
-  const handleUpdateTask = (updatedTask) => {
-    setTasks((prev) => ({
-      todo: prev.todo.map((t) =>
-        t.id === updatedTask.id
-          ? {
-              ...updatedTask,
-              activity: [
-                ...(t.activity || []),
-                { action: "Task Updated", timestamp: new Date().toISOString() },
-              ],
-            }
-          : t
-      ),
-      progress: prev.progress.map((t) =>
-        t.id === updatedTask.id
-          ? {
-              ...updatedTask,
-              activity: [
-                ...(t.activity || []),
-                { action: "Task Updated", timestamp: new Date().toISOString() },
-              ],
-            }
-          : t
-      ),
-      completed: prev.completed.map((t) =>
-        t.id === updatedTask.id
-          ? {
-              ...updatedTask,
-              activity: [
-                ...(t.activity || []),
-                { action: "Task Updated", timestamp: new Date().toISOString() },
-              ],
-            }
-          : t
-      ),
-    }));
-    addActivity(`Updated task "${updatedTask.title}"`);
-  };
 
-  const handleDeleteTask = (taskId) => {
-    const task = [...tasks.todo, ...tasks.progress, ...tasks.completed].find(
-      (t) => t.id === taskId
-    );
+  const handleUpdateTask = async (updatedTask) => {
+  try {
+    await updatePersonalTask(updatedTask._id, updatedTask);
+
+    loadTasks();
+
+    addActivity(`Updated task "${updatedTask.title}"`);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+const handleDeleteTask = async (taskId) => {
+  try {
+    await deletePersonalTask(taskId);
+
+    const task = [
+      ...tasks.todo,
+      ...tasks.progress,
+      ...tasks.completed,
+    ].find((t) => t._id === taskId);
+
     if (task) {
       addActivity(`Deleted task "${task.title}"`);
     }
+
     setTasks((prev) => ({
-      todo: prev.todo.filter((t) => t.id !== taskId),
-      progress: prev.progress.filter((t) => t.id !== taskId),
-      completed: prev.completed.filter((t) => t.id !== taskId),
+      todo: prev.todo.filter((t) => t._id !== taskId),
+      progress: prev.progress.filter((t) => t._id !== taskId),
+      completed: prev.completed.filter((t) => t._id !== taskId),
     }));
-  };
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   const [notes, setNotes] = useState(() => {
     const saved = localStorage.getItem("myboard_notes");
@@ -192,9 +210,6 @@ export default function MyBoard() {
     completed: tasks.completed.length,
   };
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-  }, [tasks]);
 
   const totalTasks =
     tasks.todo.length + tasks.progress.length + tasks.completed.length;
@@ -288,6 +303,50 @@ export default function MyBoard() {
     ]);
   };
 
+  const [showAllActivities, setShowAllActivities] = useState(false);
+
+  const [showToast, setShowToast] = useState(false);
+const [completedTaskName, setCompletedTaskName] = useState("");
+
+{showAllActivities && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[80vh] overflow-hidden">
+
+      {/* Header */}
+      <div className="flex items-center justify-between p-5 border-b">
+        <h2 className="text-xl font-semibold">
+          Activity History
+        </h2>
+
+        <button
+          onClick={() => setShowAllActivities(false)}
+          className="text-slate-500 hover:text-slate-700"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Activity List */}
+      <div className="overflow-y-auto max-h-[65vh] p-4 space-y-3">
+        {activities.map((activity) => (
+          <div
+            key={activity.id}
+            className="border border-slate-200 rounded-xl p-3"
+          >
+            <p className="text-sm font-medium">
+              {activity.text}
+            </p>
+
+            <p className="text-xs text-slate-500 mt-1">
+              {activity.time}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
+
   return (
     <div className="p-5.75 ">
       {/* Header Card */}
@@ -362,7 +421,7 @@ export default function MyBoard() {
               {upcomingTasks.map((task) => {
                 const status = getDeadlineStyle(task.dueDate);
                 return (
-                  <div key={task.id} className="border border-border-light rounded-lg p-2.5">
+                  <div key={task._id} className="border border-border-light rounded-lg p-2.5">
                     <div className="flex justify-between items-start gap-2">
                       <div>
                         <h3 className="font-medium text-text-primary text-sm">{task.title}</h3>
@@ -472,7 +531,18 @@ export default function MyBoard() {
         </div>
 
         <div className="bg-surface rounded-xl p-4 shadow-sm border border-border-light mb-8">
-          <h3 className="font-semibold mb-3 text-text-primary text-base">Recent Activity</h3>
+          <div className="flex items-center justify-between">
+  <h3 className="font-semibold">Recent Activity</h3>
+
+  {activities.length > 10 && (
+    <button
+      onClick={() => setShowAllActivities(true)}
+      className="text-primary text-sm font-medium hover:underline"
+    >
+      View All →
+    </button>
+  )}
+</div>
           <div className="space-y-3 max-h-60 overflow-y-auto">
             {activities.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -481,7 +551,7 @@ export default function MyBoard() {
                 <p className="text-sm text-text-secondary mt-1">Task actions will be recorded here.</p>
               </div>
             ) : (
-              activities.map((activity) => (
+              activities.slice(0, 10).map((activity) => (
                 <div key={activity.id} className="border-b border-border-light pb-2 last:border-0">
                   <p className="text-sm text-text-primary">{activity.text}</p>
                   <p className="text-xs text-text-secondary">{activity.time}</p>
@@ -550,6 +620,19 @@ export default function MyBoard() {
           </div>
         </DragDropContext>
       </div>
+
+      {showToast && (
+  <div className="fixed top-5 right-5 z-50 animate-bounce">
+    <div className="bg-green-500 text-white px-5 py-4 rounded-xl shadow-xl">
+      <div className="font-semibold">
+        🎉 Task Completed!
+      </div>
+      <div className="text-sm opacity-90">
+        {completedTaskName}
+      </div>
+    </div>
+  </div>
+)}
 
       <TaskDetailsModal
         task={selectedTask}
