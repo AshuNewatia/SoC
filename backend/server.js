@@ -13,14 +13,11 @@ import taskRoutes from "./routes/taskRoutes.js";
 import connectDB from "./config/db.js";
 
 import authRoutes from "./routes/authRoutes.js";
-<<<<<<< HEAD
 import taskRoutes from "./routes/taskRoutes.js";
 import personalTaskRoutes from "./routes/personalTaskRoutes.js";
 import quickNoteRoutes from "./routes/quickNoteRoutes.js";
 import personalActivityRoutes from "./routes/personalActivityRoutes.js";
-=======
 
->>>>>>> 4148bca976790c82f31a3b5c58b6290cf770e3cb
 
 // Load env variables
 dotenv.config();
@@ -55,14 +52,11 @@ app.use("/api", taskRoutes);
 app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/workspaces", memberRoutes);
 app.use("/api/workspaces", activityRoutes);
-<<<<<<< HEAD
 app.use("/api/myboard", personalTaskRoutes);
 app.use("/api/notes", quickNoteRoutes);
 app.use("/api/personal-activity", personalActivityRoutes);
-=======
 app.use('/api', taskRoutes);
 
->>>>>>> 4148bca976790c82f31a3b5c58b6290cf770e3cb
 
 /* ---------------- Health Check ---------------- */
 app.get("/", (req, res) => {
