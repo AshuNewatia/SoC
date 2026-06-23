@@ -42,7 +42,6 @@ export default function Dashboard() {
   const [createOpen, setCreateOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
-  console.log(user);
 
   const displayUser = {
     name: user?.name || "User",
@@ -60,8 +59,6 @@ export default function Dashboard() {
     try {
       // ✅ Use api.post directly to ensure your JWT token is attached!
       const res = await api.post("/api/workspaces", data);
-
-      console.log("Workspace Created Response:", res);
 
       window.dispatchEvent(new CustomEvent("workspaceListChanged"));
 

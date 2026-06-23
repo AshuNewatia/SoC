@@ -1,5 +1,5 @@
 
-import { FolderKanban, Settings, Users, ListTodo } from "lucide-react";
+import { FolderKanban, Settings, Users, ListTodo, GitBranch } from "lucide-react";
 
 
 export default function WorkspaceHero({
