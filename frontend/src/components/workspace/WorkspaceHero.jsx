@@ -1,10 +1,21 @@
-import { FolderKanban, Settings } from "lucide-react";
+import { FolderKanban, Settings, Users, ListTodo } from "lucide-react";
 
-export default function WorkspaceHero({ workspace, onSettingsClick }) {
+export default function WorkspaceHero({
+  workspace,
+  onSettingsClick,
+  tasks = [],          // <-- receive from parent
+  onlineUsers = []     // <-- receive from parent
+}) {
   if (!workspace) return null;
 
-  const memberCount = workspace.members?.length || 0;
-  const taskCount = workspace.tasks?.length || workspace.taskCount || 0;
+  // Use passed arrays; fallback to workspace data (if any)
+  const memberCount = onlineUsers.length > 0
+    ? onlineUsers.length
+    : (workspace.members?.length || 0);
+
+  const taskCount = tasks.length > 0
+    ? tasks.length
+    : (workspace.tasks?.length || workspace.taskCount || 0);
 
   return (
     <div className="bg-linear-to-r from-white to-sky-50 rounded-2xl p-5 border border-slate-200 shadow-sm">
@@ -25,13 +36,15 @@ export default function WorkspaceHero({ workspace, onSettingsClick }) {
             </div>
           </div>
 
-          {/* Metadata Badges */}
+          {/* Metadata Badges with icons */}
           <div className="flex flex-wrap items-center gap-2 mt-4 text-sm font-medium text-slate-600">
             <div className="px-3 py-1.5 bg-white rounded-lg border border-slate-200 shadow-sm flex items-center gap-1.5">
-              <span>👥</span> {memberCount} {memberCount === 1 ? "Member" : "Members"}
+              <Users size={16} className="text-indigo-500" />
+              <span>{memberCount} {memberCount === 1 ? "Member" : "Members"}</span>
             </div>
             <div className="px-3 py-1.5 bg-white rounded-lg border border-slate-200 shadow-sm flex items-center gap-1.5">
-              <span>📋</span> {taskCount} {taskCount === 1 ? "Task" : "Tasks"}
+              <ListTodo size={16} className="text-primary" />
+              <span>{taskCount} {taskCount === 1 ? "Task" : "Tasks"}</span>
             </div>
             <div className="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg border border-amber-200/60 flex items-center gap-1.5 text-xs">
               GitHub Integration Coming Soon
@@ -45,10 +58,10 @@ export default function WorkspaceHero({ workspace, onSettingsClick }) {
             Updated{" "}
             {workspace.updatedAt
               ? new Date(workspace.updatedAt).toLocaleDateString(undefined, {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })
               : "Recently"}
           </div>
           <button
@@ -58,7 +71,6 @@ export default function WorkspaceHero({ workspace, onSettingsClick }) {
             <Settings size={14} className="inline mr-1" />
             Settings
           </button>
-          {/* Active badge removed – backend does not provide `isActive` */}
         </div>
       </div>
     </div>
