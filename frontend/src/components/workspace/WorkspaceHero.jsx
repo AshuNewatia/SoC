@@ -1,8 +1,6 @@
-<<<<<<< HEAD
+
 import { FolderKanban, Settings, Users, ListTodo } from "lucide-react";
-=======
-import { FolderKanban, Settings, GitBranch } from "lucide-react";
->>>>>>> origin/main
+
 
 export default function WorkspaceHero({
   workspace,

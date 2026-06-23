@@ -16,7 +16,7 @@ import {
   updateTask as updateTaskApi,
   deleteTask as deleteTaskApi,
   updateTaskStatus as updateTaskStatusApi,
-} from "../../api/taskApi";
+} from "../../services/taskServices";
 
 const emptyBoard = {
   columns: {
