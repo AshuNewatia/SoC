@@ -18,7 +18,7 @@ import {
   createPersonalTask,
   updatePersonalTask,
   deletePersonalTask,
-} from "../api/personalTaskApi";
+} from "../services/personalTaskServices";
 
 const STORAGE_KEY = "myboard_tasks";
 
