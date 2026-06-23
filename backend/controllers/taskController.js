@@ -8,10 +8,13 @@ export const createTask = async (req, res) => {
         const createdBy = req.body.createdBy || req.user._id; 
         const { workspaceId } = req.params;
 
-        const existingWorkspace = await Workspace.findById(workspaceId);
+        const existingWorkspace =
+            await Workspace.findById(workspaceId);
 
         if (!existingWorkspace) {
-            return res.status(404).json({ message: "Workspace not found!" });
+            return res.status(404).json({
+                message: "Workspace not found!",
+            });
         }
 
         const isOwner =
@@ -23,11 +26,11 @@ export const createTask = async (req, res) => {
                 admin =>
                     admin.toString() ===
                     req.user._id.toString()
-            );
+            ) || false;
 
         if (!isOwner && !isAdmin) {
             return res.status(403).json({
-                message: "Not authorized"
+                message: "Not authorized",
             });
         }
 
@@ -64,8 +67,12 @@ export const createTask = async (req, res) => {
         res.status(201).json(task);
 
     } catch (error) {
+        console.error("CREATE TASK ERROR");
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+
+        res.status(500).json({
+            message: error.message,
+        });
     }
 };
 
@@ -161,7 +168,7 @@ export const deleteTask = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: "Server Error" });
     }
-}
+};
 
 export const updateTask = async (req, res) => {
     try {
