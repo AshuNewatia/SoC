@@ -6,10 +6,10 @@ import { logActivity } from "./activityController.js";
 // @route   GET /api/workspaces/:id/members
 export const getWorkspaceMembers = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { workspaceId } = req.params;
 
     // Fetch the workspace and fully populate both the owner and members arrays
-    const workspace = await Workspace.findById(id)
+    const workspace = await Workspace.findById(workspaceId)
       .populate("owner", "name email avatar")
       .populate("members", "name email avatar");
 
@@ -39,8 +39,13 @@ export const getWorkspaceMembers = async (req, res) => {
         name: member.name,
         email: member.email,
         avatar: member.avatar,
-        role: "Member",
-        tasksCompleted: 0
+        role: workspace.admins.some(
+          admin =>
+            admin.toString() ===
+            member._id.toString()
+        )
+          ? "Admin"
+          : "Member"
       }));
     // Combine into one array for the React frontend
     const allMembers = [ownerData, ...membersData];
@@ -56,7 +61,7 @@ export const getWorkspaceMembers = async (req, res) => {
 // @route   POST /api/workspaces/:id/members
 export const addMemberToWorkspace = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { workspaceId } = req.params;
     const { email } = req.body;
 
     // 1. Find the user they are trying to invite
@@ -66,7 +71,7 @@ export const addMemberToWorkspace = async (req, res) => {
     }
 
     // 2. Find the workspace
-    const workspace = await Workspace.findById(id);
+    const workspace = await Workspace.findById(workspaceId);
     if (!workspace) {
       return res.status(404).json({ message: "Workspace not found" });
     }
@@ -110,5 +115,150 @@ export const addMemberToWorkspace = async (req, res) => {
   } catch (error) {
     console.error("Error adding member:", error);
     res.status(500).json({ message: "Failed to add member" });
+  }
+};
+
+export const removeMember = async (req, res) => {
+  try {
+    const { workspaceId, userId } = req.params;
+
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) {
+      return res.status(404).json({
+        message: "Workspace not found"
+      });
+    }
+
+    const isOwner =
+      workspace.owner.toString() ===
+      req.user._id.toString();
+
+    const isAdmin =
+      workspace.admins.some(
+        admin =>
+          admin.toString() ===
+          req.user._id.toString()
+      );
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        message: "Not authorized"
+      });
+    }
+
+    workspace.members =
+      workspace.members.filter(
+        member =>
+          member.toString() !== userId
+      );
+
+    workspace.admins =
+      workspace.admins.filter(
+        admin =>
+          admin.toString() !== userId
+      );
+
+    await workspace.save();
+
+    res.status(200).json({
+      message: "Member removed"
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Server Error"
+    });
+  }
+};
+
+export const promoteToAdmin = async (req, res) => {
+  try {
+    const { workspaceId, userId } = req.params;
+
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) {
+      return res.status(404).json({
+        message: "Workspace not found"
+      });
+    }
+
+    // Only owner
+    if (
+      workspace.owner.toString() !==
+      req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        message: "Only owner can promote admins"
+      });
+    }
+
+    if (!workspace.members.includes(userId)) {
+      return res.status(400).json({
+        message: "User is not a member"
+      });
+    }
+
+    if (!workspace.admins.includes(userId)) {
+      workspace.admins.push(userId);
+    }
+
+    await workspace.save();
+
+    res.status(200).json({
+      message: "Admin added successfully"
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Server Error"
+    });
+  }
+};
+
+export const removeAdmin = async (req, res) => {
+  try {
+    const { workspaceId, userId } = req.params;
+
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) {
+      return res.status(404).json({
+        message: "Workspace not found"
+      });
+    }
+
+    if (
+      workspace.owner.toString() !==
+      req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        message: "Only owner can remove admins"
+      });
+    }
+
+    workspace.admins =
+      workspace.admins.filter(
+        admin =>
+          admin.toString() !== userId
+      );
+
+    await workspace.save();
+
+    res.status(200).json({
+      message: "Admin removed"
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Server Error"
+    });
   }
 };

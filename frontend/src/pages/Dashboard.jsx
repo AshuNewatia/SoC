@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FolderKanban, CheckSquare, CalendarClock, BadgeCheck } from "lucide-react";
+import api from "../services/api";
 import { useAuth } from "../context/authContext";
 import StatsGrid from "../components/dashboard/StatsGrid";
 import Hero from "../components/dashboard/Hero";
@@ -57,18 +58,13 @@ export default function Dashboard() {
 
   const handleCreateWorkspace = async (data) => {
     try {
-      const res = await createWorkspace({
-        ...data,
-        owner: user.id,
-      });
+      // ✅ Use api.post directly to ensure your JWT token is attached!
+      const res = await api.post("/api/workspaces", data);
 
-      // Let's log the actual response so you can see its exact shape!
       console.log("Workspace Created Response:", res);
 
-      // Notify Sidebar that a new workspace was created
       window.dispatchEvent(new CustomEvent("workspaceListChanged"));
 
-      // Bullet-proof way to grab the ID (checks multiple common response structures)
       const newWorkspaceId = res?.data?.workspace?._id || res?.data?._id || res?._id;
 
       if (newWorkspaceId) {
@@ -80,6 +76,8 @@ export default function Dashboard() {
       setCreateOpen(false);
     } catch (err) {
       console.error("Error creating workspace", err);
+      // Let's pop up an alert so if it fails, it tells us exactly why!
+      alert(`Failed to create workspace: ${err.response?.data?.message || err.message}`);
     }
   };
 

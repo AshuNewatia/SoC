@@ -1,0 +1,169 @@
+[33m3c1adc4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mharshk[m[33m, [m[1;31morigin/harshk[m[33m)[m '
+[33m46ea749[m merge main into harshk
+[33m3a151a8[m .
+[33mb74cce9[m .
+[33mf134f16[m admin
+[33m9a26731[m Merge branch 'main' into harshk
+[33m31a892b[m admin
+[33m34414e4[m Update WorkspaceMembers.jsx
+[33mdc8b122[m Merge pull request #34 from AshuNewatia/harshk
+[33mcef653b[m invite member
+[33m42ee485[m Merge pull request #33 from AshuNewatia/harshk
+[33m058b5ef[m role
+[33ma5ea87f[m merge main into harshk
+[33m5b58c30[m .
+[33md6bc9e5[m .
+[33m2899383[m Refactor activity fetching and update component styles
+[33m4d478c5[m Update WorkspaceMembers.jsx
+[33m0d7c51f[m Update WorkSpace.jsx
+[33m32b8e50[m Update CORS configuration to use environment variable
+[33m8e037a3[m Update server.js
+[33m87afe45[m Update workspaceController.js
+[33mb732e3c[m Update authMiddleware.js
+[33mccead6f[m Update authMiddleware.js
+[33m086b997[m Update workspaceRoutes.js
+[33mfea881f[m Update workspaceContext.jsx
+[33mbd05455[m Update Sidebar.jsx
+[33m0556ddb[m Merge pull request #32 from AshuNewatia/harshk
+[33m36c7dc2[m context issue
+[33m059618e[m Merge pull request #31 from AshuNewatia/harshk
+[33mb9dc304[m Merge branch 'main' into harshk
+[33m117d6e0[m issue fix
+[33m8477f85[m Workspaces Updates
+[33meb518f6[m Merge pull request #30 from AshuNewatia/harshk
+[33ma6a1aee[m .
+[33m1e58f41[m Merge pull request #29 from AshuNewatia/harshk
+[33m6ff02b4[m responsive issue
+[33m1504ff8[m Merge pull request #28 from AshuNewatia/harshk
+[33m5968d97[m responsivee workspace
+[33m8156e52[m Merge pull request #27 from AshuNewatia/harshk
+[33meba7b6c[m create task issue
+[33m69ae94e[m Merge pull request #26 from AshuNewatia/harshk
+[33m7495443[m .
+[33m07595f5[m issue fix
+[33mfbe4eaa[m Update server.js
+[33m6487b2a[m Update server.js
+[33m0a8a4b7[m Merge pull request #25 from AshuNewatia/harshk
+[33m81ed0a7[m Merge branch 'main' into harshk
+[33m9b1d53a[m workspace auth
+[33m28c7db7[m workspace auth
+[33ma221ef8[m Update taskServices.js
+[33m88cc777[m .
+[33m707857c[m Update Sidebar.jsx
+[33mdb5cb96[m Merge pull request #24 from AshuNewatia/harshk
+[33m78bd8ad[m minor FIX
+[33m5402bc9[m Update Sidebar.jsx
+[33m8752c19[m Update Dashboard.jsx
+[33m878e85a[m Update Dashboard.jsx
+[33m96a93f5[m Merge pull request #23 from AshuNewatia/harshk
+[33mf7b9c0c[m add root package-lock
+[33mc88878e[m CRUD WORKSPACE
+[33m17de61f[m resolve sidebar merge conflict
+[33m90593bf[m CRUD task
+[33m8980b07[m CRUD task
+[33meedeb2e[m Update App.jsx
+[33m5594e13[m Update App.jsx
+[33mff1ef70[m issue Fixed
+[33mdb5b20e[m User things done
+[33m5ec516b[m User Things Done
+[33m34df53f[m Merge pull request #22 from AshuNewatia/harshk
+[33m7f6e788[m .
+[33m3a7bc27[m web sockets
+[33m326af8c[m Update Signup.jsx
+[33m65e00ac[m Update Login.jsx
+[33m9055ba1[m Update Signup.jsx
+[33m84088be[m Update Login.jsx
+[33m301942e[m Update API endpoint for task retrieval
+[33m220d570[m Update App.jsx
+[33me292911[m Update App.jsx
+[33mb4f26be[m Merge pull request #21 from AshuNewatia/harshk
+[33m065aa4a[m Merge branch 'main' into harshk
+[33m1133d79[m deploy issue
+[33m2ff969a[m Merge Conflicts resolved
+[33m4ca0ee1[m App,jsx merge conflict resolved
+[33m270b12b[m Merge conflict resolved
+[33m0a650aa[m Merge branch 'main' of https://github.com/AshuNewatia/SoC
+[33m5eb8bdd[m Auth Done Finally
+[33m1e242c1[m Update taskRoutes.js
+[33m8f38ee8[m Update taskRoutes.js
+[33m6e611eb[m Add error handling to updateTaskStatus and deleteTask
+[33m3da7f6b[m Add PUT and DELETE routes for task management
+[33m82b684a[m Merge pull request #20 from AshuNewatia/harshk
+[33mc793dda[m erge remote-tracking branch 'origin/main' into harshk
+[33m4fc55d5[m socket
+[33mbaf2120[m socket add
+[33mee56a16[m Merge pull request #19 from AshuNewatia/harshk
+[33mdb0a9fa[m Merge branch 'main' into harshk
+[33mdf9a123[m Board fix
+[33m162ab9e[m Merge pull request #18 from AshuNewatia/project-update
+[33mb28bf1e[m[33m ([m[1;31morigin/project-update[m[33m)[m kanban board
+[33m15acf7c[m server.js updated
+[33mecf8749[m kanban-backend
+[33m26f854e[m Merge pull request #17 from AshuNewatia/project-update
+[33m1e3541c[m Merge branch 'main' into project-update
+[33m8ed1d3c[m kanban board
+[33m84e11bb[m .
+[33me56e543[m Merge pull request #16 from AshuNewatia/harshk
+[33m7c4231d[m workspace and card backend
+[33mb036b5b[m Merge pull request #15 from AshuNewatia/harshk
+[33m4e68cf6[m .
+[33m7de551f[m Landing page
+[33m9a48cca[m Landing Page
+[33m506b996[m Merge branch 'main' into harshk
+[33mfe5f88c[m Landing page
+[33m47b2693[m Issue Fixed
+[33me1f4fc4[m Issue Fixed
+[33mbc90033[m Authentication Done
+[33m2866211[m Sidebar scroll and mobile sidebar fix
+[33m757ce6d[m minore issues
+[33m5262c07[m minore issues
+[33m5e22a7e[m Workspace Structure Done
+[33mb24f8cf[m Merge branch 'main' into harshk
+[33m4d8f6d9[m worspace structure done
+[33m2c19ced[m Merge pull request #11 from AshuNewatia/project-update
+[33m3601957[m App.jsx Uppdated
+[33m69eb5b5[m Merge branch 'project-update' of https://github.com/AshuNewatia/SoC into project-update
+[33mde89c27[m App.jsx Uppdated
+[33m6680d39[m Merge pull request #10 from AshuNewatia/project-update
+[33m8d7ac64[m Merge branch 'main' into project-update
+[33me557793[m My board
+[33m08681f1[m Dashboard
+[33mace40b3[m dashboard
+[33ma5b3c6c[m dashboard card added
+[33md4de7ab[m .
+[33mdff382c[m Merge pull request #8 from AshuNewatia/harshk
+[33m08f6be2[m .
+[33m2eddcaa[m home page done
+[33m034fcc6[m active sidebar
+[33m805edff[m responsive sidebar fix2
+[33m907c961[m responsive sidebar fix
+[33ma94f215[m responsive frontend done
+[33mae7ac0a[m sidebar and Navbar frontend
+[33m94229c4[m home layout
+[33ma34d49a[m Merge pull request #6 from AshuNewatia/harshk
+[33m6e07a3d[m side bar
+[33mfe1027f[m OAuth done (Verification failing though)
+[33m29007ee[m Revert "SignUp Auth Done"
+[33m3590b37[m Merge branch 'main' of https://github.com/AshuNewatia/SoC
+[33mbda7855[m SignUp Auth Done
+[33m3da1b83[m Merge pull request #5 from AshuNewatia/harshk
+[33me6f8a61[m tailwind fix
+[33mb1343ba[m Merge pull request #4 from AshuNewatia/harshk
+[33m60b5314[m login frontend
+[33m8b3f630[m Merge pull request #3 from AshuNewatia/harshk
+[33m5d4735c[m full login and signup done
+[33m7de651c[m backend login done
+[33m6d11f57[m backend login done
+[33me7ab719[m Merge pull request #2 from AshuNewatia/harshk
+[33mf0e6143[m login structure
+[33me5e9c6e[m login structure setup
+[33m5dbbc1a[m tailwind
+[33m5b6a28f[m tailwind setup
+[33m4e5ddbf[m dashboard
+[33m11d1049[m Merge pull request #1 from AshuNewatia/harshk
+[33mafb34ef[m login
+[33m200d06e[m .
+[33mdb0fe0d[m[33m ([m[1;32mmain[m[33m)[m idk
+[33m79ee4dd[m Backend Setup
+[33m1773d64[m[33m ([m[1;31morigin/harshkasera[m[33m)[m File structure Setup
+[33m2cb56a0[m Initial Commit: Setup SoC project structure
