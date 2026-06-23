@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { FolderKanban, Settings, Users, ListTodo } from "lucide-react";
+=======
+import { FolderKanban, Settings, GitBranch } from "lucide-react";
+>>>>>>> origin/main
 
 export default function WorkspaceHero({
   workspace,
@@ -46,9 +50,18 @@ export default function WorkspaceHero({
               <ListTodo size={16} className="text-primary" />
               <span>{taskCount} {taskCount === 1 ? "Task" : "Tasks"}</span>
             </div>
-            <div className="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg border border-amber-200/60 flex items-center gap-1.5 text-xs">
-              GitHub Integration Coming Soon
-            </div>
+            
+            {/* Dynamic GitHub Badge */}
+            {workspace.githubRepo ? (
+              <div className="px-3 py-1.5 bg-green-50 text-green-700 rounded-lg border border-green-200 flex items-center gap-1.5 text-xs font-semibold">
+                <GitBranch size={14} /> 
+                {workspace.githubRepo.split('/')[1] || workspace.githubRepo} Linked
+              </div>
+            ) : (
+              <div className="px-3 py-1.5 bg-slate-50 text-slate-500 rounded-lg border border-slate-200 flex items-center gap-1.5 text-xs">
+                <GitBranch size={14} /> Not Linked
+              </div>
+            )}
           </div>
         </div>
 

@@ -37,7 +37,7 @@ export default function DeadlineCalendar({ tasks }) {
               <h3 className="font-medium text-text-primary">{date}</h3>
               <ul className="mt-2 space-y-1">
                 {groupedTasks[date].map((task) => (
-                  <li key={task.id} className="text-sm text-text-secondary">
+                  <li key={task._id} className="text-sm text-text-secondary">
                     • {task.title}
                   </li>
                 ))}

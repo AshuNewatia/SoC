@@ -52,8 +52,8 @@ export default function BoardColumn({
 
             {tasks.map((task, index) => (
               <Draggable
-                key={task.id.toString()}
-                draggableId={task.id.toString()}
+                key={task._id.toString()}
+                draggableId={task._id.toString()}
                 index={index}
               >
                 {(provided) => (
