@@ -37,9 +37,11 @@ const STORAGE_KEY = "myboard_tasks";
 
 export default function MyBoard() {
 
- const loadTasks = async () => {
+const loadTasks = async () => {
   try {
     const data = await getMyTasks();
+
+    const taskList = Array.isArray(data) ? data : data.tasks ?? [];
 
     const grouped = {
       todo: [],
@@ -47,11 +49,13 @@ export default function MyBoard() {
       completed: [],
     };
 
-    data.forEach((task) => {
+    taskList.forEach((task) => {
       if (grouped[task.status]) {
         grouped[task.status].push(task);
       }
     });
+
+ console.log("LOAD TASKS RESPONSE:", data);
 
     setTasks(grouped);
   } catch (error) {
@@ -81,6 +85,8 @@ const handleCreateTask = async (newTask) => {
       dueDate: newTask.dueDate,
       status: "todo",
     });
+
+console.log("CREATE RESPONSE:", data);
 
     setTasks((prev) => ({
       ...prev,
