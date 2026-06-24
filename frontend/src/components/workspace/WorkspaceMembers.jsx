@@ -225,7 +225,7 @@ export default function WorkspaceMembers() {
 
                     {openMenu === member._id && (
                       <div
-                        className="absolute right-0 top-10 bg-white border border-slate-200 rounded-xl shadow-lg min-w-[180px] z-50 overflow-hidden"
+                        className="absolute right-0 top-10 bg-white border border-slate-200 rounded-xl shadow-lg min-w-45 z-50 overflow-hidden"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {member.role === 'Member' && (

@@ -40,11 +40,34 @@ export default function TaskCard({ task, onClick }) {
       </div>
 
       {/* Assigned Members Count */}
-      <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-        <Users size={14} className="text-slate-400" />
-        <span className="text-sm text-slate-600">
-          {memberCount} {memberCount === 1 ? "Member" : "Members"}
-        </span>
+      <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+        <div className="flex items-center gap-2">
+          <Users
+            size={14}
+            className="text-slate-400"
+          />
+
+          <span className="text-sm text-slate-600">
+            Assigned
+          </span>
+        </div>
+
+        <div className="flex -space-x-2">
+          {task.assignedTo?.slice(0, 3).map(
+            (member) => (
+              <div
+                key={member._id}
+                className="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center border-2 border-white"
+              >
+                {member.name
+                  ?.split(" ")
+                  .map(n => n[0])
+                  .join("")
+                  .slice(0, 2)}
+              </div>
+            )
+          )}
+        </div>
       </div>
     </motion.div>
   );
