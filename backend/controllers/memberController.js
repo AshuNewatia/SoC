@@ -233,7 +233,13 @@ export const promoteToAdmin = async (req, res) => {
       });
     }
 
-    if (!workspace.members.includes(userId)) {
+    const isMember =
+      workspace.members.some(
+        member =>
+          member.toString() === userId
+      );
+
+    if (!isMember) {
       return res.status(400).json({
         message: "User is not a member"
       });
