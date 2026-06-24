@@ -11,7 +11,6 @@ import CreateTaskModal from "../components/myboard/CreateTaskModal";
 import { DragDropContext } from "@hello-pangea/dnd";
 import BoardColumn from "../components/myboard/BoardColumn";
 import TaskDetailsModal from "../components/myboard/TaskDetailsModal";
-import DeadlineCalendar from "../components/myboard/DeadlineCalendar";
 
 import {
   getMyTasks,
@@ -321,9 +320,9 @@ const handleUpdateNote = async (id, field, value) => {
 
   const filterTasks = (taskList) => {
     return taskList.filter((task) => {
-      const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = (task.title || "").toLowerCase().includes(searchTerm.toLowerCase());
       const matchesPriority = priorityFilter === "All" || task.priority === priorityFilter;
-      const matchesTag = tagFilter === "All" || task.tag === tagFilter;
+      const matchesTag = tagFilter === "All" || (task.tag || "") === tagFilter;
       return matchesSearch && matchesPriority && matchesTag;
     });
   };
@@ -781,12 +780,6 @@ const formatActivityTime = (date) => {
   </div>
 </div>
       </div>
-
-      {/* Deadline Calendar */}
-      <div className="max-h-87.5 overflow-y-auto mb-6">
-        <DeadlineCalendar tasks={allTasks} />
-      </div>
-
 
              {/* Recent Activity */}
       <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-6 mb-8">

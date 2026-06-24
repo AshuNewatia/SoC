@@ -41,7 +41,6 @@ export default function Column({ column, onCreateTask, onTaskClick }) {
               <div className="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center">
                 <div className="text-4xl mb-2">📌</div>
                 <p className="text-slate-500 text-sm">No tasks here</p>
-                <p className="text-xs text-slate-400 mt-1">Drag tasks into this column</p>
               </div>
             )}
             {column.tasks.map((task, index) => (
