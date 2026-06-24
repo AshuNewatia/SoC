@@ -167,10 +167,21 @@ export const updateTaskStatus = async (req, res) => {
                     req.user._id.toString()
             ) || false;
 
-        if (!isOwner && !isAdmin && !isMember) {
-            return res.status(403).json({
-                message: "Not authorized",
-            });
+        if (!isOwner && !isAdmin) {
+
+            const isAssigned =
+                task.assignedTo?.some(
+                    user =>
+                        user.toString() ===
+                        req.user._id.toString()
+                ) || false;
+
+            if (!isAssigned) {
+                return res.status(403).json({
+                    message:
+                        "You can only move tasks assigned to you"
+                });
+            }
         }
 
         const updatedTask = await Task.findByIdAndUpdate(
