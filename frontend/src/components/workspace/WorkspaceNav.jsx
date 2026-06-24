@@ -13,7 +13,7 @@ export default function WorkspaceNav() {
     }`;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-1.5 flex items-center gap-1 shadow-[0_2px_12px_rgba(0,0,0,0.04)] sticky top-0 z-20 overflow-x-auto">
+    <div className="bg-white border border-slate-200 rounded-2xl p-1.5 flex items-center gap-1 shadow-sm sticky top-0 z-20 overflow-x-auto">
       {tabs.map((tab) => (
         <NavLink
           key={tab}
