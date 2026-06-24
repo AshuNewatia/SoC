@@ -37,7 +37,14 @@ const STORAGE_KEY = "myboard_tasks";
 
 export default function MyBoard() {
 
-const loadTasks = async () => {
+  
+  const [tasks, setTasks] = useState({
+  todo: [],
+  progress: [],
+  completed: [],
+});
+
+ const loadTasks = async () => {
   try {
     const data = await getMyTasks();
 
@@ -49,7 +56,11 @@ const loadTasks = async () => {
       completed: [],
     };
 
-    taskList.forEach((task) => {
+    const taskArray = Array.isArray(data)
+      ? data
+      : data?.tasks || [];
+
+    taskArray.forEach((task) => {
       if (grouped[task.status]) {
         grouped[task.status].push(task);
       }
@@ -60,6 +71,12 @@ const loadTasks = async () => {
     setTasks(grouped);
   } catch (error) {
     console.error(error);
+
+    setTasks({
+      todo: [],
+      progress: [],
+      completed: [],
+    });
   }
 };
 
@@ -67,11 +84,6 @@ useEffect(() => {
   loadTasks();
 }, []);
 
-  const [tasks, setTasks] = useState({
-  todo: [],
-  progress: [],
-  completed: [],
-});
 
   const [showModal, setShowModal] = useState(false);
 

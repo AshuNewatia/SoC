@@ -5,7 +5,7 @@ import { createGithubIssue, updateGithubIssueState } from "../services/githubSer
 export const createTask = async (req, res) => {
     try {
         const { title, description, priority, dueDate, assignedTo, status } = req.body;
-        const createdBy = req.body.createdBy || req.user._id; 
+        const createdBy = req.body.createdBy || req.user._id;
         const { workspaceId } = req.params;
 
         const existingWorkspace =
@@ -50,18 +50,18 @@ export const createTask = async (req, res) => {
             }
         }
 
-        const task = new Task({ 
-            title, 
-            description, 
-            priority, 
-            dueDate, 
-            assignedTo, 
-            createdBy, 
-            workspace: workspaceId, 
+        const task = new Task({
+            title,
+            description,
+            priority,
+            dueDate,
+            assignedTo,
+            createdBy,
+            workspace: workspaceId,
             status: status || "todo",
             githubIssueNumber: issueNumber // 👇 Save the GitHub issue ID!
         });
-        
+
         await task.save();
 
         res.status(201).json(task);
@@ -112,10 +112,14 @@ export const getTasks = async (req, res) => {
         const tasks = await Task.find({
             workspace: workspaceId
         })
-        .populate(
-            "assignedTo",
-            "name email"
-        );
+            .populate(
+                "assignedTo",
+                "name email"
+            )
+            .populate(
+                "createdBy",
+                "name email"
+            );
         res.status(200).json(tasks);
 
     } catch (error) {
@@ -163,10 +167,21 @@ export const updateTaskStatus = async (req, res) => {
                     req.user._id.toString()
             ) || false;
 
-        if (!isOwner && !isAdmin && !isMember) {
-            return res.status(403).json({
-                message: "Not authorized",
-            });
+        if (!isOwner && !isAdmin) {
+
+            const isAssigned =
+                task.assignedTo?.some(
+                    user =>
+                        user.toString() ===
+                        req.user._id.toString()
+                ) || false;
+
+            if (!isAssigned) {
+                return res.status(403).json({
+                    message:
+                        "You can only move tasks assigned to you"
+                });
+            }
         }
 
         const updatedTask = await Task.findByIdAndUpdate(
