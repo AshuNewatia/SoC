@@ -16,7 +16,7 @@ import {
   updateTask as updateTaskApi,
   deleteTask as deleteTaskApi,
   updateTaskStatus as updateTaskStatusApi,
-} from "../../api/taskApi";
+} from "../../services/taskServices";
 
 const emptyBoard = {
   columns: {
@@ -36,38 +36,64 @@ export default function KanbanBoard() {
   const [editOpen, setEditOpen] = useState(false);
   const [targetColumn, setTargetColumn] = useState("todo");
   const [loading, setLoading] = useState(true);
+  const [allTasks, setAllTasks] = useState([]);
+  const [taskFilter, setTaskFilter] = useState("all");
 
   const currentUserName = user?.name || user?.email?.split("@")[0] || "Guest";
+
+  const filteredTasks = allTasks.filter((task) => {
+    if (taskFilter === "all") return true;
+
+    if (taskFilter === "my") {
+      return task.assignedTo?.some(
+        (member) => member._id.toString() === user.id
+      );
+    }
+
+    if (taskFilter === "created") {
+      return task.createdBy?._id?.toString() === user.id;
+    }
+
+    if (taskFilter === "unassigned") {
+      return !task.assignedTo?.length;
+    }
+
+    return true;
+  });
 
   const fetchTasks = async () => {
     try {
       const res = await getTasks(workspaceId);
       const tasks = res.data;
-      setBoard({
-        columns: {
-          todo: {
-            id: "todo",
-            title: "To Do",
-            tasks: tasks.filter((t) => t.status === "todo"),
-          },
-          progress: {
-            id: "progress",
-            title: "In Progress",
-            tasks: tasks.filter((t) => t.status === "progress"),
-          },
-          completed: {
-            id: "completed",
-            title: "Completed",
-            tasks: tasks.filter((t) => t.status === "completed"),
-          },
-        },
-      });
+      setAllTasks(tasks);
     } catch (err) {
       console.error("Error fetching tasks:", err);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    setBoard({
+      columns: {
+        todo: {
+          id: "todo",
+          title: "To Do",
+          tasks: filteredTasks.filter((t) => t.status === "todo"),
+        },
+        progress: {
+          id: "progress",
+          title: "In Progress",
+          tasks: filteredTasks.filter((t) => t.status === "progress"),
+        },
+        completed: {
+          id: "completed",
+          title: "Completed",
+          tasks: filteredTasks.filter((t) => t.status === "completed"),
+        },
+      },
+    });
+  }, [allTasks, taskFilter]);
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -101,18 +127,14 @@ export default function KanbanBoard() {
       const res = await createTaskApi(workspaceId, {
         ...task,
         status: targetColumn,
-        assignedTo: [],
-        // We let the backend handle 'createdBy' securely via the token!
       });
-      
+
       const savedTask = res.data;
-      await fetchTasks(); // Refresh the board
-      socket.emit("taskCreated", savedTask); // Update teammates
-      setCreateOpen(false); // Close the modal
-      
+      await fetchTasks();
+      socket.emit("taskCreated", savedTask);
+      setCreateOpen(false);
     } catch (err) {
       console.error("Error creating task:", err);
-      // 👇 This alert will pop up and tell us EXACTLY what broke if it fails!
       alert(`Task Creation Failed: ${err.response?.data?.message || err.message}`);
     }
   };
@@ -221,8 +243,8 @@ export default function KanbanBoard() {
         onSave={handleEditTask}
       />
 
-      {/* Header Card */}
-      <div className="bg-surface rounded-2xl shadow-sm border border-border-light p-5 mb-6">
+      {/* Header Card – only heading and New Task button */}
+      <div className="bg-surface rounded-2xl shadow-sm border border-border-light p-5 mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-text-primary">Workspace Board</h1>
@@ -240,7 +262,56 @@ export default function KanbanBoard() {
         </div>
       </div>
 
-      {/* Kanban Columns – now responsive: vertical on small screens, side‑by‑side on larger */}
+      {/* Filter buttons – separate div, centered */}
+      <div className="bg-surface rounded-2xl shadow-sm border border-border-light px-5 py-3 mb-6">
+  <div className="flex flex-wrap justify-center gap-2">
+    <button
+      onClick={() => setTaskFilter("all")}
+      className={`px-4 py-2 rounded-xl text-sm font-medium ${
+        taskFilter === "all"
+          ? "bg-primary text-white"
+          : "bg-white border border-border-light"
+      }`}
+    >
+      All Tasks
+    </button>
+
+    <button
+      onClick={() => setTaskFilter("my")}
+      className={`px-4 py-2 rounded-xl text-sm font-medium ${
+        taskFilter === "my"
+          ? "bg-primary text-white"
+          : "bg-white border border-border-light"
+      }`}
+    >
+      My Tasks
+    </button>
+
+    <button
+      onClick={() => setTaskFilter("created")}
+      className={`px-4 py-2 rounded-xl text-sm font-medium ${
+        taskFilter === "created"
+          ? "bg-primary text-white"
+          : "bg-white border border-border-light"
+      }`}
+    >
+      Created By Me
+    </button>
+
+    <button
+      onClick={() => setTaskFilter("unassigned")}
+      className={`px-4 py-2 rounded-xl text-sm font-medium ${
+        taskFilter === "unassigned"
+          ? "bg-primary text-white"
+          : "bg-white border border-border-light"
+      }`}
+    >
+      Unassigned
+    </button>
+  </div>
+</div>
+
+      {/* Kanban Columns */}
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="w-full">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

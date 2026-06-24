@@ -17,7 +17,7 @@ import {
   createPersonalTask,
   updatePersonalTask,
   deletePersonalTask,
-} from "../api/personalTaskApi";
+} from "../services/personalTaskServices";
 
 import {
   getMyNotes,

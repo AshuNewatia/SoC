@@ -54,7 +54,7 @@ export default function WorkspaceActivity() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto bg-surface border border-border-light rounded-[var(--radius-xl)] shadow-sm overflow-hidden font-sans text-text-primary">
+    <div className="w-full max-w-5xl mx-auto bg-surface border border-border-light rounded-(--radius-xl) shadow-sm overflow-hidden font-sans text-text-primary">
       <div className="flex items-center justify-between p-5 border-b border-border-light bg-surface">
         <div className="flex items-center gap-4">
           <div className="text-primary text-xl font-bold">≡</div>
@@ -91,10 +91,10 @@ export default function WorkspaceActivity() {
         ) : (
           activities.map((item) => (
             <div key={item._id} className="flex gap-4 p-5 hover:bg-bg-light transition-colors">
-              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-bg-light border border-border-light flex items-center justify-center text-text-secondary shadow-sm">
+              <div className="shrink-0 w-10 h-10 rounded-xl bg-bg-light border border-border-light flex items-center justify-center text-text-secondary shadow-sm">
                 {getActionIcon(item.actionType)}
               </div>
-              <div className="flex flex-col flex-grow justify-center">
+              <div className="flex flex-col grow justify-center">
                 <p className="text-sm text-text-primary leading-relaxed">
                   <span className="text-primary font-semibold">{item.userId?.name || 'A user'}</span>{' '}
                   {item.description}

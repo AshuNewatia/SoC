@@ -13,7 +13,7 @@ export default function Column({ column, onCreateTask, onTaskClick }) {
 
   return (
 
-    <motion.div className="w-full h-64 md:h-106 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col overflow-hidden">
+    <motion.div className="w-full h-64 md:h-111 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col overflow-hidden">
       {/* Header */}
       <div className="px-5 py-4 border-b border-slate-200 bg-white shrink-0">
         <div className="flex items-center justify-between">
