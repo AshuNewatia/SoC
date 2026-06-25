@@ -161,6 +161,8 @@ export const removeMember = async (req, res) => {
 
     const workspace = await Workspace.findById(workspaceId);
 
+    const userToRemove = await User.findById(userId);
+
     if (!workspace) {
       return res.status(404).json({
         message: "Workspace not found"
@@ -217,6 +219,13 @@ export const removeMember = async (req, res) => {
       );
 
     await workspace.save();
+
+    await logActivity(
+      workspace._id,
+      req.user._id,
+      "MEMBER_REMOVED",
+      `removed ${userToRemove.name} from the workspace`
+    );
 
     res.status(200).json({
       message: "Member removed"
