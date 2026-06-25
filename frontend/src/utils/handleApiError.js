@@ -1,4 +1,4 @@
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 export const handleApiError = (err) => {
   toast.error(
@@ -8,7 +8,6 @@ export const handleApiError = (err) => {
   );
 };
 
-import { toast } from "react-toastify";
 
 export const handleSuccess = (message) => {
   toast.success(message || "Operation successful");
