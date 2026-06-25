@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Outlet, useNavigate} from "react-router-dom";
 import { io } from "socket.io-client";
+import { handleApiError,handleSuccess } from "../utils/handleApiError";
 
 import WorkspaceNav from "../components/workspace/WorkspaceNav";
 import WorkspaceHero from "../components/workspace/WorkspaceHero";
@@ -29,25 +30,27 @@ export default function Workspace() {
       setWorkspace(res.data);
 
       setSettingsOpen(false);
-
+      handleSuccess("Workspace updated successfully");
       window.dispatchEvent(
         new CustomEvent("workspaceListChanged")
       );
     } catch (err) {
       console.error(err);
+      handleApiError(err);
     }
   };
 
   const handleDeleteWorkspace = async () => {
     try {
       await deleteWorkspace(id);
-
+      handleSuccess("Workspace deleted successfully");
       window.dispatchEvent(
         new CustomEvent("workspaceListChanged")
       );
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
+      handleApiError(err);
     }
   };
 

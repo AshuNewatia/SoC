@@ -532,7 +532,7 @@ const formatActivityTime = (date) => {
       {/* Productivity Widgets */}
       <div className="grid lg:grid-cols-3 gap-5 mb-6">
         {/* Upcoming Deadlines */}
-        <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-5 h-[350px] flex flex-col">
+        <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-5 h-87.5 flex flex-col">
   <div className="flex items-center justify-between mb-4">
     <h2 className="text-lg font-semibold text-text-primary">
       Upcoming Deadlines
@@ -571,7 +571,7 @@ const formatActivityTime = (date) => {
         return (
           <div
             key={task._id}
-            className="group relative overflow-hidden rounded-2xl border border-border-light bg-gradient-to-br from-white to-slate-50 p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
+            className="group relative overflow-hidden rounded-2xl border border-border-light bg-linear-to-br from-white to-slate-50 p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
           >
             {/* Priority Accent */}
             <div
@@ -650,7 +650,7 @@ const formatActivityTime = (date) => {
     {notes.map((note) => (
       <div
         key={note._id}
-        className="group relative overflow-hidden rounded-2xl border border-border-light bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
+        className="group relative overflow-hidden rounded-2xl border border-border-light bg-linear-to-br from-white to-slate-50 p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
       >
         {/* Accent */}
         <div className="absolute left-0 top-0 h-full w-1 bg-primary rounded-l-2xl"></div>
@@ -717,7 +717,7 @@ const formatActivityTime = (date) => {
         </div>
 
         {/* Task Distribution */}
-        <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-5 h-[350px] flex flex-col">
+        <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-5 h-87.5 flex flex-col">
   {/* Header */}
   <div className="flex items-center justify-between mb-5">
     <div>

@@ -39,7 +39,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
       
       // 👇 3. Fetch workspaces to update the global context state instantly
       await fetchWorkspaces();
-      
+      handleSubmit("Workspace created successfully");
       setCreateOpen(false);
     } catch (err) {
       console.error("Error creating workspace", err);

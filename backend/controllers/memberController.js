@@ -86,7 +86,7 @@ export const addMemberToWorkspace = async (req, res) => {
 
     if (!isOwner && !isAdmin) {
       return res.status(403).json({
-        message: "Not authorized",
+        message: "You can not invite member",
       });
     }
 
@@ -190,7 +190,7 @@ export const removeMember = async (req, res) => {
 
     if (!isOwner && !isAdmin) {
       return res.status(403).json({
-        message: "Not authorized"
+        message: "You can not remove member"
       });
     }
 
