@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
+import { handleApiError, handleSuccess } from '../../utils/handleApiError';
 import {
   MoreVertical,
   Shield,
@@ -77,10 +78,11 @@ export default function WorkspaceMembers() {
       const res = await api.get(`/api/workspaces/${id}/members`);
       setMembers(res.data);
       setInviteEmail('');
+      handleSuccess("Member added successfully");
       setInviteOpen(false);
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || 'Failed to invite member');
+      handleApiError(err);
     }
   };
 
@@ -89,10 +91,11 @@ export default function WorkspaceMembers() {
       await api.post(`/api/workspaces/${id}/admins/${memberId}`);
       const res = await api.get(`/api/workspaces/${id}/members`);
       setMembers(res.data);
+      handleSuccess("Promoted to admin successfully");
       setOpenMenu(null);
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || 'Failed to promote member');
+      handleApiError(err);
     }
   };
 
@@ -101,10 +104,11 @@ export default function WorkspaceMembers() {
       await api.delete(`/api/workspaces/${id}/admins/${memberId}`);
       const res = await api.get(`/api/workspaces/${id}/members`);
       setMembers(res.data);
+      handleSuccess("Demoted to member successfully");
       setOpenMenu(null);
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || 'Failed to demote member');
+      handleApiError(err);
     }
   };
 
@@ -114,10 +118,11 @@ export default function WorkspaceMembers() {
       await api.delete(`/api/workspaces/${id}/members/${memberId}`);
       const res = await api.get(`/api/workspaces/${id}/members`);
       setMembers(res.data);
+      handleSuccess("Member removed successfully");
       setOpenMenu(null);
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || 'Failed to remove member');
+      handleApiError(err);
     }
   };
 
