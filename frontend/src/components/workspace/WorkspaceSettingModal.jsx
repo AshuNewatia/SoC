@@ -10,20 +10,22 @@ export default function WorkspaceSettingsModal({
 }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  
+
   // Add state for GitHub integration fields
   const [githubRepo, setGithubRepo] = useState("");
   const [githubToken, setGithubToken] = useState("");
+
+  
 
   useEffect(() => {
     if (workspace) {
       setName(workspace.name || "");
       setDescription(workspace.description || "");
       setGithubRepo(workspace.githubRepo || "");
-      
+
       // We usually don't send the raw token back from the database for security reasons,
       // but if you do, populate it. Otherwise, leave it blank for them to update.
-      setGithubToken(workspace.githubToken || ""); 
+      setGithubToken(workspace.githubToken || "");
     }
   }, [workspace]);
 

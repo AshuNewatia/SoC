@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Outlet } from "react-router-dom";
+import { useParams, Outlet, useNavigate} from "react-router-dom";
 import { io } from "socket.io-client";
 
 import WorkspaceNav from "../components/workspace/WorkspaceNav";
 import WorkspaceHero from "../components/workspace/WorkspaceHero";
-import api from "../services/api"; // ✅ authenticated axios instance
+import WorkspaceSettingsModal from "../components/workspace/WorkspaceSettingModal";
+import api from "../services/api"; 
+import { updateWorkspace, deleteWorkspace } from "../services/workspaceServices";
 
 // Socket instance (reused, autoConnect false)
 const socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", {
@@ -18,6 +20,36 @@ export default function Workspace() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleUpdateWorkspace = async (data) => {
+    try {
+      const res = await updateWorkspace(id, data);
+
+      setWorkspace(res.data);
+
+      setSettingsOpen(false);
+
+      window.dispatchEvent(
+        new CustomEvent("workspaceListChanged")
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteWorkspace = async () => {
+    try {
+      await deleteWorkspace(id);
+
+      window.dispatchEvent(
+        new CustomEvent("workspaceListChanged")
+      );
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -83,6 +115,13 @@ export default function Workspace() {
       )}
       <WorkspaceNav workspace={workspace} />
       <Outlet context={{ workspace, socket }} />
+      <WorkspaceSettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        workspace={workspace}
+        onSave={handleUpdateWorkspace}
+        onDelete={handleDeleteWorkspace}
+      />
     </div>
   );
 }
