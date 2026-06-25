@@ -55,12 +55,12 @@ export default function BoardColumn({
               </div>
             )}
 
-            {tasks.map((task, index) => (
+                       {tasks.map((task, index) => (
               <Draggable
-                key={task._id.toString()}
-                draggableId={task._id.toString()}
-                index={index}
-              >
+  key={task?._id?.toString() || `task-${index}`}
+  draggableId={task?._id?.toString() || `task-${index}`}
+  index={index}
+>
                 {(provided) => (
                   <div
                     ref={provided.innerRef}
