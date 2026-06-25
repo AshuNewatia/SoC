@@ -4,13 +4,18 @@ import { formatDistanceToNow, format } from 'date-fns';
 import {
   UserPlus,
   UserMinus,
-  CheckCircle2,
-  PenSquare,
-  Trash2,
   PlusCircle,
+  PenSquare,
+  CheckCircle2,
+  Trash2,
   ShieldCheck,
   Clock,
-} from 'lucide-react';
+  Settings,
+  Github,
+  Link2,
+  Unlink,
+  CalendarClock,
+} from "lucide-react";
 import api from '../../services/api';
 
 export default function WorkspaceActivity() {
@@ -108,7 +113,11 @@ export default function WorkspaceActivity() {
     });
     const otherKeys = Object.keys(groups)
       .filter((key) => !order.includes(key))
-      .sort((a, b) => new Date(b) - new Date(a));
+      .sort(
+        (a, b) =>
+          new Date(groups[b][0].createdAt) -
+          new Date(groups[a][0].createdAt)
+      );
     otherKeys.forEach((key) => {
       sortedGroups[key] = groups[key];
     });
@@ -121,31 +130,58 @@ export default function WorkspaceActivity() {
   // ------------------------------------------------
   const getActivityConfig = (actionType) => {
     switch (actionType) {
-      case 'MEMBER_ADDED':
-        return { icon: UserPlus, color: 'text-blue-500', bg: 'bg-blue-50' };
-      case 'MEMBER_REMOVED':
-        return { icon: UserMinus, color: 'text-red-500', bg: 'bg-red-50' };
-      case 'TASK_CREATED':
-        return { icon: PlusCircle, color: 'text-green-500', bg: 'bg-green-50' };
-      case 'TASK_UPDATED':
-        return { icon: PenSquare, color: 'text-amber-500', bg: 'bg-amber-50' };
-      case 'TASK_COMPLETED':
-        return { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50' };
-      case 'TASK_DELETED':
-        return { icon: Trash2, color: 'text-red-400', bg: 'bg-red-50' };
-      case 'ADMIN_PROMOTED':
-        return { icon: ShieldCheck, color: 'text-purple-500', bg: 'bg-purple-50' };
-      case 'ADMIN_REMOVED':
-        return { icon: ShieldCheck, color: 'text-gray-500', bg: 'bg-gray-50' };
+      case "ADMIN_PROMOTED":
+        return { icon: ShieldCheck, color: "text-purple-500", bg: "bg-purple-50" };
+      case "ADMIN_REMOVED":
+        return { icon: ShieldCheck, color: "text-gray-500", bg: "bg-gray-50" };
+      case "GITHUB_LINKED":
+        return { icon: Link2, color: "text-green-600", bg: "bg-green-50" };
+      case "GITHUB_UNLINKED":
+        return { icon: Unlink, color: "text-orange-500", bg: "bg-orange-50" };
+      case "MEMBER_ADDED":
+        return { icon: UserPlus, color: "text-blue-500", bg: "bg-blue-50" };
+      case "MEMBER_REMOVED":
+        return { icon: UserMinus, color: "text-red-500", bg: "bg-red-50" };
+      case "TASK_COMPLETED":
+        return { icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-50" };
+      case "TASK_CREATED":
+        return { icon: PlusCircle, color: "text-green-500", bg: "bg-green-50" };
+      case "TASK_DELETED":
+        return { icon: Trash2, color: "text-red-400", bg: "bg-red-50" };
+      case "TASK_UPDATED":
+        return { icon: PenSquare, color: "text-amber-500", bg: "bg-amber-50" };
+      case "WORKSPACE_CREATED":
+        return { icon: PlusCircle, color: "text-cyan-500", bg: "bg-cyan-50" };
+      case "WORKSPACE_UPDATED":
+        return { icon: Settings, color: "text-indigo-500", bg: "bg-indigo-50" };
+      case 'TASK_ASSIGNED':
+        return { icon: UserPlus, color: 'text-cyan-500', bg: 'bg-cyan-50' };
+      case 'TASK_DUE_DATE_CHANGED':
+        return { icon: CalendarClock, color: 'text-orange-500', bg: 'bg-orange-50' };
+
       default:
-        return { icon: Clock, color: 'text-gray-500', bg: 'bg-gray-50' };
+        return { icon: Clock, color: "text-gray-500", bg: "bg-gray-50" };
     }
   };
 
-  const getRelativeTime = (dateString) => {
-    if (!dateString) return '';
-    return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+  const formatDateTime = (dateString) => {
+    return new Date(dateString).toLocaleString(
+      "en-IN",
+      {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
   };
+
+  const getRelativeTime = (date) =>
+    formatDistanceToNow(
+      new Date(date),
+      { addSuffix: true }
+    );;
 
   const getUserInitials = (name) => {
     if (!name) return '?';
@@ -178,11 +214,10 @@ export default function WorkspaceActivity() {
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
-                  activeFilter === filter
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'bg-transparent border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800'
-                }`}
+                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${activeFilter === filter
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-transparent border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+                  }`}
               >
                 {filter}
               </button>
@@ -257,13 +292,16 @@ export default function WorkspaceActivity() {
                           {item.description}
                         </p>
                         <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 font-medium">
-                          <span
-                            className="flex items-center gap-1 cursor-help"
-                            title={exactTimestamp}
-                          >
-                            <Clock size={12} className="text-slate-400" />
+                          <span>
+                            {formatDateTime(item.createdAt)}
+                          </span>
+
+                          <span>•</span>
+
+                          <span>
                             {getRelativeTime(item.createdAt)}
                           </span>
+
                         </div>
                       </div>
                     </div>

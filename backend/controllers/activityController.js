@@ -35,4 +35,4 @@ export const logActivity = async (workspaceId, userId, actionType, description) 
   } catch (error) {
     console.error("Failed to log activity:", error);
   }
-};
+}; 

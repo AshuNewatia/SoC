@@ -1,6 +1,8 @@
 import Task from "../models/Task.js";
 import Workspace from "../models/Workspace.js";
+import User from "../models/User.js";
 import { createGithubIssue, updateGithubIssueState } from "../services/githubService.js";
+import { logActivity } from "./activityController.js";
 
 
 export const createTask = async (req, res) => {
@@ -65,6 +67,28 @@ export const createTask = async (req, res) => {
 
         await task.save();
 
+
+
+        await logActivity(
+            existingWorkspace._id,
+            req.user._id,
+            "TASK_CREATED",
+            `created task "${title}"`
+        );
+        const assignedUsers = await User.find({
+            _id: { $in: assignedTo }
+        });
+        if (assignedUsers.length > 0) {
+            await logActivity(
+                existingWorkspace._id,
+                req.user._id,
+                "TASK_ASSIGNED",
+                `assigned "${title}" to ${assignedUsers
+                    .map(user => user.name)
+                    .join(", ")}`
+            );
+        }
+
         res.status(201).json(task);
 
     } catch (error) {
@@ -82,6 +106,10 @@ export const getTasks = async (req, res) => {
         const { workspaceId } = req.params;
 
         const existingWorkspace = await Workspace.findById(workspaceId);
+
+        if (!existingWorkspace) {
+            return res.status(404).json({ message: "Workspace not found!" });
+        }
 
         const isOwner =
             existingWorkspace.owner.toString() ===
@@ -107,9 +135,6 @@ export const getTasks = async (req, res) => {
             });
         }
 
-        if (!existingWorkspace) {
-            return res.status(404).json({ message: "Workspace not found!" });
-        }
         const tasks = await Task.find({
             workspace: workspaceId
         })
@@ -210,6 +235,14 @@ export const updateTaskStatus = async (req, res) => {
                 );
             }
         }
+        if (updatedTask.status === "completed") {
+            await logActivity(
+                workspace._id,
+                req.user._id,
+                "TASK_COMPLETED",
+                `completed task "${updatedTask.title}"`
+            );
+        }
         res.status(200).json({
             message: "Task status updated",
             task: updatedTask,
@@ -255,6 +288,13 @@ export const deleteTask = async (req, res) => {
 
         await Task.findByIdAndDelete(taskId);
 
+        await logActivity(
+            workspace._id,
+            req.user._id,
+            "TASK_DELETED",
+            `deleted task "${taskToDelete.title}"`
+        );
+
         res.status(200).json({ message: "Task deleted" });
     } catch (error) {
         res.status(500).json({ message: "Server Error" });
@@ -265,11 +305,15 @@ export const updateTask = async (req, res) => {
     try {
         const { taskId } = req.params;
 
-        // 👇 BUG FIX: Fetch the task and workspace first before checking roles!
         const taskToUpdate = await Task.findById(taskId);
         if (!taskToUpdate) {
             return res.status(404).json({ message: "Task not found" });
         }
+
+        const oldAssignedUsers = taskToUpdate.assignedTo.map(
+            id => id.toString()
+        );
+        const oldDueDate = taskToUpdate.dueDate;
 
         const workspace = await Workspace.findById(taskToUpdate.workspace);
 
@@ -293,7 +337,42 @@ export const updateTask = async (req, res) => {
             req.body,
             { new: true }
         );
+        const newAssignedUsers = updatedTask.assignedTo.map(
+            id => id.toString()
+        );
 
+        if (
+            JSON.stringify(oldAssignedUsers) !==
+            JSON.stringify(newAssignedUsers)
+        ) {
+            const assignedUsers = await User.find({
+                _id: { $in: updatedTask.assignedTo }
+            });
+
+            await logActivity(
+                workspace._id,
+                req.user._id,
+                "TASK_ASSIGNED",
+                `assigned "${updatedTask.title}" to ${assignedUsers
+                    .map(user => user.name)
+                    .join(", ")}`
+            );
+        }
+        if (
+            oldDueDate?.toString() !==
+            updatedTask.dueDate?.toString()
+        ) {
+            const newDate = new Date(
+                updatedTask.dueDate
+            ).toLocaleDateString();
+
+            await logActivity(
+                workspace._id,
+                req.user._id,
+                "TASK_DUE_DATE_CHANGED",
+                `changed due date of "${updatedTask.title}" to ${newDate}`
+            );
+        }
         res.status(200).json(updatedTask);
 
     } catch (error) {

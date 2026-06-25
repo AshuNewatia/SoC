@@ -1,5 +1,6 @@
 import Workspace from "../models/Workspace.js";
 import mongoose from "mongoose";
+import { logActivity } from "./activityController.js";
 
 // ─── CREATE ──────────────────────────────────────────────
 export const createWorkspace = async (req, res) => {
@@ -20,6 +21,13 @@ export const createWorkspace = async (req, res) => {
     });
 
     await workspace.save();
+
+    await logActivity(
+      workspace._id,
+      req.user._id,
+      "WORKSPACE_CREATED",
+      `created workspace "${name}"`
+    );
 
     res.status(201).json({
       message: "Workspace created successfully",
@@ -123,6 +131,14 @@ export const updateWorkspace = async (req, res) => {
     if (githubToken !== undefined) workspace.githubToken = githubToken;
 
     await workspace.save();
+
+    await logActivity(
+      workspace._id,
+      req.user._id,
+      "WORKSPACE_UPDATED",
+      `updated workspace settings`
+    );
+
     res.status(200).json(workspace);
   } catch (error) {
     console.error(error);
