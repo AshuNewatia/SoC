@@ -11,12 +11,6 @@ const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1d' });
 };
 
-// ==========================================
-// 1. STANDARD EMAIL/PASSWORD AUTHENTICATION
-// ==========================================
-
-// @desc    Register a new user
-// @route   POST /api/auth/signup
 export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -69,50 +63,71 @@ export const signup = async (req, res) => {
 // @route   POST /api/auth/login
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
 
-    // Find user by email
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Please provide email and password",
+      });
+    }
+
+    email = email.trim().toLowerCase();
+
     const user = await User.findOne({ email });
+
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      console.log("User not found:", email);
+
+      return res.status(401).json({
+        message: "Invalid credentials",
+      });
     }
 
-    // Safety check: If they signed up with OAuth but never set a password
-    if (!user.password || !user.hasPassword) {
-      return res.status(401).json({ message: 'Please sign in using your Google or GitHub account.' });
+    if (!user.hasPassword || !user.password) {
+      return res.status(401).json({
+        message:
+          "This account was created using Google/GitHub login.",
+      });
     }
 
-    // Compare password with hashed version
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    console.log("Login Attempt:", {
+      email,
+      match: isMatch,
+    });
+
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid Password' });
+      return res.status(401).json({
+        message: "Invalid password",
+      });
     }
 
-    // Generate token
     const token = generateToken(user._id);
 
-    res.json({
+    return res.status(200).json({
       token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         avatar: user.avatar,
-        role: user.role
-      }
+        role: user.role,
+      },
     });
   } catch (error) {
-    console.error('Login Error:', error);
-    res.status(500).json({ message: 'Server error during login' });
+    console.error("Login Error:", error);
+
+    return res.status(500).json({
+      message: "Server error during login",
+      error: error.message,
+    });
   }
 };
 
-// ==========================================
-// 2. OAUTH AUTHENTICATION (GOOGLE & GITHUB)
-// ==========================================
-
-// @desc    Google OAuth Login/Signup
-// @route   POST /api/auth/google
 export const googleAuth = async (req, res) => {
   try {
     const { code } = req.body;
@@ -183,6 +198,7 @@ export const githubAuth = async (req, res) => {
       client_id: process.env.GITHUB_CLIENT_ID,
       client_secret: process.env.GITHUB_CLIENT_SECRET,
       code,
+      redirect_uri: `${process.env.CLIENT_URL}/oauth/callback`,
     }, {
       headers: { Accept: 'application/json' },
     });
@@ -193,24 +209,40 @@ export const githubAuth = async (req, res) => {
       headers: { Authorization: `Bearer ${access_token}` },
     });
 
-    const { id: githubId, login, avatar_url, email } = userResponse.data;
-    const userEmail = email || `${login}@github.user`; 
+    const { id: githubId, login, avatar_url } = userResponse.data;
+    let userEmail = userResponse.data.email;
 
-    // --- DOMAIN GATEKEEPER ---
-    if (!userEmail.endsWith('@iiti.ac.in')) {
-      return res.status(403).json({ message: 'Access denied. Please ensure your primary GitHub email is your official institute address.' });
+    // FETCH PRIVATE EMAILS (If primary is hidden)
+    if (!userEmail) {
+      const emailResponse = await axios.get('https://api.github.com/user/emails', {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+      
+      const primaryEmailObj = emailResponse.data.find(
+        (e) => e.primary && e.verified
+      );
+      
+      if (primaryEmailObj) {
+        userEmail = primaryEmailObj.email;
+      }
+    }
+
+    // --- NO DOMAIN GATEKEEPER FOR GITHUB ---
+    // We just ensure they have an email attached to their account so the DB doesn't fail
+    if (!userEmail) {
+      return res.status(400).json({ 
+        message: 'Could not retrieve a valid email from your GitHub account. Please ensure you have a verified email on GitHub.' 
+      });
     }
 
     let user = await User.findOne({ $or: [{ githubId }, { email: userEmail }] });
 
-    // INTERCEPT
     if (!user) {
       const tempToken = jwt.sign(
         { email: userEmail, name: login, githubId, avatar: avatar_url, provider: 'github' }, 
         process.env.JWT_SECRET, 
         { expiresIn: '15m' }
       );
-      
       
       return res.status(200).json({
         action: 'requires_profile_creation',
@@ -219,21 +251,21 @@ export const githubAuth = async (req, res) => {
       });
     } 
     
-    // LOGIN
     if (!user.githubId) {
       user.githubId = githubId;
       await user.save();
     }
-    const role = getRoleFromEmail(email);
+
     const token = generateToken(user._id);
     return res.status(200).json({
       action: 'login',
       token,
       user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, role: user.role },
     });
+
   } catch (error) {
     console.error('GitHub Auth Error:', error.response?.data || error.message);
-    res.status(500).json({ message: 'GitHub authentication failed' });
+    res.status(500).json({ message: 'GitHub authentication failed.' });
   }
 };
 

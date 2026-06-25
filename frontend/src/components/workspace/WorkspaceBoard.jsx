@@ -1,4 +1,4 @@
-// src/pages/KanbanBoard.jsx
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Plus } from "lucide-react";
@@ -16,7 +16,7 @@ import {
   updateTask as updateTaskApi,
   deleteTask as deleteTaskApi,
   updateTaskStatus as updateTaskStatusApi,
-} from "../../api/taskApi";
+} from "../../api/taskApi.js";
 
 const emptyBoard = {
   columns: {

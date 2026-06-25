@@ -67,7 +67,7 @@ function Signup() {
     const options = {
       client_id: 'Ov23liAjvQDdoB6Ix9s4', 
       // Dynamically uses localhost or Render depending on where the app is running
-      redirect_uri: `${window.location.origin}/oauth/callback`,
+      redirect_uri: "http://localhost:5173/oauth/callback",
       scope: 'user:email',
     };
     const qs = new URLSearchParams(options).toString();

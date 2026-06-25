@@ -48,7 +48,7 @@ function CreateProfile() {
       // Dynamic API URL for Local vs Render
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-      const response = await axios.post(`${API_BASE_URL}/api/auth/complete-oauth`, {
+      const response = await axios.post(`${API_BASE_URL}/auth/complete-oauth`, {
         tempToken,
         password: formData.password,
         // Only send the name if they typed one, otherwise the backend will 
