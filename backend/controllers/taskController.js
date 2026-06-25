@@ -31,7 +31,7 @@ export const createTask = async (req, res) => {
 
         if (!isOwner && !isAdmin) {
             return res.status(403).json({
-                message: "Not authorized",
+                message: "Member can not create task",
             });
         }
 
@@ -250,7 +250,7 @@ export const deleteTask = async (req, res) => {
             );
 
         if (!isOwner && !isAdmin) {
-            return res.status(403).json({ message: "Not authorized" });
+            return res.status(403).json({ message: "Member can not delete task" });
         }
 
         await Task.findByIdAndDelete(taskId);
@@ -285,7 +285,7 @@ export const updateTask = async (req, res) => {
             );
 
         if (!isOwner && !isAdmin) {
-            return res.status(403).json({ message: "Not authorized" });
+            return res.status(403).json({ message: "Member can not update task" });
         }
 
         const updatedTask = await Task.findByIdAndUpdate(
