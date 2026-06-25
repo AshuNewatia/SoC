@@ -9,6 +9,7 @@ import Column from "../kanban/Column";
 import TaskDrawer from "../kanban/TaskDrawer";
 import CreateTaskModal from "../kanban/CreateTaskModal";
 import EditTaskModal from "../kanban/EditTaskModal";
+import { handleApiError, handleSuccess } from "../../utils/handleApiError";
 
 import {
   getTasks,
@@ -132,10 +133,11 @@ export default function KanbanBoard() {
       const savedTask = res.data;
       await fetchTasks();
       socket.emit("taskCreated", savedTask);
+      handleSuccess("Task created successfully");
       setCreateOpen(false);
     } catch (err) {
       console.error("Error creating task:", err);
-      alert(`Task Creation Failed: ${err.response?.data?.message || err.message}`);
+      handleApiError(err);
     }
   };
 
@@ -146,8 +148,10 @@ export default function KanbanBoard() {
       setDrawerOpen(false);
       setSelectedTask(null);
       socket.emit("taskDeleted", task);
+      handleSuccess("Task deleted successfully");
     } catch (err) {
       console.error("Error deleting task:", err);
+      handleApiError(err);
     }
   };
 
@@ -156,9 +160,11 @@ export default function KanbanBoard() {
       await updateTaskApi(selectedTask._id, updatedTask);
       await fetchTasks();
       socket.emit("taskUpdated", { ...selectedTask, ...updatedTask });
+      handleSuccess("Task updated successfully");
       setEditOpen(false);
     } catch (err) {
       console.error("Error updating task:", err);
+      handleApiError(err);
     }
   };
 
@@ -204,6 +210,7 @@ export default function KanbanBoard() {
       socket.emit("taskMoved", movedTask);
     } catch (err) {
       console.error("Error moving task:", err);
+      handleApiError(err);
       await fetchTasks();
     }
   };
