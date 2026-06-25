@@ -9,8 +9,6 @@ import api from "../../../services/api";
 import { useAuth } from "../../../context/authContext";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import WorkspaceSettingsModal from "../WorkspaceSettingModal";
-import { updateWorkspace, deleteWorkspace, } from "../../../services/workspaceServices";
 
 export default function WorkspaceOverview() {
   const { id } = useParams();
@@ -115,14 +113,7 @@ export default function WorkspaceOverview() {
 
   return (
     <>
-      <WorkspaceSettingsModal
-        isOpen={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        workspace={workspace}
-        onSave={handleUpdateWorkspace}
-        onDelete={handleDeleteWorkspace}
-      />
-      <div className="space-y-4 p-1.5">
+      <div className="space-y-4 p-1.35">
         <Overview
           onlineUsers={onlineUsers}
           totalTasks={totalTasks}

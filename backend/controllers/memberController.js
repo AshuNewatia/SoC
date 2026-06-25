@@ -64,39 +64,72 @@ export const addMemberToWorkspace = async (req, res) => {
     const { workspaceId } = req.params;
     const { email } = req.body;
 
-    // 1. Find the user they are trying to invite
-    const userToAdd = await User.findOne({ email });
-    if (!userToAdd) {
-      return res.status(404).json({ message: "User not found. Ask them to register first." });
-    }
-
-    // 2. Find the workspace
     const workspace = await Workspace.findById(workspaceId);
+
     if (!workspace) {
-      return res.status(404).json({ message: "Workspace not found" });
+      return res.status(404).json({
+        message: "Workspace not found",
+      });
     }
 
-    // 3. Ensure the owner isn't being added to the members array
-    if (workspace.owner.toString() === userToAdd._id.toString()) {
-      return res.status(400).json({ message: "This user is already the owner." });
+    // Permission Check
+    const isOwner =
+      workspace.owner.toString() ===
+      req.user._id.toString();
+
+    const isAdmin =
+      workspace.admins.some(
+        (admin) =>
+          admin.toString() ===
+          req.user._id.toString()
+      );
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        message: "Not authorized",
+      });
     }
 
-    // 4. Ensure the user isn't already in the members array
-    if (workspace.members.includes(userToAdd._id)) {
-      return res.status(400).json({ message: "User is already a member." });
+    // Find user by email
+    const userToAdd = await User.findOne({ email });
+
+    if (!userToAdd) {
+      return res.status(404).json({
+        message: "User not found",
+      });
     }
 
-    // 5. Add user and save
+    // Owner already exists
+    if (
+      workspace.owner.toString() ===
+      userToAdd._id.toString()
+    ) {
+      return res.status(400).json({
+        message: "User is already the owner",
+      });
+    }
+
+    // Already member
+    const alreadyMember =
+      workspace.members.some(
+        (member) =>
+          member.toString() ===
+          userToAdd._id.toString()
+      );
+
+    if (alreadyMember) {
+      return res.status(400).json({
+        message: "User is already a member",
+      });
+    }
+
     workspace.members.push(userToAdd._id);
-    await workspace.save();
 
-    // 6. Log the activity 
-    // (Assuming req.user.id is the person who sent the invite, provided by auth middleware)
-    const actionUserId = req.user?.id || workspace.owner;
+    await workspace.save();
 
     await logActivity(
       workspace._id,
-      actionUserId,
+      req.user._id,
       "MEMBER_ADDED",
       `Added ${userToAdd.name} to the workspace`
     );
@@ -109,12 +142,16 @@ export const addMemberToWorkspace = async (req, res) => {
         email: userToAdd.email,
         avatar: userToAdd.avatar,
         role: "Member",
-        tasksCompleted: 0
-      }
+      },
     });
+
   } catch (error) {
-    console.error("Error adding member:", error);
-    res.status(500).json({ message: "Failed to add member" });
+    console.error("ADD MEMBER ERROR:");
+    console.error(error);
+
+    res.status(500).json({
+      message: "Server Error",
+    });
   }
 };
 
@@ -127,6 +164,16 @@ export const removeMember = async (req, res) => {
     if (!workspace) {
       return res.status(404).json({
         message: "Workspace not found"
+      });
+    }
+
+    if (
+      userId ===
+      req.user._id.toString()
+    ) {
+      return res.status(400).json({
+        message:
+          "You cannot remove yourself"
       });
     }
 
@@ -152,6 +199,16 @@ export const removeMember = async (req, res) => {
         member =>
           member.toString() !== userId
       );
+
+    const targetIsAdmin =
+      workspace.admins.some(
+        admin =>
+          admin.toString() === userId
+      );
+
+    if (targetIsAdmin && !isOwner) {
+      return res.status(401).json({ message: "Only owner can remove admin" })
+    }
 
     workspace.admins =
       workspace.admins.filter(
@@ -196,7 +253,13 @@ export const promoteToAdmin = async (req, res) => {
       });
     }
 
-    if (!workspace.members.includes(userId)) {
+    const isMember =
+      workspace.members.some(
+        member =>
+          member.toString() === userId
+      );
+
+    if (!isMember) {
       return res.status(400).json({
         message: "User is not a member"
       });

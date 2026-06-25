@@ -18,4 +18,5 @@ export const deleteTask = (taskId) =>
 export const updateTaskStatus = (taskId, data) => 
   axios.put(`${API_URL}/api/tasks/${taskId}/status`, data);
 
+
 console.log("taskApi.js loaded with direct axios exports");

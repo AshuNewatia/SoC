@@ -1,21 +1,21 @@
-import axios from "axios";
+import api from "../services/api";
 
-// Using the hardcoded URL to bypass any potential issues with services/api.js
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
+// ─── GET ALL TASKS FOR A WORKSPACE ─────────────────────────────
 export const getTasks = (workspaceId) => 
-  axios.get(`${API_URL}/api/workspaces/${workspaceId}/tasks`);
+  api.get(`/api/workspaces/${workspaceId}/tasks`);
 
+// ─── CREATE A NEW TASK IN A WORKSPACE ──────────────────────────
 export const createTask = (workspaceId, task) => 
-  axios.post(`${API_URL}/api/workspaces/${workspaceId}/tasks`, task);
+  api.post(`/api/workspaces/${workspaceId}/tasks`, task);
 
+// ─── UPDATE A TASK'S DETAILS ───────────────────────────────────
 export const updateTask = (taskId, task) => 
-  axios.put(`${API_URL}/api/tasks/${taskId}`, task);
+  api.put(`/api/tasks/${taskId}`, task);
 
+// ─── DELETE A TASK ─────────────────────────────────────────────
 export const deleteTask = (taskId) => 
-  axios.delete(`${API_URL}/api/tasks/${taskId}`);
+  api.delete(`/api/tasks/${taskId}`);
 
+// ─── UPDATE ONLY TASK STATUS (For Drag & Drop) ─────────────────
 export const updateTaskStatus = (taskId, data) => 
-  axios.put(`${API_URL}/api/tasks/${taskId}/status`, data);
-
-console.log("taskApi.js loaded with direct axios exports");
+  api.put(`/api/tasks/${taskId}/status`, data);

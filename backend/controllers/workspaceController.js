@@ -52,7 +52,6 @@ export const getWorkspaceById = async (req, res) => {
   try {
     const { workspaceId } = req.params;
 
-    // ✅ friend’s better ObjectId validation
     if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
       return res.status(400).json({ message: "Invalid workspace id" });
     }
@@ -93,7 +92,6 @@ export const updateWorkspace = async (req, res) => {
   try {
     const { workspaceId } = req.params;
     
-    // ✅ FIX 1: Extract the GitHub fields from req.body
     const { name, description, githubRepo, githubToken } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
@@ -106,8 +104,14 @@ export const updateWorkspace = async (req, res) => {
     }
 
     // owner-only check
-    if (workspace.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Only the owner can update this workspace" });
+    const isOwner =
+            workspace.owner.toString() ===
+            req.user._id.toString();
+    
+    if(!isOwner){
+      return res.status(403).json({
+                message: "Only owner can update the workspace",
+            });
     }
 
     // Update standard fields
@@ -141,8 +145,14 @@ export const deleteWorkspace = async (req, res) => {
       return res.status(404).json({ message: "Workspace not found" });
     }
 
-    if (workspace.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Only the owner can delete this workspace" });
+    const isOwner =
+            workspace.owner.toString() ===
+            req.user._id.toString();
+    
+    if(!isOwner){
+      return res.status(403).json({
+                message: "Only owner can delete the workspace",
+            });
     }
 
     await Workspace.findByIdAndDelete(workspaceId);
@@ -152,44 +162,3 @@ export const deleteWorkspace = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
-
-import User from "../models/User.js"; // 👈 Make sure to import the User model at the top!
-
-// ─── ADD MEMBER BY EMAIL ────────────────────────────────
-export const addMember = async (req, res) => {
-  try {
-    const { workspaceId } = req.params;
-    const { email } = req.body;
-
-    // 1. Check if the workspace exists
-    const workspace = await Workspace.findById(workspaceId);
-    if (!workspace) return res.status(404).json({ message: "Workspace not found" });
-
-    // 2. Check if the requester is the owner (Security)
-    if (workspace.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Only the owner can add members" });
-    }
-
-    // 3. Find the user they are trying to add
-    const userToAdd = await User.findOne({ email });
-    if (!userToAdd) return res.status(404).json({ message: "User with that email not found" });
-
-    // 4. Check if they are already a member
-    if (workspace.members.includes(userToAdd._id)) {
-      return res.status(400).json({ message: "User is already a member" });
-    }
-
-    // 5. Add them to the array and save!
-    workspace.members.push(userToAdd._id);
-    await workspace.save();
-
-    // Re-populate the members list so the frontend gets the updated names/emails
-    await workspace.populate("members", "name email");
-
-    res.status(200).json(workspace);
-  } catch (error) {
-    console.error("Error adding member:", error);
-    res.status(500).json({ message: "Server Error" });
-  }
-};
-

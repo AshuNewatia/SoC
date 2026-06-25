@@ -85,7 +85,6 @@ export default function TaskDetailsModal({
                 <option>Low</option>
                 <option>Medium</option>
                 <option>High</option>
-                <option>Critical</option>
               </select>
             </div>
 
@@ -140,15 +139,21 @@ export default function TaskDetailsModal({
             <h3 className="font-semibold text-text-primary mb-3 text-base">
               Activity History
             </h3>
-            {task.activity?.length ? (
+            {task.activityHistory?.length ? (
               <div className="space-y-3 max-h-48 overflow-y-auto">
-                {task.activity.map((item, index) => (
+                {task.activityHistory.map((item, index) => (
                   <div key={index} className="border-l-2 border-primary/30 pl-3">
                     <p className="text-sm font-medium text-text-primary">
                       {item.action}
                     </p>
                     <span className="text-xs text-text-secondary">
-                      {new Date(item.timestamp).toLocaleString()}
+                      {new Date(item.timestamp).toLocaleString("en-IN", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+})}
                     </span>
                   </div>
                 ))}

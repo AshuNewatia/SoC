@@ -13,7 +13,7 @@ export default function Column({ column, onCreateTask, onTaskClick }) {
 
   return (
 
-    <motion.div className="w-full h-64 md:h-106 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col overflow-hidden">
+    <motion.div className="w-full h-64 md:h-111 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col overflow-hidden">
       {/* Header */}
       <div className="px-5 py-4 border-b border-slate-200 bg-white shrink-0">
         <div className="flex items-center justify-between">
@@ -41,13 +41,12 @@ export default function Column({ column, onCreateTask, onTaskClick }) {
               <div className="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center">
                 <div className="text-4xl mb-2">📌</div>
                 <p className="text-slate-500 text-sm">No tasks here</p>
-                <p className="text-xs text-slate-400 mt-1">Drag tasks into this column</p>
               </div>
             )}
             {column.tasks.map((task, index) => (
               <Draggable
-                key={task._id || task.id}
-                draggableId={String(task._id || task.id)}
+                key={task._id || task._id}
+                draggableId={String(task._id || task._id)}
                 index={index}
               >
                 {(provided, snapshot) => (
