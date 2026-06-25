@@ -167,6 +167,16 @@ export const removeMember = async (req, res) => {
       });
     }
 
+    if (
+      userId ===
+      req.user._id.toString()
+    ) {
+      return res.status(400).json({
+        message:
+          "You cannot remove yourself"
+      });
+    }
+
     const isOwner =
       workspace.owner.toString() ===
       req.user._id.toString();
@@ -189,6 +199,16 @@ export const removeMember = async (req, res) => {
         member =>
           member.toString() !== userId
       );
+
+    const targetIsAdmin =
+      workspace.admins.some(
+        admin =>
+          admin.toString() === userId
+      );
+
+    if (targetIsAdmin && !isOwner) {
+      return res.status(401).json({ message: "Only owner can remove admin" })
+    }
 
     workspace.admins =
       workspace.admins.filter(

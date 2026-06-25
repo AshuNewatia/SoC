@@ -167,7 +167,9 @@ export const updateTaskStatus = async (req, res) => {
                     req.user._id.toString()
             ) || false;
 
-        if (!isOwner && !isAdmin) {
+        const isUnassigned = task.assignedTo.length === 0;
+
+        if (!isOwner && !isAdmin && !isUnassigned) {
 
             const isAssigned =
                 task.assignedTo?.some(
