@@ -1,4 +1,4 @@
-// src/pages/KanbanBoard.jsx
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Plus } from "lucide-react";

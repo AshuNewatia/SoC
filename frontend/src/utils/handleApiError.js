@@ -8,7 +8,6 @@ export const handleApiError = (err) => {
   );
 };
 
-
 export const handleSuccess = (message) => {
   toast.success(message || "Operation successful");
 };

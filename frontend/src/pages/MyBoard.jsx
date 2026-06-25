@@ -48,6 +48,8 @@ export default function MyBoard() {
   try {
     const data = await getMyTasks();
 
+    const taskList = Array.isArray(data) ? data : data.tasks ?? [];
+
     const grouped = {
       todo: [],
       progress: [],
@@ -63,6 +65,8 @@ export default function MyBoard() {
         grouped[task.status].push(task);
       }
     });
+
+ console.log("LOAD TASKS RESPONSE:", data);
 
     setTasks(grouped);
   } catch (error) {
@@ -93,6 +97,8 @@ const handleCreateTask = async (newTask) => {
       dueDate: newTask.dueDate,
       status: "todo",
     });
+
+console.log("CREATE RESPONSE:", data);
 
     setTasks((prev) => ({
       ...prev,
