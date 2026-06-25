@@ -1,15 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
-import api from '../../services/api'; // ✅ adjust path
+import { formatDistanceToNow, format } from 'date-fns';
+import {
+  UserPlus,
+  UserMinus,
+  CheckCircle2,
+  PenSquare,
+  Trash2,
+  PlusCircle,
+  ShieldCheck,
+  Clock,
+} from 'lucide-react';
+import api from '../../services/api';
 
 export default function WorkspaceActivity() {
   const { id } = useParams();
-  const { socket } = useOutletContext(); 
-  
+  const { socket } = useOutletContext();
+
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
 
+  // ------------------------------------------------
+  // 1. Fetch & live updates
+  // ------------------------------------------------
   useEffect(() => {
     const fetchActivities = async () => {
       try {
@@ -25,55 +39,149 @@ export default function WorkspaceActivity() {
     fetchActivities();
 
     if (socket) {
-      socket.on("new_activity", (newActivity) => {
+      socket.on('new_activity', (newActivity) => {
         setActivities((prev) => [newActivity, ...prev]);
       });
     }
 
     return () => {
-      if (socket) socket.off("new_activity");
+      if (socket) socket.off('new_activity');
     };
   }, [id, socket]);
 
-  // Filters and helpers unchanged
-  const filters = ['All', 'Tasks', 'Members', 'Files'];
+  // ------------------------------------------------
+  // 2. Filtering – includes 'Admins'
+  // ------------------------------------------------
+  const filters = ['All', 'Tasks', 'Members', 'Admins'];
 
-  const getActionIcon = (actionType) => {
+  const filteredActivities = useMemo(() => {
+    if (activeFilter === 'All') return activities;
+
+    return activities.filter((activity) => {
+      const type = activity.actionType || '';
+      switch (activeFilter) {
+        case 'Tasks':
+          return type.startsWith('TASK_');
+        case 'Members':
+          return type.startsWith('MEMBER_');
+        case 'Admins':
+          return type === 'ADMIN_PROMOTED' || type === 'ADMIN_REMOVED';
+        default:
+          return true;
+      }
+    });
+  }, [activities, activeFilter]);
+
+  // ------------------------------------------------
+  // 3. Group activities by actual dates
+  // ------------------------------------------------
+  const groupedActivities = useMemo(() => {
+    const groups = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    filteredActivities.forEach((activity) => {
+      const date = new Date(activity.createdAt);
+      const dateKey = date.toDateString();
+
+      let groupLabel;
+      if (date.toDateString() === today.toDateString()) {
+        groupLabel = 'Today';
+      } else if (date.toDateString() === yesterday.toDateString()) {
+        groupLabel = 'Yesterday';
+      } else {
+        groupLabel = format(date, 'MMM d, yyyy');
+      }
+
+      if (!groups[groupLabel]) groups[groupLabel] = [];
+      groups[groupLabel].push(activity);
+    });
+
+    // Sort groups: Today, Yesterday, then other dates descending
+    const order = ['Today', 'Yesterday'];
+    const sortedGroups = {};
+    order.forEach((key) => {
+      if (groups[key]) sortedGroups[key] = groups[key];
+    });
+    const otherKeys = Object.keys(groups)
+      .filter((key) => !order.includes(key))
+      .sort((a, b) => new Date(b) - new Date(a));
+    otherKeys.forEach((key) => {
+      sortedGroups[key] = groups[key];
+    });
+
+    return sortedGroups;
+  }, [filteredActivities]);
+
+  // ------------------------------------------------
+  // 4. Helpers: Icons, Colors, Avatar
+  // ------------------------------------------------
+  const getActivityConfig = (actionType) => {
     switch (actionType) {
-      case 'MEMBER_ADDED': return '👤+';
-      case 'TASK_CREATED': return '📅';
-      case 'TASK_UPDATED': return '✏️';
-      case 'TASK_COMPLETED': return '✓';
-      default: return '⚡';
+      case 'MEMBER_ADDED':
+        return { icon: UserPlus, color: 'text-blue-500', bg: 'bg-blue-50' };
+      case 'MEMBER_REMOVED':
+        return { icon: UserMinus, color: 'text-red-500', bg: 'bg-red-50' };
+      case 'TASK_CREATED':
+        return { icon: PlusCircle, color: 'text-green-500', bg: 'bg-green-50' };
+      case 'TASK_UPDATED':
+        return { icon: PenSquare, color: 'text-amber-500', bg: 'bg-amber-50' };
+      case 'TASK_COMPLETED':
+        return { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50' };
+      case 'TASK_DELETED':
+        return { icon: Trash2, color: 'text-red-400', bg: 'bg-red-50' };
+      case 'ADMIN_PROMOTED':
+        return { icon: ShieldCheck, color: 'text-purple-500', bg: 'bg-purple-50' };
+      case 'ADMIN_REMOVED':
+        return { icon: ShieldCheck, color: 'text-gray-500', bg: 'bg-gray-50' };
+      default:
+        return { icon: Clock, color: 'text-gray-500', bg: 'bg-gray-50' };
     }
   };
 
-  const formatTime = (dateString) => {
+  const getRelativeTime = (dateString) => {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return formatDistanceToNow(new Date(dateString), { addSuffix: true });
   };
 
+  const getUserInitials = (name) => {
+    if (!name) return '?';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // ------------------------------------------------
+  // 5. Render
+  // ------------------------------------------------
   return (
-    <div className="w-full max-w-5xl mx-auto bg-surface border border-border-light rounded-(--radius-xl) shadow-sm overflow-hidden font-sans text-text-primary">
-      <div className="flex items-center justify-between p-5 border-b border-border-light bg-surface">
+    <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-sm font-sans overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-white">
         <div className="flex items-center gap-4">
           <div className="text-primary text-xl font-bold">≡</div>
-          <h2 className="text-xl font-semibold text-text-primary">Activity Log</h2>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-50 text-success border border-green-200 text-xs font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse"></span> LIVE
+          <h2 className="text-xl font-bold text-slate-800">Activity Log</h2>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-50 text-emerald-700 border border-green-200 text-xs font-semibold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> LIVE
           </span>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            {filters.map(filter => (
+            {filters.map((filter) => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
-                  activeFilter === filter 
-                    ? 'bg-primary text-white shadow-sm' 
-                    : 'bg-transparent border border-border-light text-text-secondary hover:bg-bg-light hover:text-text-primary'
+                  activeFilter === filter
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-transparent border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800'
                 }`}
               >
                 {filter}
@@ -83,25 +191,84 @@ export default function WorkspaceActivity() {
         </div>
       </div>
 
-      <div className="divide-y divide-border-light bg-surface max-h-[70vh] overflow-y-auto">
+      {/* Activity Feed */}
+      <div className="max-h-[70vh] overflow-y-auto bg-white">
         {loading ? (
-          <div className="p-8 text-center text-text-secondary">Loading live activity...</div>
-        ) : activities.length === 0 ? (
-          <div className="p-8 text-center text-text-secondary">No recent activity found.</div>
+          <div className="p-8 text-center text-slate-500">Loading live activity...</div>
+        ) : Object.keys(groupedActivities).length === 0 ? (
+          <div className="p-8 text-center text-slate-500">
+            <p className="text-lg mb-2">🚀 No activity yet</p>
+            <p className="text-sm">
+              Activity will appear here when members create tasks, complete work, or manage the workspace.
+            </p>
+          </div>
         ) : (
-          activities.map((item) => (
-            <div key={item._id} className="flex gap-4 p-5 hover:bg-bg-light transition-colors">
-              <div className="shrink-0 w-10 h-10 rounded-xl bg-bg-light border border-border-light flex items-center justify-center text-text-secondary shadow-sm">
-                {getActionIcon(item.actionType)}
+          Object.entries(groupedActivities).map(([groupLabel, items]) => (
+            <div key={groupLabel}>
+              {/* Group header */}
+              <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm px-6 py-2 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                {groupLabel}
               </div>
-              <div className="flex flex-col grow justify-center">
-                <p className="text-sm text-text-primary leading-relaxed">
-                  <span className="text-primary font-semibold">{item.userId?.name || 'A user'}</span>{' '}
-                  {item.description}
-                </p>
-                <div className="flex items-center gap-3 mt-1 text-xs text-text-secondary font-medium">
-                  <span className="flex items-center gap-1">⏱ {formatTime(item.createdAt)}</span>
-                </div>
+
+              {/* Timeline */}
+              <div className="relative">
+                {items.map((item, index) => {
+                  const { icon: Icon, color, bg } = getActivityConfig(item.actionType);
+                  const isLast = index === items.length - 1;
+                  const exactTimestamp = new Date(item.createdAt).toLocaleString(undefined, {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                  });
+
+                  return (
+                    <div key={item._id} className="relative flex gap-4 px-6 py-4 hover:bg-slate-50 transition-colors">
+                      {/* Vertical line (except last) */}
+                      {!isLast && (
+                        <div className="absolute left-9 top-12 bottom-0 w-0.5 bg-slate-200" />
+                      )}
+
+                      {/* Avatar + Icon */}
+                      <div className="relative shrink-0">
+                        {item.userId?.avatar ? (
+                          <img
+                            src={item.userId.avatar}
+                            alt={item.userId.name}
+                            className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm border-2 border-white shadow-sm">
+                            {getUserInitials(item.userId?.name)}
+                          </div>
+                        )}
+                        {/* Action icon badge */}
+                        <div
+                          className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full ${bg} border-2 border-white flex items-center justify-center shadow-sm`}
+                        >
+                          <Icon size={12} className={color} strokeWidth={2.5} />
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-slate-800 leading-relaxed">
+                          <span className="font-semibold text-primary">
+                            {item.userId?.name || 'A user'}
+                          </span>{' '}
+                          {item.description}
+                        </p>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 font-medium">
+                          <span
+                            className="flex items-center gap-1 cursor-help"
+                            title={exactTimestamp}
+                          >
+                            <Clock size={12} className="text-slate-400" />
+                            {getRelativeTime(item.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))
