@@ -27,7 +27,7 @@ export default function WorkspaceOverview() {
   useEffect(() => {
     const fetchWorkspace = async () => {
       try {
-        const res = await api.get(`/api/workspaces/${id}`);
+        const res = await api.get(`/workspaces/${id}`);
         setWorkspace(res.data);
       } catch (error) {
         console.error("Error fetching workspace:", error);
