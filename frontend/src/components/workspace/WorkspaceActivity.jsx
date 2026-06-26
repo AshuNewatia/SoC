@@ -11,7 +11,6 @@ import {
   ShieldCheck,
   Clock,
   Settings,
-  Github,
   Link2,
   Unlink,
   CalendarClock,
