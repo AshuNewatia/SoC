@@ -58,7 +58,7 @@ export default function Dashboard() {
   const handleCreateWorkspace = async (data) => {
     try {
       // ✅ Use api.post directly to ensure your JWT token is attached!
-      const res = await api.post("/api/workspaces", data);
+      const res = await api.post("/workspaces", data);
 
       window.dispatchEvent(new CustomEvent("workspaceListChanged"));
 
