@@ -18,7 +18,7 @@ export default function Overview({
           </div>
           <button
             onClick={() => onCreateTask("todo")}
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-primary text-white font-medium hover:bg-primary-hover transition shadow-md"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white font-medium hover:bg-primary-hover transition shadow-md"
           >
             <Plus size={18} />
             Create Task
@@ -35,31 +35,34 @@ export default function Overview({
             <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
         </div>
+        <p className="mt-2 text-xs text-slate-500">
+          {completedTasks} of {totalTasks} tasks completed
+        </p>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mt-8">
-          <div className="rounded-2xl border border-slate-200 p-5">
+          <div className="rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center gap-3">
               <Activity className="text-primary" size={20} />
               <span className="text-slate-600">Active Tasks</span>
             </div>
             <p className="text-3xl font-bold mt-3">{totalTasks}</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 p-5">
+          <div className="rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center gap-3">
               <CheckCircle2 className="text-emerald-500" size={20} />
               <span className="text-slate-600">Completed</span>
             </div>
             <p className="text-3xl font-bold mt-3">{completedTasks}</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 p-5">
+          <div className="rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center gap-3">
               <Users className="text-indigo-500" size={20} />
               <span className="text-slate-600">Members</span>
             </div>
             <p className="text-3xl font-bold mt-3">{onlineUsers.length}</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 p-5">
+          <div className="rounded-2xl border border-slate-200 p-5 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center gap-3">
               <Clock3 className="text-violet-500" size={20} />
               <span className="text-slate-600">Pending</span>
@@ -72,14 +75,20 @@ export default function Overview({
         <div className="mt-8">
           <h3 className="text-sm font-semibold text-slate-700 mb-3">Active Collaborators</h3>
           <div className="flex -space-x-3">
-            {onlineUsers.map((user, index) => (
+            {onlineUsers.slice(0, 3).map((user, index) => (
               <div
                 key={index}
                 className="h-11 w-11 rounded-full border-4 border-white bg-primary text-white flex items-center justify-center font-semibold shadow"
               >
-                {user.name?.[0]}
+                {user.name?.[0]?.toUpperCase()}
               </div>
             ))}
+
+            {onlineUsers.length > 3 && (
+              <div className="h-11 w-11 rounded-full border-4 border-white bg-slate-200 text-slate-700 flex items-center justify-center font-semibold shadow">
+                +{onlineUsers.length - 3}
+              </div>
+            )}
           </div>
         </div>
       </div>
