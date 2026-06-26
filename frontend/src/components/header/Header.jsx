@@ -1,11 +1,46 @@
 import { Bell, Search, ChevronDown, Menu } from "lucide-react";
 import { useAuth } from '../../context/authContext';
-import { useNavigate } from 'react-router-dom'; // 1. Import useNavigate
+import { useNavigate, useLocation } from 'react-router-dom'; // 1. Import useNavigate
 
 export default function Header({ title = "Overview", onMenuClick }) {
   const { user } = useAuth();
   const navigate = useNavigate(); // 2. Initialize it
-  
+  const location = useLocation();
+
+  let pageTitle = "Overview";
+
+  if (location.pathname === "/dashboard") {
+    pageTitle = "Overview";
+  }
+  else if (location.pathname === "/MyBoard") {
+    pageTitle = "My Board";
+  }
+  else if (location.pathname === "/Analytics") {
+    pageTitle = "Analytics";
+  }
+  else if (location.pathname === "/Settings") {
+    pageTitle = "Settings";
+  }
+  else if (location.pathname === "/profile") {
+    pageTitle = "Profile";
+  }
+  else if (location.pathname.includes("/workspace/")) {
+    if (location.pathname.includes("/overview"))
+      pageTitle = "Workspace Overview";
+
+    else if (location.pathname.includes("/board"))
+      pageTitle = "Workspace Board";
+
+    else if (location.pathname.includes("/chat"))
+      pageTitle = "Workspace Chat";
+
+    else if (location.pathname.includes("/activity"))
+      pageTitle = "Workspace Activity";
+
+    else if (location.pathname.includes("/members"))
+      pageTitle = "Workspace Members";
+  }
+
   const today = new Date();
   const weekday = today.toLocaleDateString("en-US", { weekday: "long" });
   const month = today.toLocaleDateString("en-US", { month: "long" });
@@ -25,7 +60,7 @@ export default function Header({ title = "Overview", onMenuClick }) {
           <Menu size={20} />
         </button>
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-black tracking-tight">{title}</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-black tracking-tight">{pageTitle}</h1>
           <p className="text-xs text-gray-600 mt-0.5 hidden md:block">{formattedDate}</p>
         </div>
       </div>
@@ -52,8 +87,8 @@ export default function Header({ title = "Overview", onMenuClick }) {
         </button>
 
         {/* 3. Attach navigate('/profile') to the profile button */}
-        <button 
-          onClick={() => navigate('/profile')} 
+        <button
+          onClick={() => navigate('/profile')}
           className="flex items-center gap-2 md:gap-3 pl-2 pr-3 py-1.5 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all duration-200"
         >
           <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-linear-to-br from-primary to-primary-hover flex items-center justify-center text-white font-semibold text-sm">

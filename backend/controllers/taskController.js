@@ -138,14 +138,10 @@ export const getTasks = async (req, res) => {
         const tasks = await Task.find({
             workspace: workspaceId
         })
-            .populate(
-                "assignedTo",
-                "name email"
-            )
-            .populate(
-                "createdBy",
-                "name email"
-            );
+            .populate("assignedTo", "name email")
+            .populate("createdBy", "name email")
+            .populate("workspace", "name");
+
         res.status(200).json(tasks);
 
     } catch (error) {
