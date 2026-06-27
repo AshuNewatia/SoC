@@ -1,26 +1,29 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  GitBranch, 
-  Layers, 
+import {
+  LayoutDashboard,
+  GitBranch,
+  Layers,
   ArrowRight,
   CheckCircle,
   Users
 } from "lucide-react";
+import logo from "../assets/logo.png"
 
 export default function Landing() {
   return (
     <div className="min-h-screen bg-bg-light font-sans selection:bg-primary selection:text-white flex flex-col overflow-x-hidden">
-      
+
       {/* Navigation */}
       <nav className="fixed w-full z-50 bg-surface/90 backdrop-blur-md border-b border-border-light shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-linear-to-br from-primary to-primary-hover flex items-center justify-center text-white font-bold text-xl shadow-md">
-              C
-            </div>
-            <span className="text-2xl font-bold bg-linear-to-r from-text-primary to-text-secondary bg-clip-text text-transparent tracking-tight hidden sm:block">
+            <img
+              src={logo}
+              alt="CampusFlow"
+              className="h-13 w-13 rounded-2xl shadow-lg"
+            />
+            <span className="text-2xl font-bold text-black bg-clip-text tracking-tight hidden sm:block">
               CampusFlow
             </span>
           </div>
@@ -73,7 +76,7 @@ export default function Landing() {
               {/* Mockup Header */}
               <div className="bg-linear-to-r from-text-primary to-[#1E293B] px-5 py-4 flex items-center justify-between border-b border-border-light/20">
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded bg-primary flex items-center justify-center text-white text-xs font-bold">C</div>
+                  <div className="w-6 h-6 rounded bg-primary flex items-center justify-center text-white text-xs font-bold">CF</div>
                   <span className="text-white font-semibold text-sm">CampusFlow</span>
                 </div>
                 <div className="flex gap-2">

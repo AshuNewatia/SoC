@@ -27,7 +27,7 @@ export default function WorkspaceOverview() {
   useEffect(() => {
     const fetchWorkspace = async () => {
       try {
-        const res = await api.get(`/api/workspaces/${id}`);
+        const res = await api.get(`/workspaces/${id}`);
         setWorkspace(res.data);
       } catch (error) {
         console.error("Error fetching workspace:", error);
@@ -108,7 +108,13 @@ export default function WorkspaceOverview() {
   const completedTasks = tasks.filter((t) => t.status === "completed").length;
 
   const handleCreateTask = () => {
-    window.dispatchEvent(new CustomEvent("openCreateTaskModal"));
+    navigate(`/workspace/${id}/board`);
+
+    setTimeout(() => {
+      window.dispatchEvent(
+        new CustomEvent("openCreateTaskModal")
+      );
+    }, 100);
   };
 
   return (

@@ -14,7 +14,7 @@ export function WorkspaceProvider({ children }) {
     
     try {
       // 👇 Attach the user ID as a query parameter so the backend knows who is asking!
-      const res = await api.get(`/workspaces?userId=${user.id}`);
+      const res = await api.get(`/api/workspaces?userId=${user.id}`);
       
       setWorkspaces(res.data);
     } catch (err) {

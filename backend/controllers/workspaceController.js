@@ -133,6 +133,30 @@ export const updateWorkspace = async (req, res) => {
 
     await workspace.save();
 
+    if (githubRepo && githubToken && workspace.isModified('githubRepo')) {
+  try {
+    // 2. Fetch the issues using your engine
+    const githubIssues = await fetchGithubIssues(githubToken, githubRepo);
+
+    // 3. Import them as new Tasks in CampusFlow
+    if (githubIssues.length > 0) {
+      // Map them to your Task model structure
+      const tasksToImport = githubIssues.map(issue => ({
+        ...issue,
+        workspace: workspace._id,
+        owner: req.user._id
+      }));
+
+      // 4. Batch insert into MongoDB
+      await Task.insertMany(tasksToImport);
+      console.log(`Successfully imported ${tasksToImport.length} issues.`);
+    }
+  } catch (err) {
+    console.error("Auto-sync failed:", err.message);
+    // We don't crash the workspace update, just log the sync error
+  }
+}
+
     await logActivity(
       workspace._id,
       req.user._id,

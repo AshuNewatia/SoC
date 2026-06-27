@@ -1,16 +1,16 @@
 import api from "./api";
 
 export const getWorkspaces = () =>
-  api.get("/workspaces");
+  api.get("/api/workspaces");
 
 export const getWorkspace = (id) =>
-  api.get(`/workspaces/${id}`);
+  api.get(`/api/workspaces/${id}`);
 
 export const createWorkspace = (data) =>
-  api.post("/workspaces", data);
+  api.post("/api/workspaces", data);
 
 export const updateWorkspace = (id, data) =>
-  api.put(`/workspaces/${id}`, data);
+  api.put(`/api/workspaces/${id}`, data);
 
 export const deleteWorkspace = (id) =>
-  api.delete(`/workspaces/${id}`);
+  api.delete(`/api/workspaces/${id}`);

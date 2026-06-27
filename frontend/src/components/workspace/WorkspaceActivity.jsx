@@ -31,7 +31,7 @@ export default function WorkspaceActivity() {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const res = await api.get(`/workspaces/${id}/activity`);
+        const res = await api.get(`/api/workspaces/${id}/activity`);
         setActivities(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error('Failed to fetch activity log:', err);
@@ -263,17 +263,11 @@ export default function WorkspaceActivity() {
 
                       {/* Avatar + Icon */}
                       <div className="relative shrink-0">
-                        {item.userId?.avatar ? (
-                          <img
-                            src={item.userId.avatar}
-                            alt={item.userId.name}
-                            className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm border-2 border-white shadow-sm">
-                            {getUserInitials(item.userId?.name)}
-                          </div>
-                        )}
+
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm border-2 border-white shadow-sm">
+                          {getUserInitials(item.userId?.name)}
+                        </div>
+
                         {/* Action icon badge */}
                         <div
                           className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full ${bg} border-2 border-white flex items-center justify-center shadow-sm`}

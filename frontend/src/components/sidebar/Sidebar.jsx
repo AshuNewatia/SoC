@@ -9,20 +9,22 @@ import {
   ChevronRight,
   X,
 } from "lucide-react";
+import logo from "../../assets/logo.png";
 
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/authContext";
 // 👇 1. Import the new Workspace Context
-import { useWorkspaces } from "../../context/workspaceContext"; 
+import { useWorkspaces } from "../../context/workspaceContext";
 import LogoutModal from "../common/LogoutModal";
 import CreateWorkspaceModal from "../workspace/CreateWorkspaceModal";
 import { createWorkspace } from "../../services/workspaceServices";
 
-export default function Sidebar({ isOpen = false, onClose = () => {} }) {
+export default function Sidebar({ isOpen = false, onClose = () => { } }) {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
-  
+  const location = useLocation();
+
   // 👇 2. Grab workspaces and the fetch function from Context instead of local state
   const { workspaces, fetchWorkspaces } = useWorkspaces();
 
@@ -36,7 +38,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
         ...data,
         owner: user.id,
       });
-      
+
       // 👇 3. Fetch workspaces to update the global context state instantly
       await fetchWorkspaces();
       handleSubmit("Workspace created successfully");
@@ -48,10 +50,9 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
 
   // Helper function for NavLink styles
   const getLinkClass = ({ isActive }) =>
-    `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-      isActive
-        ? "bg-primary/15 text-primary font-semibold shadow-sm"
-        : "hover:bg-slate-100 hover:shadow-sm text-text-primary"
+    `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
+      ? "bg-primary/15 text-primary font-semibold shadow-sm"
+      : "hover:bg-slate-100 hover:shadow-sm text-text-primary"
     }`;
 
   // Actual logout action triggered by the modal
@@ -96,9 +97,11 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
         {/* Mobile header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200 md:hidden">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-primary to-primary-hover flex items-center justify-center text-white font-bold text-lg shadow-md">
-              C
-            </div>
+            <img
+              src={logo}
+              alt="CampusFlow"
+              className="h-11 w-11 rounded-xl object-cover"
+            />
             <h1 className="font-bold text-xl text-text-primary">CampusFlow</h1>
           </div>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 transition">
@@ -109,9 +112,11 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
         {/* Desktop logo */}
         <div className="hidden md:flex h-18 px-6 items-center shrink-0 mt-0">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-primary to-primary-hover flex items-center justify-center text-white font-bold text-lg shadow-md">
-              C
-            </div>
+            <img
+              src={logo}
+              alt="CampusFlow"
+              className="h-11 w-11 rounded-xl object-cover"
+            />
             <div>
               <h1 className="font-bold text-xl text-text-primary">CampusFlow</h1>
               <p className="text-xs text-text-secondary">Collaborative Workspace</p>
@@ -146,7 +151,7 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
                 <Plus size={16} />
               </button>
             </div>
-            
+
             {/* Dynamic Workspace List */}
             <div className="space-y-2">
               {workspaces.length === 0 ? (
@@ -159,13 +164,15 @@ export default function Sidebar({ isOpen = false, onClose = () => {} }) {
                     key={workspace._id}
                     to={`/workspace/${workspace._id}/overview`}
                     onClick={onClose}
-                    className={({ isActive }) =>
-                      `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                        isActive
+                    className={() => {
+                      const isWorkspaceActive =
+                        location.pathname.startsWith(`/workspace/${workspace._id}`);
+
+                      return `w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isWorkspaceActive
                           ? "bg-primary/15 text-primary font-semibold shadow-sm"
                           : "bg-slate-50 hover:bg-white hover:shadow-md hover:-translate-y-0.5 text-text-primary"
-                      }`
-                    }
+                        }`;
+                    }}
                   >
                     <FolderKanban size={18} />
                     {workspace.name}
