@@ -23,8 +23,24 @@ export function WorkspaceProvider({ children }) {
   };
 
   useEffect(() => {
+  fetchWorkspaces();
+
+  const handleWorkspaceChange = () => {
     fetchWorkspaces();
-  }, [user]);
+  };
+
+  window.addEventListener(
+    "workspaceListChanged",
+    handleWorkspaceChange
+  );
+
+  return () => {
+    window.removeEventListener(
+      "workspaceListChanged",
+      handleWorkspaceChange
+    );
+  };
+}, [user]);
 
   return (
     <WorkspaceContext.Provider value={{ workspaces, setWorkspaces, fetchWorkspaces }}>

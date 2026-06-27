@@ -90,7 +90,7 @@ export default function Dashboard() {
   const activeWorkspaces = workspaces.length;
 
   const assignedTasks = tasks.filter(task =>
-    task.assignedTo?.some(assigned => assigned._id === user?._id)
+    task.assignedTo?.some(assigned => assigned._id === user?.id)
   ).length;
 
   const completedTasks = tasks.filter(task => task.status === "completed").length;

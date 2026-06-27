@@ -2,7 +2,7 @@ import { Bell, Search, ChevronDown, Menu } from "lucide-react";
 import { useAuth } from '../../context/authContext';
 import { useNavigate, useLocation } from 'react-router-dom'; // 1. Import useNavigate
 
-export default function Header({ title = "Overview", onMenuClick }) {
+export default function Header({ title = "Overview", onMenuClick, workspaceSearch, setWorkspaceSearch }) {
   const { user } = useAuth();
   const navigate = useNavigate(); // 2. Initialize it
   const location = useLocation();
@@ -75,7 +75,9 @@ export default function Header({ title = "Overview", onMenuClick }) {
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
             <input
               type="text"
-              placeholder="Search workspace..."
+              value={workspaceSearch}
+              onChange={(e) => setWorkspaceSearch(e.target.value)}
+              placeholder="Search workspaces..."
               className="w-64 lg:w-72 pl-10 pr-4 py-2.5 rounded-2xl bg-gray-50 border border-transparent outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
             />
           </div>
