@@ -1,6 +1,8 @@
 import Workspace from "../models/Workspace.js";
 import mongoose from "mongoose";
 import { logActivity } from "./activityController.js";
+import { fetchGithubIssues } from '../services/githubService.js';
+import Task from '../models/Task.js';
 
 // ─── CREATE ──────────────────────────────────────────────
 export const createWorkspace = async (req, res) => {
@@ -98,8 +100,7 @@ export const getWorkspaceById = async (req, res) => {
 // ─── UPDATE (only owner) ────────────────────────────────
 export const updateWorkspace = async (req, res) => {
   try {
-    const { workspaceId } = req.params;
-    
+    const { workspaceId } = req.params;    
     const { name, description, githubRepo, githubToken } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
