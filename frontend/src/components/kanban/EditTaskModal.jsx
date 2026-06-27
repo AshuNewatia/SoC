@@ -33,7 +33,7 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const res = await api.get(`/api/workspaces/${workspaceId}/members`);
+        const res = await api.get(`/workspaces/${workspaceId}/members`);
         setMembers(res.data);
       } catch (err) {
         console.error(err);

@@ -46,7 +46,7 @@ export default function CreateTaskModal({ isOpen, onClose, onCreate, defaultStat
     const fetchMembers = async () => {
       try {
         const res = await api.get(
-          `/api/workspaces/${workspaceId}/members`
+          `/workspaces/${workspaceId}/members`
         );
 
         setMembers(res.data);

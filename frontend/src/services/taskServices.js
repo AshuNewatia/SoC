@@ -2,28 +2,28 @@ import api from "./api";
 
 // All paths now start with a slash and exclude the redundant "/api"
 export const getTasks = (workspaceId) =>
-  api.get(`/api/workspaces/${workspaceId}/tasks`);
+  api.get(`/workspaces/${workspaceId}/tasks`);
 
 export const createTask = (workspaceId, taskData) =>
   api.post(
-    `/api/workspaces/${workspaceId}/tasks`,
+    `/workspaces/${workspaceId}/tasks`,
     taskData
   );
 
 export const updateTask = (taskId, taskData) =>
   api.put(
-    `/api/tasks/${taskId}`,
+    `/tasks/${taskId}`,
     taskData
   );
 
 export const deleteTask = (taskId) =>
-  api.delete(`/api/tasks/${taskId}`);
+  api.delete(`/tasks/${taskId}`);
 
 export const updateTaskStatus = (
   taskId,
   data
 ) =>
   api.patch(
-    `/api/tasks/${taskId}/status`,
+    `/tasks/${taskId}/status`,
     data
   );

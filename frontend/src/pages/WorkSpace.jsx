@@ -73,7 +73,7 @@ export default function Workspace() {
     const fetchWorkspace = async () => {
       try {
         // ✅ use api.get – token automatically added
-        const res = await api.get(`/api/workspaces/${id}`);
+        const res = await api.get(`/workspaces/${id}`);
         setWorkspace(res.data);
 
       } catch (err) {

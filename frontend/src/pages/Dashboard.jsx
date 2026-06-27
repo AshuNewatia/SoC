@@ -24,7 +24,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchWorkspaces = async () => {
       try {
-        const res = await api.get("/api/workspaces");
+        const res = await api.get("/workspaces");
         setWorkspaces(res.data || []);
       } catch (err) {
         console.error("Failed to fetch workspaces:", err);
@@ -60,7 +60,7 @@ export default function Dashboard() {
 
         for (const workspace of workspaces) {
           const res = await api.get(
-            `/api/workspaces/${workspace._id}/activity`
+            `/workspaces/${workspace._id}/activity`
           );
 
           allActivities = [
