@@ -55,7 +55,7 @@ export default function CreateTaskModal({
     setFormData({
   title: "",
   description: "",
-  priority: "Medium",
+  priority: "",
   dueDate: "",
   tag: "",
 });
@@ -78,6 +78,12 @@ const tags = [
   "Design",
   "General",
 ];
+
+const priorityStyles = {
+  Low: "bg-green-50 text-green-600 border-green-200",
+  Medium: "bg-yellow-50 text-yellow-600 border-yellow-200",
+  High: "bg-red-50 text-red-600 border-red-200",
+};
 
 return (
   <AnimatePresence>
@@ -102,7 +108,7 @@ return (
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col"
+            className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col"
           >
             {/* Header */}
             <div className="sticky top-0 bg-white border-b border-slate-200 px-7 py-5 z-20">
@@ -111,7 +117,7 @@ return (
                   <h2 className="text-2xl font-semibold text-slate-900">
                     Create Task
                   </h2>
-
+<div className="mt-3 w-16 h-1 rounded-full bg-sky-500" />
                   <p className="text-sm text-slate-500 mt-1">
                     Organize your work with priorities and deadlines.
                   </p>
@@ -185,8 +191,8 @@ return (
                       }
                       className={`rounded-xl border px-3 py-3 text-sm font-medium transition ${
                         formData.priority === priority
-                          ? "border-slate-900 bg-slate-900 text-white"
-                          : "border-slate-200 hover:border-slate-400"
+                           ? priorityStyles[priority]
+                           : "border-slate-200"
                       }`}
                     >
                       {priority}
@@ -207,7 +213,7 @@ return (
                   name="dueDate"
                   value={formData.dueDate}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-900 focus:ring-4 focus:ring-slate-200"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
                 />
               </div>
 
@@ -231,8 +237,8 @@ return (
                       }
                       className={`rounded-full px-4 py-2 text-sm transition border ${
                         formData.tag === tag
-                          ? "bg-slate-900 text-white border-slate-900"
-                          : "border-slate-200 hover:border-slate-400"
+                         ? "bg-sky-500 text-white border-sky-500"
+                         : "border-slate-200 hover:border-sky-300"
                       }`}
                     >
                       {tag}
@@ -268,7 +274,7 @@ return (
                 <button
                   type="submit"
                   onClick={handleSubmit}
-                  className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm"
+                  className="px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white transition shadow-sm"
                 >
                   Create Task
                 </button>
