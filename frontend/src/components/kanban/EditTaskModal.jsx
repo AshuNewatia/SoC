@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Check, Type, FileText, CalendarDays, Flag, Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import api from "../../services/api";
@@ -9,7 +9,6 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    assignee: "",
     priority: "Medium",
     dueDate: "",
     assignedTo: [],
@@ -48,7 +47,6 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
         assignedTo: task.assignedTo?.map((user) => user._id) || [],
         priority: task.priority || "Medium",
         dueDate: task.dueDate?.split("T")[0] || "",
-        githubIssue: task.githubIssue || "",
       });
     }
   }, [task, isOpen, workspaceId]);
@@ -63,6 +61,9 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
     onClose();
   };
 
+  const inputClass =
+    "w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-primary focus:ring-4 focus:ring-primary/10";
+
   return (
     <AnimatePresence>
       {isOpen && task && (
@@ -76,109 +77,187 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
             className="fixed inset-0 bg-black/40 z-40"
           />
 
-          {/* Modal */}
+          {/* Modal Container */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-xl max-h-[90vh] overflow-y-auto bg-white rounded-3xl shadow-2xl z-50 p-6"
+            className="fixed inset-0 z-[60] flex items-center justify-center p-5"
           >
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold">Edit Task</h2>
-                <p className="text-sm text-slate-500">Update task details and assignments</p>
-              </div>
-              <button onClick={onClose} className="p-2 rounded-lg hover:bg-slate-100">
-                <X size={20} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <input
-                required
-                placeholder="Task Title"
-                value={form.title}
-                onChange={(e) => handleChange("title", e.target.value)}
-                className="w-full border border-slate-200 rounded-xl p-3"
-              />
-
-              <textarea
-                required
-                rows="4"
-                placeholder="Description"
-                value={form.description}
-                onChange={(e) => handleChange("description", e.target.value)}
-                className="w-full border border-slate-200 rounded-xl p-3"
-              />
-
-              <div className="space-y-3">
-                <label className="font-medium text-slate-700">Assigned Members</label>
-                <input
-                  type="text"
-                  placeholder="Search members..."
-                  value={searchMember}
-                  onChange={(e) => setSearchMember(e.target.value)}
-                  className="w-full border border-slate-200 rounded-xl p-3"
-                />
-                <div className="max-h-48 overflow-y-auto border border-slate-200 rounded-xl">
-                  {filteredMembers.map((member) => {
-                    const selected = form.assignedTo.includes(member._id);
-                    return (
-                      <button
-                        key={member._id}
-                        type="button"
-                        onClick={() => toggleMember(member._id)}
-                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50"
-                      >
-                        <span>{member.name}</span>
-                        <span>{selected ? "✅" : "⬜"}</span>
-                      </button>
-                    );
-                  })}
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col"
+            >
+              {/* ===== STICKY HEADER ===== */}
+              <div className="sticky top-0 bg-white border-b border-slate-200 px-7 py-5 z-20 flex justify-between items-start">
+                <div>
+                  <h2 className="text-2xl font-semibold text-slate-900">Edit Task</h2>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Update task details and assignments.
+                  </p>
                 </div>
+                <button
+                  onClick={onClose}
+                  className="w-10 h-10 rounded-xl hover:bg-slate-100 transition flex items-center justify-center"
+                >
+                  <X size={18} />
+                </button>
               </div>
 
-              <select
-                value={form.priority}
-                onChange={(e) => handleChange("priority", e.target.value)}
-                className="w-full border border-slate-200 rounded-xl p-3"
-              >
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-                <option value="Critical">Critical</option>
-              </select>
+              {/* ===== SCROLLABLE BODY ===== */}
+              <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
+                {/* Title */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                    <Type size={16} className="text-slate-400" />
+                    Title
+                  </label>
+                  <input
+                    required
+                    placeholder="Task Title"
+                    value={form.title}
+                    onChange={(e) => handleChange("title", e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
 
-              <input
-                type="date"
-                value={form.dueDate}
-                onChange={(e) => handleChange("dueDate", e.target.value)}
-                className="w-full border border-slate-200 rounded-xl p-3"
-              />
+                {/* Description */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                    <FileText size={16} className="text-slate-400" />
+                    Description
+                  </label>
+                  <textarea
+                    rows="4"
+                    placeholder="Description"
+                    value={form.description}
+                    onChange={(e) => handleChange("description", e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
 
-              <input
-                placeholder="GitHub Issue"
-                value={form.githubIssue}
-                onChange={(e) => handleChange("githubIssue", e.target.value)}
-                className="w-full border border-slate-200 rounded-xl p-3"
-              />
+                {/* Priority */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                    <Flag size={16} className="text-slate-400" />
+                    Priority
+                  </label>
+                  <div className="grid grid-cols-4 gap-3">
+                    {["Low", "Medium", "High", "Critical"].map((priority) => (
+                      <button
+                        key={priority}
+                        type="button"
+                        onClick={() => handleChange("priority", priority)}
+                        className={`rounded-xl border px-3 py-3 text-sm font-medium transition
+                          ${
+                            form.priority === priority
+                              ? "bg-primary text-white border-primary"
+                              : "border-slate-200 hover:border-primary"
+                          }`}
+                      >
+                        {priority}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-              <div className="flex gap-3">
+                {/* Due Date */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                    <CalendarDays size={16} className="text-slate-400" />
+                    Due Date
+                  </label>
+                  <input
+                    type="date"
+                    value={form.dueDate}
+                    onChange={(e) => handleChange("dueDate", e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+
+                {/* Assign Members */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
+                    <Users size={16} className="text-slate-400" />
+                    Assign Members
+                  </label>
+
+                  {/* Selected members chips */}
+                  {form.assignedTo.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {members
+                        .filter(member => form.assignedTo.includes(member._id))
+                        .map(member => (
+                          <div
+                            key={member._id}
+                            className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium"
+                          >
+                            {member.name}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+
+                  <input
+                    type="text"
+                    placeholder="Search members..."
+                    value={searchMember}
+                    onChange={(e) => setSearchMember(e.target.value)}
+                    className={inputClass}
+                  />
+
+                  <div className="max-h-48 overflow-y-auto border rounded-xl divide-y divide-slate-100 mt-3">
+                    {filteredMembers.map((member) => {
+                      const selected = form.assignedTo.includes(member._id);
+                      return (
+                        <button
+                          key={member._id}
+                          type="button"
+                          onClick={() => toggleMember(member._id)}
+                          className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
+                              {member.name?.[0]}
+                            </div>
+                            <div>
+                              <p className="font-medium text-slate-800">{member.name}</p>
+                              <p className="text-xs text-slate-500">Team Member</p>
+                            </div>
+                          </div>
+                          <div
+                            className={`
+                              h-5 w-5 rounded-md border flex items-center justify-center
+                              ${selected ? "bg-primary border-primary" : "border-slate-300"}
+                            `}
+                          >
+                            {selected && <Check size={14} className="text-white" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </form>
+
+              {/* ===== FIXED FOOTER ===== */}
+              <div className="sticky bottom-0 bg-white border-t border-slate-200 px-7 py-5 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 border border-slate-200 py-3 rounded-xl"
+                  className="px-5 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 bg-slate-900 text-white py-3 rounded-xl"
+                  onClick={handleSubmit}
+                  className="px-6 py-3 rounded-xl bg-primary text-white hover:bg-primary-hover transition font-medium"
                 >
                   Save Changes
                 </button>
               </div>
-            </form>
+            </div>
           </motion.div>
         </>
       )}

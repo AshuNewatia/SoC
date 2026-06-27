@@ -53,10 +53,6 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
     setShowLogoutModal(false);
   };
 
-  window.dispatchEvent(
-    new CustomEvent("workspaceListChanged")
-  );
-
   const sortedWorkspaces = [...workspaces].sort(
     (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
   );
