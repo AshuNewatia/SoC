@@ -1,6 +1,6 @@
 // src/context/WorkspaceContext.jsx
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import api from '../services/api'; 
+import api from '../services/api';
 import { useAuth } from './authContext';
 
 const WorkspaceContext = createContext();
@@ -11,11 +11,11 @@ export function WorkspaceProvider({ children }) {
 
   const fetchWorkspaces = async () => {
     if (!user) return; // Don't fetch if not logged in
-    
+
     try {
       // 👇 Attach the user ID as a query parameter so the backend knows who is asking!
       const res = await api.get(`/api/workspaces?userId=${user.id}`);
-      
+
       setWorkspaces(res.data);
     } catch (err) {
       console.error("Error fetching workspaces", err);
@@ -23,24 +23,26 @@ export function WorkspaceProvider({ children }) {
   };
 
   useEffect(() => {
-  fetchWorkspaces();
+    if (!user?.id) return;
 
-  const handleWorkspaceChange = () => {
     fetchWorkspaces();
-  };
 
-  window.addEventListener(
-    "workspaceListChanged",
-    handleWorkspaceChange
-  );
+    const handleWorkspaceChange = () => {
+      fetchWorkspaces();
+    };
 
-  return () => {
-    window.removeEventListener(
+    window.addEventListener(
       "workspaceListChanged",
       handleWorkspaceChange
     );
-  };
-}, [user]);
+
+    return () => {
+      window.removeEventListener(
+        "workspaceListChanged",
+        handleWorkspaceChange
+      );
+    };
+  }, [user?.id]);
 
   return (
     <WorkspaceContext.Provider value={{ workspaces, setWorkspaces, fetchWorkspaces }}>
