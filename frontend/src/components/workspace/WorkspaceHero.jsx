@@ -5,19 +5,13 @@ import { FolderKanban, Settings, Users, ListTodo, GitBranch } from "lucide-react
 export default function WorkspaceHero({
   workspace,
   onSettingsClick,
-  tasks = [],          // <-- receive from parent
+  tasks,          // <-- receive from parent
   onlineUsers = []     // <-- receive from parent
 }) {
   if (!workspace) return null;
 
   // Use passed arrays; fallback to workspace data (if any)
-  const memberCount = onlineUsers.length > 0
-    ? onlineUsers.length
-    : (workspace.members?.length || 0);
-
-  const taskCount = tasks.length > 0
-    ? tasks.length
-    : (workspace.tasks?.length || workspace.taskCount || 0);
+  const memberCount = workspace.members?.length || 0;
 
   return (
     <div className="bg-linear-to-r from-white to-sky-50 rounded-2xl p-5 border border-slate-200 shadow-sm">
@@ -46,7 +40,7 @@ export default function WorkspaceHero({
             </div>
             <div className="px-3 py-1.5 bg-white rounded-lg border border-slate-200 shadow-sm flex items-center gap-1.5">
               <ListTodo size={16} className="text-primary" />
-              <span>{taskCount} {taskCount === 1 ? "Task" : "Tasks"}</span>
+              <span>{tasks} {tasks === 1 ? "Task" : "Tasks"}</span>
             </div>
             
             {/* Dynamic GitHub Badge */}

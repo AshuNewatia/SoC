@@ -7,7 +7,8 @@ export const getWorkspaceActivities = async (req, res) => {
     const { id } = req.params;
 
     const activities = await ActivityLog.find({ workspaceId: id })
-      .populate("userId", "name email avatar") // Populate the user who did the action
+      .populate("userId", "name email avatar")
+      .populate("workspaceId", "name") // Populate the user who did the action
       .sort({ createdAt: -1 }) // Newest first
       .limit(50); // Limit to the 50 most recent events to keep it fast
 

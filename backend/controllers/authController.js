@@ -296,7 +296,7 @@ export const completeOAuthProfile = async (req, res) => {
       githubId: decoded.provider === 'github' ? decoded.githubId : undefined,
       role: getRoleFromEmail(decoded.email),
     });
-    const role = getRoleFromEmail(email);
+    // const role = getRoleFromEmail(email);
     const token = generateToken(user._id);
 
     res.status(201).json({

@@ -8,6 +8,7 @@ import WorkspaceHero from "../components/workspace/WorkspaceHero";
 import WorkspaceSettingsModal from "../components/workspace/WorkspaceSettingModal";
 import api from "../services/api"; 
 import { updateWorkspace, deleteWorkspace } from "../services/workspaceServices";
+import { getTasks } from "../services/taskServices"
 
 // Socket instance (reused, autoConnect false)
 const socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", {
@@ -21,7 +22,19 @@ export default function Workspace() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [tasks, setTasks] = useState([]);
   const navigate = useNavigate();
+
+  const fetchTasks = async () => {
+    try {
+      const res = await getTasks(id);
+      setTasks(res.data);
+    } catch (err) {
+      console.error("Error fetching tasks:", err);
+    }
+  };
+
+  const totalTasks = tasks.length;
 
   const handleUpdateWorkspace = async (data) => {
     try {
@@ -60,7 +73,7 @@ export default function Workspace() {
     const fetchWorkspace = async () => {
       try {
         // ✅ use api.get – token automatically added
-        const res = await api.get(`workspaces/${id}`);
+        const res = await api.get(`/api/workspaces/${id}`);
         setWorkspace(res.data);
 
       } catch (err) {
@@ -72,6 +85,7 @@ export default function Workspace() {
     };
 
     fetchWorkspace();
+    fetchTasks();
 
     // Socket connection
     socket.connect();
@@ -112,7 +126,7 @@ export default function Workspace() {
   return (
     <div className="p-6 space-y-4 font-sans bg-bg-light min-h-screen text-text-primary">
       {workspace ? (
-        <WorkspaceHero workspace={workspace} onSettingsClick={() => setSettingsOpen(true)} />
+        <WorkspaceHero workspace={workspace} tasks={totalTasks} onSettingsClick={() => setSettingsOpen(true)} />
       ) : (
         <div className="h-32 rounded-2xl bg-slate-100 animate-pulse" />
       )}

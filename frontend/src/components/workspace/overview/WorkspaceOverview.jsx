@@ -108,7 +108,13 @@ export default function WorkspaceOverview() {
   const completedTasks = tasks.filter((t) => t.status === "completed").length;
 
   const handleCreateTask = () => {
-    window.dispatchEvent(new CustomEvent("openCreateTaskModal"));
+    navigate(`/workspace/${id}/board`);
+
+    setTimeout(() => {
+      window.dispatchEvent(
+        new CustomEvent("openCreateTaskModal")
+      );
+    }, 100);
   };
 
   return (
