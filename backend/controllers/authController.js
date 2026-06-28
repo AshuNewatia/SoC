@@ -37,7 +37,11 @@ export const signup = async (req, res) => {
       email,
       password: hashedPassword,
       hasPassword: true,   // Mark that they have a local password
-      role
+      role,
+      year: '',            // default
+      branch: '',          // default
+      program: '',         // default
+      facultyType: ''      // default
     });
 
     // Generate token
@@ -50,7 +54,11 @@ export const signup = async (req, res) => {
         name: user.name,
         email: user.email,
         avatar: user.avatar,
-        role: user.role
+        role: user.role,
+        year: user.year,
+        branch: user.branch,
+        program: user.program,
+        facultyType: user.facultyType
       }
     });
   } catch (error) {
@@ -116,6 +124,10 @@ export const login = async (req, res) => {
         email: user.email,
         avatar: user.avatar,
         role: user.role,
+        year: user.year,
+        branch: user.branch,
+        program: user.program,
+        facultyType: user.facultyType
       },
     });
   } catch (error) {
@@ -136,7 +148,7 @@ export const googleAuth = async (req, res) => {
       code,
       client_id: process.env.GOOGLE_CLIENT_ID,
       client_secret: process.env.GOOGLE_CLIENT_SECRET,
-      redirect_uri: `${process.env.CLIENT_URL}/oauth/callback`, 
+      redirect_uri: `${process.env.CLIENT_URL}/oauth/callback`,
       grant_type: 'authorization_code',
     });
 
@@ -158,18 +170,18 @@ export const googleAuth = async (req, res) => {
     // INTERCEPT: If user doesn't exist, they are signing up.
     if (!user) {
       const tempToken = jwt.sign(
-        { email, name, googleId, avatar: picture, provider: 'google' }, 
-        process.env.JWT_SECRET, 
+        { email, name, googleId, avatar: picture, provider: 'google' },
+        process.env.JWT_SECRET,
         { expiresIn: '15m' }
       );
-      
+
       return res.status(200).json({
         action: 'requires_profile_creation',
         tempToken,
         message: 'Redirecting to complete profile...'
       });
-    } 
-    
+    }
+
     // LOGIN: User already exists.
     if (!user.googleId) {
       user.googleId = googleId;
@@ -180,7 +192,17 @@ export const googleAuth = async (req, res) => {
     return res.status(200).json({
       action: 'login',
       token,
-      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, role: user.role },
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        role: user.role,
+        year: user.year,
+        branch: user.branch,
+        program: user.program,
+        facultyType: user.facultyType
+      },
     });
   } catch (error) {
     console.error('Google Auth Error:', error.response?.data || error.message);
@@ -217,11 +239,11 @@ export const githubAuth = async (req, res) => {
       const emailResponse = await axios.get('https://api.github.com/user/emails', {
         headers: { Authorization: `Bearer ${access_token}` },
       });
-      
+
       const primaryEmailObj = emailResponse.data.find(
         (e) => e.primary && e.verified
       );
-      
+
       if (primaryEmailObj) {
         userEmail = primaryEmailObj.email;
       }
@@ -230,8 +252,8 @@ export const githubAuth = async (req, res) => {
     // --- NO DOMAIN GATEKEEPER FOR GITHUB ---
     // We just ensure they have an email attached to their account so the DB doesn't fail
     if (!userEmail) {
-      return res.status(400).json({ 
-        message: 'Could not retrieve a valid email from your GitHub account. Please ensure you have a verified email on GitHub.' 
+      return res.status(400).json({
+        message: 'Could not retrieve a valid email from your GitHub account. Please ensure you have a verified email on GitHub.'
       });
     }
 
@@ -239,18 +261,18 @@ export const githubAuth = async (req, res) => {
 
     if (!user) {
       const tempToken = jwt.sign(
-        { email: userEmail, name: login, githubId, avatar: avatar_url, provider: 'github' }, 
-        process.env.JWT_SECRET, 
+        { email: userEmail, name: login, githubId, avatar: avatar_url, provider: 'github' },
+        process.env.JWT_SECRET,
         { expiresIn: '15m' }
       );
-      
+
       return res.status(200).json({
         action: 'requires_profile_creation',
         tempToken,
         message: 'Redirecting to complete profile...'
       });
-    } 
-    
+    }
+
     if (!user.githubId) {
       user.githubId = githubId;
       await user.save();
@@ -260,7 +282,17 @@ export const githubAuth = async (req, res) => {
     return res.status(200).json({
       action: 'login',
       token,
-      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, role: user.role },
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        role: user.role,
+        year: user.year,
+        branch: user.branch,
+        program: user.program,
+        facultyType: user.facultyType
+      },
     });
 
   } catch (error) {
@@ -278,7 +310,7 @@ export const completeOAuthProfile = async (req, res) => {
     const { tempToken, password, name } = req.body;
 
     const decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
-    
+
     const existingUser = await User.findOne({ email: decoded.email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
@@ -295,14 +327,28 @@ export const completeOAuthProfile = async (req, res) => {
       googleId: decoded.provider === 'google' ? decoded.googleId : undefined,
       githubId: decoded.provider === 'github' ? decoded.githubId : undefined,
       role: getRoleFromEmail(decoded.email),
+      year: '',
+      branch: '',
+      program: '',
+      facultyType: '',
     });
-    // const role = getRoleFromEmail(email);
+
     const token = generateToken(user._id);
 
     res.status(201).json({
       action: 'login',
       token,
-      user: { id: user._id, name: user.name, email: user.email, avatar: user.avatar, role: user.role }
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        role: user.role,
+        year: user.year,
+        branch: user.branch,
+        program: user.program,
+        facultyType: user.facultyType
+      }
     });
 
   } catch (error) {
@@ -313,8 +359,8 @@ export const completeOAuthProfile = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { name, year, branch, oldPassword, newPassword } = req.body;
-    
+    const { name, year, branch, program, facultyType, oldPassword, newPassword } = req.body;
+
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -332,15 +378,26 @@ export const updateProfile = async (req, res) => {
       user.password = await bcrypt.hash(newPassword, salt);
     }
 
-    if (name) user.name = name;
-    if (year) user.year = year;
-    if (branch) user.branch = branch;
+    user.program = program ?? user.program;
+    user.year = year ?? user.year;
+    user.branch = branch ?? user.branch;
+    user.facultyType = facultyType ?? user.facultyType;
 
     await user.save();
 
     res.status(200).json({
       message: "Profile updated successfully",
-      user: { _id: user._id, name: user.name, year: user.year, branch: user.branch, email: user.email }
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        year: user.year,
+        branch: user.branch,
+        program: user.program,
+        facultyType: user.facultyType,
+        avatar: user.avatar
+      }
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -361,12 +418,12 @@ export const forgotPassword = async (req, res) => {
 
     const { email } = req.body;
     const user = await User.findOne({ email });
-    
+
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.resetOtp = otp;
-    user.otpExpires = Date.now() + 10 * 60 * 1000; 
+    user.otpExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
     await transporter.sendMail({
@@ -387,7 +444,7 @@ export const resetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
     const user = await User.findOne({ email, resetOtp: otp, otpExpires: { $gt: Date.now() } });
-    
+
     if (!user) return res.status(400).json({ message: "Invalid or expired OTP" });
 
     const salt = await bcrypt.genSalt(10);
@@ -395,7 +452,7 @@ export const resetPassword = async (req, res) => {
     user.resetOtp = undefined;
     user.otpExpires = undefined;
     await user.save();
-    
+
     res.json({ message: "Password updated successfully" });
   } catch (error) {
     console.error("Reset Password Error:", error);
