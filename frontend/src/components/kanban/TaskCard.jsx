@@ -23,7 +23,7 @@ export default function TaskCard({ task, onClick }) {
         <h3 className="font-semibold text-slate-800 leading-snug">
           {task.title || "Untitled Task"}
         </h3>
-        <p className="text-sm text-slate-500 mt-1 line-clamp-2">
+        <p className="text-sm text-slate-500 mt-1 truncate">
           {task.description || "No description provided"}
         </p>
       </div>
@@ -35,7 +35,15 @@ export default function TaskCard({ task, onClick }) {
         </span>
         <div className="flex items-center gap-1 text-xs text-slate-500">
           <CalendarDays size={14} />
-          {task.dueDate || "No due date"}
+          <p>
+            {task.dueDate
+              ? new Date(task.dueDate).toLocaleDateString("en-IN", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+              })
+              : "No Due Date"}
+          </p>
         </div>
       </div>
 
