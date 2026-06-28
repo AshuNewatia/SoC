@@ -27,7 +27,7 @@ export default function InsightsSection() {
   if (!insights) return null;
 
   return (
-    <div className="grid gap-5 md:grid-cols-3">
+    <div className="grid gap-5 md:grid-rows-3">
       <InsightCard
         title="Top Performer"
         value={insights.topPerformer.name}

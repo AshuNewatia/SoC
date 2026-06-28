@@ -13,56 +13,11 @@ import TaskStatusChart from "../components/analytics/TaskStatusChart";
 import PriorityChart from "../components/analytics/PriorityChart";
 import MemberPerformance from "../components/analytics/MemberPerformance";
 import ProductivityChart from "../components/analytics/ProductivityChart";
-import GithubAnalytics from "../components/analytics/GithubAnalytics";
+// import GithubAnalytics from "../components/analytics/GithubAnalytics";
 import InsightsSection from "../components/analytics/InsightsSection";
 
-import { exportAnalyticsReport } from "../services/analyticsService";
 
 export default function Analytics() {
-
-// useEffect(() => {
-//   socket.on("analyticsUpdated", () => {
-//     fetchOverview();
-//     fetchTaskStatus();
-//     fetchPriority();
-//     fetchWorkload();
-//     fetchProductivity();
-//   });
-
-//   return () => {
-//     socket.off("analyticsUpdated");
-//   };
-// }, []);
-
-const [exporting, setExporting] = useState(false);
-
-const handleExport = async () => {
-  try {
-    setExporting(true);
-
-    const response = await exportAnalyticsReport();
-
-    const url = window.URL.createObjectURL(
-      new Blob([response.data])
-    );
-
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = "analytics-report.pdf";
-
-    document.body.appendChild(link);
-    link.click();
-
-    link.remove();
-
-    window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error("Export failed:", error);
-  } finally {
-    setExporting(false);
-  }
-};
 
   return (
     <div className="p-6 space-y-6">
@@ -78,10 +33,6 @@ const handleExport = async () => {
           </p>
         </div>
 
-        <button onClick={handleExport} disabled={exporting}
-          className="px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary-hover transition">
-          {exporting ? "Generating..." : "Export Report"}
-        </button>
       </div>
 
       {/* KPI Cards */}
@@ -96,11 +47,10 @@ const handleExport = async () => {
       {/* Distribution */}
       <div className="grid lg:grid-cols-2 gap-6">
         <PriorityChart />
-        <GithubAnalytics />
-      </div>
-
-      {/* AI Insights */}
+        {/* AI Insights */}
       <InsightsSection />
+        
+      </div>
 
       <ProductivityChart />
 
