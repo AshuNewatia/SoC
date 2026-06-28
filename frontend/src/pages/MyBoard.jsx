@@ -741,6 +741,7 @@ export default function MyBoard() {
                 month: "short",
               }
             )}
+          </span>
           </div>
         </div>
 
