@@ -1,5 +1,6 @@
 import api from "./api";
 
+// All paths now start with a slash and exclude the redundant "/api"
 export const getTasks = (workspaceId) =>
   api.get(`/api/workspaces/${workspaceId}/tasks`);
 

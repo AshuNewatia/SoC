@@ -54,7 +54,7 @@ function OAuthCallback() {
   }, [location, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary to-blue-900 flex flex-col items-center justify-center text-white">
+    <div className="min-h-screen bg-linear-to-br from-primary to-blue-900 flex flex-col items-center justify-center text-white">
       <div className="w-12 h-12 border-4 border-t-transparent border-white rounded-full animate-spin mb-4"></div>
       <p className="text-lg font-medium tracking-wide">Authenticating with IIT Indore servers...</p>
     </div>

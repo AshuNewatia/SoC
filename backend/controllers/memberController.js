@@ -86,7 +86,7 @@ export const addMemberToWorkspace = async (req, res) => {
 
     if (!isOwner && !isAdmin) {
       return res.status(403).json({
-        message: "Not authorized",
+        message: "You can not invite member",
       });
     }
 
@@ -161,9 +161,21 @@ export const removeMember = async (req, res) => {
 
     const workspace = await Workspace.findById(workspaceId);
 
+    const userToRemove = await User.findById(userId);
+
     if (!workspace) {
       return res.status(404).json({
         message: "Workspace not found"
+      });
+    }
+
+    if (
+      userId ===
+      req.user._id.toString()
+    ) {
+      return res.status(400).json({
+        message:
+          "You cannot remove yourself"
       });
     }
 
@@ -180,7 +192,7 @@ export const removeMember = async (req, res) => {
 
     if (!isOwner && !isAdmin) {
       return res.status(403).json({
-        message: "Not authorized"
+        message: "You can not remove member"
       });
     }
 
@@ -190,6 +202,16 @@ export const removeMember = async (req, res) => {
           member.toString() !== userId
       );
 
+    const targetIsAdmin =
+      workspace.admins.some(
+        admin =>
+          admin.toString() === userId
+      );
+
+    if (targetIsAdmin && !isOwner) {
+      return res.status(401).json({ message: "Only owner can remove admin" })
+    }
+
     workspace.admins =
       workspace.admins.filter(
         admin =>
@@ -197,6 +219,13 @@ export const removeMember = async (req, res) => {
       );
 
     await workspace.save();
+
+    await logActivity(
+      workspace._id,
+      req.user._id,
+      "MEMBER_REMOVED",
+      `removed ${userToRemove.name} from the workspace`
+    );
 
     res.status(200).json({
       message: "Member removed"

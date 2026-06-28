@@ -1,10 +1,19 @@
+// src/components/task/TaskDrawer.jsx
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CalendarDays, MessageSquare, Flag, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { X, CalendarDays, Flag, Trash2 } from "lucide-react";
+import DeleteTaskModal from "./DeleteTaskModal";
 
 const priorityColors = {
   High: "bg-orange-100 text-orange-700",
   Medium: "bg-yellow-100 text-yellow-700",
   Low: "bg-emerald-100 text-emerald-700",
+};
+
+const statusColors = {
+  todo: "bg-slate-100 text-slate-700",
+  progress: "bg-blue-100 text-blue-700",
+  completed: "bg-green-100 text-green-700",
 };
 
 const statusLabels = {
@@ -14,127 +23,176 @@ const statusLabels = {
 };
 
 export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit }) {
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
   if (!task) return null;
 
-  const comments = Array.isArray(task.comments) ? task.comments : [];
   const priorityClass = priorityColors[task.priority] || "bg-slate-100 text-slate-700";
-  const memberCount = task.assignedTo?.length || 0;
+  const statusClass = statusColors[task.status] || "bg-slate-100 text-slate-700";
   const statusLabel = statusLabels[task.status] || task.status || "Unknown";
+  const memberCount = task.assignedTo?.length || 0;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/30 z-40"
-          />
+    <>
+      {/* Delete Confirmation Modal */}
+      <DeleteTaskModal
+        isOpen={deleteModalOpen}
+        taskTitle={task.title}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={() => {
+          onDelete(task);
+          setDeleteModalOpen(false);
+        }}
+      />
 
-          {/* Drawer */}
-          <motion.div
-            initial={{ x: 500 }}
-            animate={{ x: 0 }}
-            exit={{ x: 500 }}
-            transition={{ type: "spring", damping: 25 }}
-            className="fixed right-0 top-0 h-screen w-full sm:w-[420px] bg-white shadow-2xl z-50 overflow-y-auto"
-          >
-            {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-5 z-10">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 pr-4">
-                  <h2 className="text-2xl font-bold text-slate-800 break-words">
-                    {task.title || "Untitled Task"}
-                  </h2>
-                  <p className="text-sm text-slate-500 mt-1">{statusLabel}</p>
-                  <button
-                    onClick={onEdit}
-                    className="mt-4 w-full rounded-xl bg-slate-900 py-3 text-white font-medium"
-                  >
-                    Edit Task
-                  </button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => onDelete(task)}
-                    className="p-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                  <button
-                    onClick={onClose}
-                    className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-              </div>
-            </div>
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="fixed inset-0 bg-black/30 z-40"
+            />
 
-            <div className="p-6">
-              {/* Description */}
-              <div>
-                <h3 className="font-semibold mb-2">Description</h3>
-                <p className="text-slate-600 whitespace-pre-wrap">
-                  {task.description || "No description provided"}
-                </p>
-              </div>
-
-              {/* Details */}
-              <div className="mt-8 space-y-5">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500">Priority</span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${priorityClass}`}>
-                    {task.priority || "None"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500">Assigned Members</span>
-                  <span className="font-medium">{memberCount}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500">Due Date</span>
-                  <span className="flex items-center gap-2">
-                    <CalendarDays size={16} />
-                    {task.dueDate || "Not set"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500">Status</span>
-                  <span className="flex items-center gap-2 capitalize">
-                    <Flag size={16} />
-                    {statusLabel}
-                  </span>
+            {/* Drawer – width increased to 480px */}
+            <motion.div
+              initial={{ x: 500 }}
+              animate={{ x: 0 }}
+              exit={{ x: 500 }}
+              transition={{ type: "spring", damping: 25 }}
+              className="fixed right-0 top-0 h-screen w-full sm:w-[480px] bg-white shadow-2xl z-50 overflow-y-auto"
+            >
+              {/* Header */}
+              <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-5 z-10">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 pr-4">
+                    <h2 className="text-2xl font-bold text-slate-800 break-words">
+                      {task.title || "Untitled Task"}
+                    </h2>
+                    {/* Status badge in header */}
+                    <span
+                      className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium ${statusClass}`}
+                    >
+                      {statusLabel}
+                    </span>
+                    <button
+                      onClick={onEdit}
+                      className="mt-4 w-full rounded-xl bg-slate-900 py-3 text-white font-medium"
+                    >
+                      Edit Task
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setDeleteModalOpen(true)}
+                      className="p-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                    <button
+                      onClick={onClose}
+                      className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Comments (keep UI, backend later) */}
-              <div className="mt-10">
-                <div className="flex items-center gap-2 mb-4">
-                  <MessageSquare size={18} />
-                  <h3 className="font-semibold">Comments</h3>
+              <div className="p-6">
+                {/* Description Card */}
+                <div className="rounded-2xl bg-slate-50 p-4 border border-slate-200">
+                  <h3 className="font-semibold mb-3">Description</h3>
+                  <p className="text-slate-600 whitespace-pre-wrap">
+                    {task.description || "No description provided"}
+                  </p>
                 </div>
-                {comments.length > 0 ? (
-                  <div className="space-y-3">
-                    {comments.map((comment, index) => (
-                      <div key={index} className="p-4 rounded-xl bg-slate-50">
-                        {comment}
+
+                {/* Details */}
+                <div className="mt-8 space-y-5">
+                  {/* Priority */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500">Priority</span>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${priorityClass}`}
+                    >
+                      {task.priority || "None"}
+                    </span>
+                  </div>
+
+                  {/* Assigned Members – chips */}
+                  <div className="flex justify-between items-start">
+                    <span className="text-slate-500">Assigned To</span>
+
+                    <div className="text-right">
+                      <div className="font-medium">
+                        {memberCount} {memberCount === 1 ? "Member" : "Members"}
                       </div>
-                    ))}
+
+                      {task.assignedTo?.length > 0 && (
+                        <div className="flex flex-wrap justify-end gap-2 mt-2">
+                          {task.assignedTo.map((member) => (
+                            <div
+                              key={member._id}
+                              className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium"
+                            >
+                              {member.name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <div className="p-4 rounded-xl bg-slate-50 text-slate-500">
-                    No comments yet
+
+                  {/* Due Date */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500">Due Date</span>
+
+                    <span className="flex items-center gap-2">
+                      <CalendarDays size={16} />
+                      {task.dueDate
+                        ? new Date(task.dueDate).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                        : "Not set"}
+                    </span>
                   </div>
-                )}
+
+                  {/* Created At – new field */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500">Created</span>
+
+                    <span className="text-sm text-slate-700">
+                      {task.createdAt
+                        ? new Date(task.createdAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                        : "Unknown"}
+                    </span>
+                  </div>
+
+                  {/* Status – replaced with badge */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500">Status</span>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${statusClass}`}
+                    >
+                      {statusLabel}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
