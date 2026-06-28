@@ -515,68 +515,15 @@ export default function MyBoard() {
       <div className="grid lg:grid-cols-3 gap-5 mb-6">
         {/* Upcoming Deadlines */}
         <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-5 h-87.5 flex flex-col">
-  <div className="flex items-center justify-between mb-4">
-    <h2 className="text-lg font-semibold text-text-primary">
-      Upcoming Deadlines
-    </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-text-primary">
+              Upcoming Deadlines
+            </h2>
 
-    <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-medium">
-      {upcomingTasks.length} Tasks
-    </span>
-  </div>
-
-  {upcomingTasks.length === 0 ? (
-    <div className="flex-1 flex flex-col items-center justify-center text-center">
-      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl mb-4">
-        📅
-      </div>
-
-      <h3 className="font-semibold text-text-primary">
-        No Upcoming Deadlines
-      </h3>
-
-      <p className="text-sm text-text-secondary mt-2 max-w-xs leading-relaxed">
-        Tasks with due dates will automatically appear here.
-      </p>
-    </div>
-  ) : (
-    <div className="space-y-3 overflow-y-auto flex-1 pr-1">
-      {upcomingTasks.map((task) => {
-        const status = getDeadlineStyle(task.dueDate);
-
-        const priorityColor = {
-          Low: "bg-green-500",
-          Medium: "bg-yellow-500",
-          High: "bg-orange-500",
-        };
-
-        return (
-          <div
-            key={task._id}
-            className="group relative overflow-hidden rounded-2xl border border-border-light bg-linear-to-br from-white to-slate-50 p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
-          >
-            {/* Priority Accent */}
-            <div
-              className={`absolute left-0 top-0 h-full w-1 ${
-                priorityColor[task.priority] || "bg-primary"
-              }`}
-            />
-
-            <div className="flex justify-between items-start gap-3">
-              <div className="flex-1">
-                <h3 className="font-semibold text-text-primary text-sm">
-                  {task.title}
-                </h3>
-
-                <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                    {task.tag || "General"}
-                  </span>
-
-                  <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
-                    {task.priority}
-                  </span>
-                </div>
+            <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-medium">
+              {upcomingTasks.length} Tasks
+            </span>
+          </div>
 
           {upcomingTasks.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center">
@@ -656,7 +603,10 @@ export default function MyBoard() {
         {/* Quick Notes */}
         <div className="bg-surface rounded-xl p-4 shadow-sm border border-border-light h-87.5 flex flex-col">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-text-primary text-base">Quick Notes</h2>
+            <h2 className="font-semibold text-text-primary text-base">
+              Quick Notes
+            </h2>
+
             <button
               onClick={handleCreateNote}
               className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/30"
@@ -665,207 +615,161 @@ export default function MyBoard() {
               New Note
             </button>
           </div>
+
           <div className="overflow-y-auto flex-1 pr-2">
-           {notes.length === 0 ? (
-  <div className="h-full flex flex-col items-center justify-center text-center">
-    <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl mb-4">
-      📝
-    </div>
-    <h3 className="font-semibold text-text-primary">
-      No Notes Yet
-    </h3>
-    <p className="text-sm text-text-secondary mt-2 max-w-xs leading-relaxed">
-      Capture ideas, reminders, meeting notes and anything
-      important throughout your day.
-    </p>
-  </div>
-) : (
-  <div className="space-y-4">
-    {notes.map((note) => (
-      <div
-        key={note._id}
-        className="group relative overflow-hidden rounded-2xl border border-border-light bg-linear-to-br from-white to-slate-50 p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
-      >
-        {/* Accent */}
-        <div className="absolute left-0 top-0 h-full w-1 bg-primary rounded-l-2xl"></div>
+            {notes.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl mb-4">
+                  📝
+                </div>
 
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <input
-            value={note.title}
-            onChange={(e) =>
-              handleUpdateNote(
-                note._id,
-                "title",
-                e.target.value
-              )
-            }
-            placeholder="Untitled Note"
-            className="w-full bg-transparent text-base font-semibold text-text-primary outline-none placeholder:text-slate-400"
-          />
+                <h3 className="font-semibold text-text-primary">
+                  No Notes Yet
+                </h3>
 
-          <button
-            onClick={() => handleDeleteNote(note._id)}
-            className="opacity-0 group-hover:opacity-100 transition text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
+                <p className="text-sm text-text-secondary mt-2 max-w-xs leading-relaxed">
+                  Capture ideas, reminders, meeting notes and anything important
+                  throughout your day.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {notes.map((note) => (
+                  <div
+                    key={note._id}
+                    className="group relative overflow-hidden rounded-2xl border border-border-light bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
+                  >
+                    {/* Accent */}
+                    <div className="absolute left-0 top-0 h-full w-1 bg-primary rounded-l-2xl" />
 
-        {/* Content */}
-        <textarea
-          rows={2}
-          value={note.content}
-          onChange={(e) =>
-            handleUpdateNote(
-              note._id,
-              "content",
-              e.target.value
-            )
-          }
-          placeholder="Write your thoughts..."
-          className="w-full resize-none bg-transparent outline-none text-sm text-text-secondary leading-6 placeholder:text-slate-400"
-        />
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <input
+                        value={note.title}
+                        onChange={(e) =>
+                          handleUpdateNote(note._id, "title", e.target.value)
+                        }
+                        placeholder="Untitled Note"
+                        className="w-full bg-transparent text-base font-semibold text-text-primary outline-none placeholder:text-slate-400"
+                      />
 
-        {/* Footer */}
-        <div className="mt-3 pt-3 border-t border-border-light flex justify-between items-center">
-          <span className="text-xs text-text-secondary">
-            Last updated
-          </span>
+                      <button
+                        onClick={() => handleDeleteNote(note._id)}
+                        className="opacity-0 group-hover:opacity-100 transition text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
 
-          <span className="text-xs font-medium text-primary">
-            {new Date(note.updatedAt).toLocaleDateString(
-              "en-IN",
-              {
-                day: "numeric",
-                month: "short",
-              }
+                    {/* Content */}
+                    <textarea
+                      rows={2}
+                      value={note.content}
+                      onChange={(e) =>
+                        handleUpdateNote(note._id, "content", e.target.value)
+                      }
+                      placeholder="Write your thoughts..."
+                      className="w-full resize-none bg-transparent outline-none text-sm text-text-secondary leading-6 placeholder:text-slate-400"
+                    />
+
+                    {/* Footer */}
+                    <div className="mt-3 pt-3 border-t border-border-light flex justify-between items-center">
+                      <span className="text-xs text-text-secondary">
+                        Last updated
+                      </span>
+
+                      <span className="text-xs font-medium text-primary">
+                        {new Date(note.updatedAt).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
 
         {/* Task Distribution */}
         <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-5 h-87.5 flex flex-col">
-  {/* Header */}
-  <div className="flex items-center justify-between mb-5">
-    <div>
-      <h2 className="text-lg font-semibold text-text-primary">
-        Task Distribution
-      </h2>
-      <p className="text-sm text-text-secondary mt-1">
-        Overview of your current workload
-      </p>
-    </div>
-
-    <div className="text-xs font-medium px-3 py-1 rounded-full bg-primary/10 text-primary">
-      {stats.total} Total
-    </div>
-  </div>
-
-  {/* Distribution */}
-  <div className="space-y-5 flex-1">
-    {taskDistribution.map((item) => {
-      const colors = {
-        "To Do": {
-          dot: "bg-slate-400",
-          bar: "bg-slate-400",
-          light: "bg-slate-400",
-        },
-        "In Progress": {
-          dot: "bg-blue-500",
-          bar: "bg-blue-500",
-          light: "bg-blue-100",
-        },
-        Completed: {
-          dot: "bg-green-500",
-          bar: "bg-green-500",
-          light: "bg-green-100",
-        },
-      };
-
-      const color = colors[item.label];
-
-      return (
-        <div key={item.label}>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-3 h-3 rounded-full ${color.dot}`}
-              />
-
-              <span className="font-medium text-text-primary">
-                {item.label}
-              </span>
+          {/* Header */}
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-lg font-semibold text-text-primary">
+                Task Distribution
+              </h2>
+              <p className="text-sm text-text-secondary mt-1">
+                Overview of your current workload
+              </p>
             </div>
 
             <div className="text-xs font-medium px-3 py-1 rounded-full bg-primary/10 text-primary">
               {stats.total} Total
             </div>
-          </div>
+        </div>
+        {/* Distribution */}
+        <div className="space-y-5 flex-1">
+          {taskDistribution.map((item) => {
+            const colors = {
+              "To Do": {
+                dot: "bg-slate-400",
+                bar: "bg-slate-400",
+                light: "bg-slate-100",
+              },
+              "In Progress": {
+                dot: "bg-blue-500",
+                bar: "bg-blue-500",
+                light: "bg-blue-100",
+              },
+              Completed: {
+                dot: "bg-green-500",
+                bar: "bg-green-500",
+                light: "bg-green-100",
+              },
+            };
 
-          {/* Distribution */}
-          <div className="space-y-5 flex-1">
-            {taskDistribution.map((item) => {
-              const colors = {
-                "To Do": {
-                  dot: "bg-slate-400",
-                  bar: "bg-slate-400",
-                  light: "bg-slate-400",
-                },
-                "In Progress": {
-                  dot: "bg-blue-500",
-                  bar: "bg-blue-500",
-                  light: "bg-blue-100",
-                },
-                Completed: {
-                  dot: "bg-green-500",
-                  bar: "bg-green-500",
-                  light: "bg-green-100",
-                },
-              };
+            const color = colors[item.label];
 
-              const color = colors[item.label];
+            return (
+              <div key={item.label}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${color.dot}`} />
 
-              return (
-                <div key={item.label}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-3 h-3 rounded-full ${color.dot}`}
-                      />
-
-                      <span className="font-medium text-text-primary">
-                        {item.label}
-                      </span>
-                    </div>
-
-                    <span
-                      className={`text-xs font-semibold px-2.5 py-1 rounded-full ${color.light}`}
-                    >
-                      {item.count}
+                    <span className="font-medium text-text-primary">
+                      {item.label}
                     </span>
                   </div>
 
-                  <div className="relative h-2 rounded-full bg-border-light overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-700 ${color.bar}`}
-                      style={{
-                        width: `${maxTasks ? (item.count / maxTasks) * 100 : 0}%`,
-                      }}
-                    />
-                  </div>
-
-                  <div className="mt-1 text-right text-xs text-text-secondary">
-                    {stats.total
-                      ? Math.round((item.count / stats.total) * 100)
-                      : 0}
-                    %
-                  </div>
+                  <span
+                    className={`text-xs font-semibold px-2.5 py-1 rounded-full ${color.light}`}
+                  >
+                    {item.count}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
+
+                <div className="relative h-2 rounded-full bg-border-light overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ${color.bar}`}
+                    style={{
+                      width: `${maxTasks ? (item.count / maxTasks) * 100 : 0}%`,
+                    }}
+                  />
+                </div>
+
+                <div className="mt-1 text-right text-xs text-text-secondary">
+                  {stats.total
+                    ? Math.round((item.count / stats.total) * 100)
+                    : 0}
+                  %
+                </div>
+              </div>
+            );
+          })}
         </div>
+      </div>
       </div>
 
       {/* Recent Activity */}
@@ -933,70 +837,70 @@ export default function MyBoard() {
             />
           </div>
         </div>
-
-        {/* Search */}
-
-        <div className="flex flex-col md:flex-row gap-3 mb-5">
-          <input
-            type="text"
-            placeholder="Search tasks..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 border border-border-light rounded-xl px-4 py-2 text-sm text-text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-primary"
-          />
-          <select
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
-            className="border border-border-light rounded-xl px-4 py-2 text-sm text-text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-primary"
-          >
-            <option>All</option>
-            <option>Low</option>
-            <option>Medium</option>
-            <option>High</option>
-          </select>
-        </div>
-
-        {/* Personal Kanban */}
-
-        <h2 className="text-lg font-semibold text-text-primary mb-4">Personal Tasks</h2>
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid lg:grid-cols-3 gap-5">
-            <BoardColumn
-              columnId="todo"
-              title="To Do"
-              tasks={filterTasks(tasks.todo)}
-              onDelete={handleDeleteTask}
-              onOpen={(task) => {
-                setSelectedTask(task);
-                setShowTaskModal(true);
-              }}
-              titleClass="text-text-primary"
-            />
-            <BoardColumn
-              columnId="progress"
-              title="In Progress"
-              tasks={filterTasks(tasks.progress)}
-              onDelete={handleDeleteTask}
-              onOpen={(task) => {
-                setSelectedTask(task);
-                setShowTaskModal(true);
-              }}
-              titleClass="text-primary"
-            />
-            <BoardColumn
-              columnId="completed"
-              title="Completed"
-              tasks={filterTasks(tasks.completed)}
-              onDelete={handleDeleteTask}
-              onOpen={(task) => {
-                setSelectedTask(task);
-                setShowTaskModal(true);
-              }}
-              titleClass="text-success"
-            />
-          </div>
-        </DragDropContext>
       </div>
+
+      {/* Search */}
+
+      <div className="flex flex-col md:flex-row gap-3 mb-5">
+        <input
+          type="text"
+          placeholder="Search tasks..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1 border border-border-light rounded-xl px-4 py-2 text-sm text-text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-primary"
+        />
+        <select
+          value={priorityFilter}
+          onChange={(e) => setPriorityFilter(e.target.value)}
+          className="border border-border-light rounded-xl px-4 py-2 text-sm text-text-primary bg-surface focus:outline-none focus:ring-1 focus:ring-primary"
+        >
+          <option>All</option>
+          <option>Low</option>
+          <option>Medium</option>
+          <option>High</option>
+        </select>
+      </div>
+
+      {/* Personal Kanban */}
+
+      <h2 className="text-lg font-semibold text-text-primary mb-4">Personal Tasks</h2>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="grid lg:grid-cols-3 gap-5">
+          <BoardColumn
+            columnId="todo"
+            title="To Do"
+            tasks={filterTasks(tasks.todo)}
+            onDelete={handleDeleteTask}
+            onOpen={(task) => {
+              setSelectedTask(task);
+              setShowTaskModal(true);
+            }}
+            titleClass="text-text-primary"
+          />
+          <BoardColumn
+            columnId="progress"
+            title="In Progress"
+            tasks={filterTasks(tasks.progress)}
+            onDelete={handleDeleteTask}
+            onOpen={(task) => {
+              setSelectedTask(task);
+              setShowTaskModal(true);
+            }}
+            titleClass="text-primary"
+          />
+          <BoardColumn
+            columnId="completed"
+            title="Completed"
+            tasks={filterTasks(tasks.completed)}
+            onDelete={handleDeleteTask}
+            onOpen={(task) => {
+              setSelectedTask(task);
+              setShowTaskModal(true);
+            }}
+            titleClass="text-success"
+          />
+        </div>
+      </DragDropContext>
 
       <TaskDetailsModal
         task={selectedTask}
@@ -1005,5 +909,5 @@ export default function MyBoard() {
         onSave={handleUpdateTask}
       />
     </div>
-  );
+  )
 }
