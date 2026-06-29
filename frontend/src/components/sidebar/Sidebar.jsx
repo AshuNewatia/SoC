@@ -30,12 +30,23 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
 
   const handleCreateWorkspace = async (data) => {
     try {
-      await createWorkspace({
+      const res = await createWorkspace({
         ...data,
         owner: user.id,
       });
       await fetchWorkspaces();
+
       setCreateOpen(false);
+
+      const workspaceId = res._id || res?.data?._id;
+
+      if (workspaceId) {
+        navigate(`/workspace/${workspaceId}/overview`);
+
+        window.dispatchEvent(new CustomEvent("workspaceListChanged"));
+      } else {
+        console.warn("No workspace ID returned; navigation skipped.");
+      }
     } catch (err) {
       console.error("Error creating workspace", err);
     }
@@ -154,7 +165,12 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
               </span>
             </div>
             <button
-              onClick={() => setCreateOpen(true)}
+              onClick={() => {
+                onClose();
+                setTimeout(() => {
+                  setCreateOpen(true);
+                }, 300);
+              }}
               className="text-primary hover:bg-primary/10 p-1.5 rounded-lg transition"
             >
               <Plus size={15} />

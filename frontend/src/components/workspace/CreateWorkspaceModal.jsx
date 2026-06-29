@@ -19,7 +19,6 @@ export default function CreateWorkspaceModal({
     onCreate({ name: name.trim(), description: description.trim() });
     setName("");
     setDescription("");
-    onClose();
   };
 
   return (
@@ -32,7 +31,7 @@ export default function CreateWorkspaceModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 z-40"
+            className="fixed inset-0 bg-black/40 z-100"
           />
 
           {/* Modal Container */}
@@ -40,7 +39,7 @@ export default function CreateWorkspaceModal({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center p-5"
+            className="fixed inset-0 z-110 flex items-center justify-center p-5"
           >
             <div
               onClick={(e) => e.stopPropagation()}
