@@ -9,7 +9,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-// ----- Delete Confirmation Modal (reusable pattern) -----
+// ----- Delete Confirmation Modal -----
 function DeleteWorkspaceModal({ isOpen, onClose, onConfirm, workspace }) {
   if (!workspace) return null;
 
@@ -22,14 +22,14 @@ function DeleteWorkspaceModal({ isOpen, onClose, onConfirm, workspace }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 z-50"
+            className="fixed inset-0 bg-black/40 z-100"
           />
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: "spring", damping: 25 }}
-            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 flex items-center justify-center z-101 p-4"
           >
             <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6">
               <div className="flex items-start justify-between">
@@ -175,8 +175,9 @@ export default function WorkspaceSettingsModal({
                   </div>
                 </div>
 
-                {/* ===== SCROLLABLE BODY ===== */}
+                {/* ===== SCROLLABLE BODY with form id ===== */}
                 <form
+                  id="workspace-settings-form"
                   onSubmit={handleSubmit}
                   className="flex-1 overflow-y-auto px-7 py-6 space-y-7"
                 >
@@ -214,7 +215,7 @@ export default function WorkspaceSettingsModal({
 
                   <hr className="border-slate-200" />
 
-                  {/* GitHub Integration Section Card */}
+                  {/* GitHub Integration Section */}
                   <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
                     <div className="flex items-center gap-2 mb-2">
                       <GitBranch size={18} className="text-primary" />
@@ -281,6 +282,7 @@ export default function WorkspaceSettingsModal({
                     </button>
                     <button
                       type="submit"
+                      form="workspace-settings-form"  // ✅ Links to the form
                       className="px-6 py-3 rounded-xl bg-primary text-white hover:bg-primary-hover transition font-medium"
                     >
                       Save Changes

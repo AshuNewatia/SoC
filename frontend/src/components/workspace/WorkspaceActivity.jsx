@@ -180,7 +180,7 @@ export default function WorkspaceActivity() {
     formatDistanceToNow(
       new Date(date),
       { addSuffix: true }
-    );;
+    );
 
   const getUserInitials = (name) => {
     if (!name) return '?';
@@ -193,35 +193,34 @@ export default function WorkspaceActivity() {
   };
 
   // ------------------------------------------------
-  // 5. Render
+  // 5. Render – Responsive Header
   // ------------------------------------------------
   return (
     <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-sm font-sans overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-white">
-        <div className="flex items-center gap-4">
+      {/* Header – now responsive with flex-wrap */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-6 border-b border-slate-200 bg-white">
+        <div className="flex items-center gap-3 md:gap-4 flex-wrap">
           <div className="text-primary text-xl font-bold">≡</div>
-          <h2 className="text-xl font-bold text-slate-800">Activity Log</h2>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-50 text-emerald-700 border border-green-200 text-xs font-semibold">
+          <h2 className="text-lg md:text-xl font-bold text-slate-800">Activity Log</h2>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-50 text-emerald-700 border border-green-200 text-xs font-semibold whitespace-nowrap">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> LIVE
           </span>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            {filters.map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setActiveFilter(filter)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${activeFilter === filter
+        <div className="flex flex-wrap items-center gap-2">
+          {filters.map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`px-3 md:px-4 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition-colors whitespace-nowrap
+                ${activeFilter === filter
                   ? 'bg-primary text-white shadow-sm'
                   : 'bg-transparent border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800'
-                  }`}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
+                }`}
+            >
+              {filter}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -263,7 +262,6 @@ export default function WorkspaceActivity() {
 
                       {/* Avatar + Icon */}
                       <div className="relative shrink-0">
-
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm border-2 border-white shadow-sm">
                           {getUserInitials(item.userId?.name)}
                         </div>
@@ -284,17 +282,14 @@ export default function WorkspaceActivity() {
                           </span>{' '}
                           {item.description}
                         </p>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 font-medium">
+                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 font-medium flex-wrap">
                           <span>
                             {formatDateTime(item.createdAt)}
                           </span>
-
                           <span>•</span>
-
                           <span>
                             {getRelativeTime(item.createdAt)}
                           </span>
-
                         </div>
                       </div>
                     </div>
