@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, Trash2, User } from "lucide-react";
+import { Calendar, Trash2, Pencil } from "lucide-react";
 
 export default function TaskCard({ task, onDelete, onOpen }) {
   const isOverdue =
@@ -23,7 +23,6 @@ export default function TaskCard({ task, onDelete, onOpen }) {
 
   return (
     <div
-      onClick={() => onOpen(task)}
       className="bg-surface rounded-xl border border-border-light p-4 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer"
     >
       {/* Header */}
@@ -32,9 +31,8 @@ export default function TaskCard({ task, onDelete, onOpen }) {
           {task.title}
         </h3>
         <span
-          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-            priorityStyles[task.priority] || "bg-slate-100 text-slate-700"
-          }`}
+          className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityStyles[task.priority] || "bg-slate-100 text-slate-700"
+            }`}
         >
           {task.priority}
         </span>
@@ -52,29 +50,37 @@ export default function TaskCard({ task, onDelete, onOpen }) {
         <Calendar size={12} />
         <span className={isOverdue ? "text-red-500 font-medium" : ""}>
           {task.dueDate
-  ? new Date(task.dueDate).toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    })
-  : "No due date"}
+            ? new Date(task.dueDate).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
+            : "No due date"}
         </span>
       </div>
 
       {/* Footer */}
       <div className="flex items-center justify-between">
         <span
-          className={`text-xs px-2 py-1 rounded-md font-medium ${
-            tagStyles[task.tag] || "bg-slate-100 text-slate-700"
-          }`}
+          className={`text-xs px-2 py-1 rounded-md font-medium ${tagStyles[task.tag] || "bg-slate-100 text-slate-700"
+            }`}
         >
           {task.tag}
         </span>
 
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-semibold">
-            <User size={12} />
-          </div>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpen(task);
+            }}
+            className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-1.5 rounded transition"
+          >
+            <Pencil size={16} />
+          </button>
+
+
           <button
             onClick={(e) => {
               e.stopPropagation();
