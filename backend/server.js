@@ -16,6 +16,7 @@ import authRoutes from "./routes/authRoutes.js";
 import personalTaskRoutes from "./routes/personalTaskRoutes.js";
 import quickNoteRoutes from "./routes/quickNoteRoutes.js";
 import personalActivityRoutes from "./routes/personalActivityRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js"
 
 
 // Load env variables
@@ -55,6 +56,7 @@ app.use("/api/myboard", personalTaskRoutes);
 app.use("/api/notes", quickNoteRoutes);
 app.use("/api/personal-activity", personalActivityRoutes);
 app.use('/api', taskRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 
 /* ---------------- Health Check ---------------- */

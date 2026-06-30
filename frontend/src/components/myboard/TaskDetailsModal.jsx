@@ -148,12 +148,12 @@ export default function TaskDetailsModal({
                     </p>
                     <span className="text-xs text-text-secondary">
                       {new Date(item.timestamp).toLocaleString("en-IN", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-})}
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </span>
                   </div>
                 ))}

@@ -90,7 +90,7 @@ export default function Dashboard() {
   const activeWorkspaces = workspaces.length;
 
   const assignedTasks = tasks.filter(task =>
-    task.assignedTo?.some(assigned => assigned._id === user?._id)
+    task.assignedTo?.some(assigned => assigned._id === user?.id)
   ).length;
 
   const completedTasks = tasks.filter(task => task.status === "completed").length;
@@ -176,7 +176,7 @@ export default function Dashboard() {
   const handleCreateWorkspace = async (data) => {
     try {
       // ✅ Use api.post directly to ensure your JWT token is attached!
-      const res = await api.post("/workspaces", data);
+      const res = await api.post("/api/workspaces", data);
       window.dispatchEvent(new CustomEvent("workspaceListChanged"));
 
       const newWorkspaceId = res?.data?.workspace?._id || res?.data?._id || res?._id;
