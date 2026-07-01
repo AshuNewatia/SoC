@@ -32,8 +32,12 @@ export const signup = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      hasPassword: true,   
-      role
+      hasPassword: true,   // Mark that they have a local password
+      role,
+      year: '',            // default
+      branch: '',          // default
+      program: '',         // default
+      facultyType: ''      // default
     });
 
     const token = generateToken(user._id);
@@ -167,8 +171,9 @@ export const googleAuth = async (req, res) => {
         tempToken,
         message: 'Redirecting to complete profile...'
       });
-    } 
-    
+    }
+
+    // LOGIN: User already exists.
     if (!user.googleId) {
       user.googleId = googleId;
       await user.save();
