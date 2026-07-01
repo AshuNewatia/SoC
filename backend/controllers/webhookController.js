@@ -33,6 +33,12 @@ export const handleGithubWebhook = async (req, res) => {
       } else if (payload.action === "reopened") {
         task.status = "In Progress";
         await task.save();
+        if (task) {
+    const io = req.app.get("io"); // Get the radio tower
+    if (io) {
+        io.emit("taskUpdated", task); // Broadcast to all users
+    }
+}
       }
     }
   } catch (error) {
