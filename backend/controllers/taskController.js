@@ -333,6 +333,20 @@ export const updateTask = async (req, res) => {
             req.body,
             { new: true }
         );
+
+        if (updatedTask.githubIssueNumber && workspace.githubToken && workspace.githubRepo) {
+           const status = req.body.status || updatedTask.status;
+           await updateGithubIssueState(
+                workspace.githubToken,
+                workspace.githubRepo,
+                updatedTask.githubIssueNumber,
+                status
+                );
+             }
+
+if (req.app.get('io')) {
+    req.app.get('io').emit('taskUpdated', updatedTask);
+}
         const newAssignedUsers = updatedTask.assignedTo.map(
             id => id.toString()
         );

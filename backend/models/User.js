@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
   hasPassword: { type: Boolean, default: false },
   resetOtp: String,
   otpExpires: Date,
-  year: { type: String }, // or Number
+  year: { type: String }, 
   branch: { type: String },
   role: {
   type: String,

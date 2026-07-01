@@ -15,32 +15,27 @@ export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // --- DOMAIN GATEKEEPER ---
     if (!email.endsWith('@iiti.ac.in')) {
       return res.status(403).json({ message: 'Access denied. Only official @iiti.ac.in emails are allowed.' });
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
 
-    // Hash password (salt rounds = 10)
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const role = getRoleFromEmail(email);
 
-    // Create user
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      hasPassword: true,   // Mark that they have a local password
+      hasPassword: true,   
       role
     });
 
-    // Generate token
     const token = generateToken(user._id);
 
     res.status(201).json({
@@ -59,8 +54,6 @@ export const signup = async (req, res) => {
   }
 };
 
-// @desc    Login user
-// @route   POST /api/auth/login
 export const login = async (req, res) => {
   try {
     let { email, password } = req.body;
@@ -148,14 +141,12 @@ export const googleAuth = async (req, res) => {
 
     const { id: googleId, email, name, picture } = userResponse.data;
 
-    // --- DOMAIN GATEKEEPER ---
     if (!email.endsWith('@iiti.ac.in')) {
       return res.status(403).json({ message: 'Access denied. Please sign in with your official institute Google account.' });
     }
 
     let user = await User.findOne({ $or: [{ googleId }, { email }] });
 
-    // INTERCEPT: If user doesn't exist, they are signing up.
     if (!user) {
       const tempToken = jwt.sign(
         { email, name, googleId, avatar: picture, provider: 'google' }, 
@@ -170,7 +161,6 @@ export const googleAuth = async (req, res) => {
       });
     } 
     
-    // LOGIN: User already exists.
     if (!user.googleId) {
       user.googleId = googleId;
       await user.save();
@@ -188,8 +178,6 @@ export const googleAuth = async (req, res) => {
   }
 };
 
-// @desc    GitHub OAuth Login/Signup
-// @route   POST /api/auth/github
 export const githubAuth = async (req, res) => {
   try {
     const { code } = req.body;
@@ -212,7 +200,6 @@ export const githubAuth = async (req, res) => {
     const { id: githubId, login, avatar_url } = userResponse.data;
     let userEmail = userResponse.data.email;
 
-    // FETCH PRIVATE EMAILS (If primary is hidden)
     if (!userEmail) {
       const emailResponse = await axios.get('https://api.github.com/user/emails', {
         headers: { Authorization: `Bearer ${access_token}` },
@@ -227,8 +214,6 @@ export const githubAuth = async (req, res) => {
       }
     }
 
-    // --- NO DOMAIN GATEKEEPER FOR GITHUB ---
-    // We just ensure they have an email attached to their account so the DB doesn't fail
     if (!userEmail) {
       return res.status(400).json({ 
         message: 'Could not retrieve a valid email from your GitHub account. Please ensure you have a verified email on GitHub.' 
@@ -269,10 +254,6 @@ export const githubAuth = async (req, res) => {
   }
 };
 
-// ==========================================
-// 3. PROFILE COMPLETION & MANAGEMENT
-// ==========================================
-
 export const completeOAuthProfile = async (req, res) => {
   try {
     const { tempToken, password, name } = req.body;
@@ -296,7 +277,6 @@ export const completeOAuthProfile = async (req, res) => {
       githubId: decoded.provider === 'github' ? decoded.githubId : undefined,
       role: getRoleFromEmail(decoded.email),
     });
-    // const role = getRoleFromEmail(email);
     const token = generateToken(user._id);
 
     res.status(201).json({
@@ -348,9 +328,6 @@ export const updateProfile = async (req, res) => {
   }
 };
 
-// ==========================================
-// 4. PASSWORD RECOVERY
-// ==========================================
 
 export const forgotPassword = async (req, res) => {
   try {

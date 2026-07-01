@@ -7,7 +7,7 @@ import {
   deleteWorkspace,
 } from "../controllers/workspaceController.js";
 import { protect } from "../middleware/authMiddleware.js";
-import { handleGithubWebhook } from "../controllers/githubWebhookController.js";
+import { handleGithubWebhook } from "../controllers/webhookController.js";
 
 const router = express.Router();
 

@@ -1,6 +1,5 @@
 import PersonalActivity from "../models/PersonalActivity.js";
 
-// Get all activities of logged-in user
 export const getPersonalActivities = async (req, res) => {
   try {
     const activities = await PersonalActivity.find({
@@ -15,7 +14,7 @@ export const getPersonalActivities = async (req, res) => {
   }
 };
 
-// Create a new activity
+
 export const createPersonalActivity = async (req, res) => {
   try {
     const activity = await PersonalActivity.create({

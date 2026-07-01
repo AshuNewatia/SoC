@@ -4,7 +4,6 @@ import { getWorkspaceActivities } from "../controllers/activityController.js";
 
 const router = express.Router();
 
-// Fetch activity log for a specific workspace
-router.get("/:id/activity", getWorkspaceActivities); // Add 'protect' middleware in production
+router.get("/:id/activity", getWorkspaceActivities); 
 
 export default router;
