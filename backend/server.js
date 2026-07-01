@@ -41,12 +41,11 @@ app.use(cors({
       callback(new Error('Blocked by CORS policy'));
     }
   },
-  credentials: true, // This allows secure cookies and tokens to be sent
+  credentials: true, 
 }));
 
-app.use(express.json()); // Parses incoming JSON payloads
+app.use(express.json()); 
 
-/* ---------------- Routes ---------------- */
 app.use("/api/auth", authRoutes);
 app.use("/api", taskRoutes);
 app.use("/api/workspaces", workspaceRoutes);
@@ -58,16 +57,12 @@ app.use("/api/personal-activity", personalActivityRoutes);
 app.use('/api', taskRoutes);
 app.use("/api/analytics", analyticsRoutes);
 
-
-/* ---------------- Health Check ---------------- */
 app.get("/", (req, res) => {
   res.send("CampusFlow Backend Running 🚀");
 });
 
-/* ---------------- HTTP Server ---------------- */
 const server = http.createServer(app);
 
-/* ---------------- Socket.io ---------------- */
 const io = new Server(server, {
   cors: {
     origin: [
@@ -81,7 +76,6 @@ const io = new Server(server, {
 
 initializeSocket(io);
 
-/* ---------------- Start Server ---------------- */
 const PORT = process.env.PORT || 5000;
 
 connectDB()
