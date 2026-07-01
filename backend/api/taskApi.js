@@ -1,6 +1,5 @@
 import axios from "axios";
 
-// Using the hardcoded URL to bypass any potential issues with services/api.js
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export const getTasks = (workspaceId) => 

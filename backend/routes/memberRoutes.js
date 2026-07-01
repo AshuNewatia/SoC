@@ -4,7 +4,6 @@ import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Member management routes
 router.get(
   "/:workspaceId/members",
   protect,

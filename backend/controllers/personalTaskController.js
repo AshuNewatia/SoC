@@ -54,7 +54,6 @@ export const updateTask = async (req, res) => {
       });
     }
 
-    // Track changes
     if (req.body.status && req.body.status !== task.status) {
       const statusMap = {
         todo: "To Do",
@@ -100,7 +99,6 @@ export const updateTask = async (req, res) => {
       });
     }
 
-    // Update fields
     task.title = req.body.title ?? task.title;
     task.description = req.body.description ?? task.description;
     task.priority = req.body.priority ?? task.priority;

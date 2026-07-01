@@ -2,13 +2,11 @@ import Workspace from "../models/Workspace.js";
 import User from "../models/User.js";
 import { logActivity } from "./activityController.js";
 
-// @desc    Get all members of a workspace (including the owner)
-// @route   GET /api/workspaces/:id/members
 export const getWorkspaceMembers = async (req, res) => {
   try {
     const { workspaceId } = req.params;
 
-    // Fetch the workspace and fully populate both the owner and members arrays
+
     const workspace = await Workspace.findById(workspaceId)
       .populate("owner", "name email avatar")
       .populate("members", "name email avatar");
@@ -17,17 +15,15 @@ export const getWorkspaceMembers = async (req, res) => {
       return res.status(404).json({ message: "Workspace not found" });
     }
 
-    // Format the owner
     const ownerData = {
       _id: workspace.owner._id,
       name: workspace.owner.name,
       email: workspace.owner.email,
       avatar: workspace.owner.avatar,
       role: "Owner",
-      tasksCompleted: 0 // You can calculate this later when you build the Task system
+      tasksCompleted: 0 
     };
 
-    // Format the standard members
     const membersData = workspace.members
       .filter(
         member =>
@@ -47,7 +43,7 @@ export const getWorkspaceMembers = async (req, res) => {
           ? "Admin"
           : "Member"
       }));
-    // Combine into one array for the React frontend
+
     const allMembers = [ownerData, ...membersData];
 
     res.status(200).json(allMembers);
@@ -57,8 +53,6 @@ export const getWorkspaceMembers = async (req, res) => {
   }
 };
 
-// @desc    Add a new user to a workspace by email
-// @route   POST /api/workspaces/:id/members
 export const addMemberToWorkspace = async (req, res) => {
   try {
     const { workspaceId } = req.params;
@@ -72,7 +66,6 @@ export const addMemberToWorkspace = async (req, res) => {
       });
     }
 
-    // Permission Check
     const isOwner =
       workspace.owner.toString() ===
       req.user._id.toString();
@@ -90,7 +83,6 @@ export const addMemberToWorkspace = async (req, res) => {
       });
     }
 
-    // Find user by email
     const userToAdd = await User.findOne({ email });
 
     if (!userToAdd) {
@@ -99,7 +91,6 @@ export const addMemberToWorkspace = async (req, res) => {
       });
     }
 
-    // Owner already exists
     if (
       workspace.owner.toString() ===
       userToAdd._id.toString()
