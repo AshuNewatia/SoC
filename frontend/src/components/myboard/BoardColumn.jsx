@@ -21,7 +21,7 @@ export default function BoardColumn({
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm h-[70vh] flex flex-col overflow-hidden">
-      
+
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
         <div className="flex items-center gap-2">
@@ -42,9 +42,8 @@ export default function BoardColumn({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex-1 overflow-y-auto p-4 space-y-3 transition-colors duration-200 ${
-              snapshot.isDraggingOver ? "bg-primary/5" : ""
-            }`}
+            className={`flex-1 overflow-y-auto p-4 space-y-3 transition-colors duration-200 ${snapshot.isDraggingOver ? "bg-primary/5" : ""
+              }`}
           >
             {tasks.length === 0 && !snapshot.isDraggingOver && (
               <div className="h-full flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl">
@@ -55,12 +54,12 @@ export default function BoardColumn({
               </div>
             )}
 
-                       {tasks.map((task, index) => (
+            {tasks.map((task, index) => (
               <Draggable
-  key={task?._id?.toString() || `task-${index}`}
-  draggableId={task?._id?.toString() || `task-${index}`}
-  index={index}
->
+                key={task?._id?.toString() || `task-${index}`}
+                draggableId={task?._id?.toString() || `task-${index}`}
+                index={index}
+              >
                 {(provided) => (
                   <div
                     ref={provided.innerRef}

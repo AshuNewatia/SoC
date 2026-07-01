@@ -13,7 +13,7 @@ import authRoutes from "./routes/authRoutes.js";
 import personalTaskRoutes from "./routes/personalTaskRoutes.js";
 import quickNoteRoutes from "./routes/quickNoteRoutes.js";
 import personalActivityRoutes from "./routes/personalActivityRoutes.js";
-import webhookRoutes from "./routes/webhookRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js"
 
 
 dotenv.config();
@@ -47,7 +47,7 @@ app.use("/api/myboard", personalTaskRoutes);
 app.use("/api/notes", quickNoteRoutes);
 app.use("/api/personal-activity", personalActivityRoutes);
 app.use('/api', taskRoutes);
-app.use("/api/webhooks", webhookRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 app.get("/", (req, res) => {
   res.send("CampusFlow Backend Running 🚀");

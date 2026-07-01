@@ -10,10 +10,10 @@ export default function ViewProfile() {
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold text-slate-800 mb-6">Profile Settings</h2>
-      
+
       {/* 4. Render the Modal */}
       <EditProfile isOpen={isEditing} onClose={() => setIsEditing(false)} />
-      
+
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="bg-slate-50 p-6 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -22,11 +22,15 @@ export default function ViewProfile() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-900">{user?.name}</h1>
-              <p className="text-slate-500">First-year B.Tech CSE</p>
+              <p className="text-slate-500">
+                {user?.role === "student"
+                  ? `${user?.year || ""} Year • ${user?.program || ""} • ${user?.branch || ""}`
+                  : user?.facultyType || "Faculty"}
+              </p>
             </div>
           </div>
           {/* 5. Attach trigger to the button */}
-          <button 
+          <button
             onClick={() => setIsEditing(true)}
             className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition"
           >

@@ -223,7 +223,47 @@ export default function KanbanBoard() {
   };
 
   if (loading) {
-    return <div className="bg-white rounded-2xl shadow-sm border p-10">Loading board...</div>;
+    return (
+      <div className="space-y-6 animate-pulse">
+
+        {/* Header Skeleton */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+          <div className="h-8 w-56 bg-slate-200 rounded-lg"></div>
+          <div className="h-4 w-80 bg-slate-100 rounded mt-3"></div>
+        </div>
+
+        {/* Filter Skeleton */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 flex gap-3">
+          <div className="h-10 w-24 bg-slate-200 rounded-xl"></div>
+          <div className="h-10 w-24 bg-slate-200 rounded-xl"></div>
+          <div className="h-10 w-32 bg-slate-200 rounded-xl"></div>
+          <div className="h-10 w-28 bg-slate-200 rounded-xl"></div>
+        </div>
+
+        {/* Columns Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((col) => (
+            <div
+              key={col}
+              className="bg-white rounded-2xl border border-slate-200 p-4"
+            >
+              <div className="h-6 w-32 bg-slate-200 rounded mb-5"></div>
+
+              {[1, 2, 3].map((card) => (
+                <div
+                  key={card}
+                  className="bg-slate-50 rounded-xl p-4 mb-4"
+                >
+                  <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-slate-100 rounded w-1/2 mt-3"></div>
+                  <div className="h-3 bg-slate-100 rounded w-1/3 mt-2"></div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -271,52 +311,48 @@ export default function KanbanBoard() {
 
       {/* Filter buttons – separate div, centered */}
       <div className="bg-surface rounded-2xl shadow-sm border border-border-light px-5 py-3 mb-6">
-  <div className="flex flex-wrap justify-center gap-2">
-    <button
-      onClick={() => setTaskFilter("all")}
-      className={`px-4 py-2 rounded-xl text-sm font-medium ${
-        taskFilter === "all"
-          ? "bg-primary text-white"
-          : "bg-white border border-border-light"
-      }`}
-    >
-      All Tasks
-    </button>
+        <div className="flex flex-wrap justify-center gap-2">
+          <button
+            onClick={() => setTaskFilter("all")}
+            className={`px-4 py-2 rounded-xl text-sm font-medium ${taskFilter === "all"
+                ? "bg-primary text-white"
+                : "bg-white border border-border-light"
+              }`}
+          >
+            All Tasks
+          </button>
 
-    <button
-      onClick={() => setTaskFilter("my")}
-      className={`px-4 py-2 rounded-xl text-sm font-medium ${
-        taskFilter === "my"
-          ? "bg-primary text-white"
-          : "bg-white border border-border-light"
-      }`}
-    >
-      My Tasks
-    </button>
+          <button
+            onClick={() => setTaskFilter("my")}
+            className={`px-4 py-2 rounded-xl text-sm font-medium ${taskFilter === "my"
+                ? "bg-primary text-white"
+                : "bg-white border border-border-light"
+              }`}
+          >
+            My Tasks
+          </button>
 
-    <button
-      onClick={() => setTaskFilter("created")}
-      className={`px-4 py-2 rounded-xl text-sm font-medium ${
-        taskFilter === "created"
-          ? "bg-primary text-white"
-          : "bg-white border border-border-light"
-      }`}
-    >
-      Created By Me
-    </button>
+          <button
+            onClick={() => setTaskFilter("created")}
+            className={`px-4 py-2 rounded-xl text-sm font-medium ${taskFilter === "created"
+                ? "bg-primary text-white"
+                : "bg-white border border-border-light"
+              }`}
+          >
+            Created By Me
+          </button>
 
-    <button
-      onClick={() => setTaskFilter("unassigned")}
-      className={`px-4 py-2 rounded-xl text-sm font-medium ${
-        taskFilter === "unassigned"
-          ? "bg-primary text-white"
-          : "bg-white border border-border-light"
-      }`}
-    >
-      Unassigned
-    </button>
-  </div>
-</div>
+          <button
+            onClick={() => setTaskFilter("unassigned")}
+            className={`px-4 py-2 rounded-xl text-sm font-medium ${taskFilter === "unassigned"
+                ? "bg-primary text-white"
+                : "bg-white border border-border-light"
+              }`}
+          >
+            Unassigned
+          </button>
+        </div>
+      </div>
 
       {/* Kanban Columns */}
       <DragDropContext onDragEnd={onDragEnd}>

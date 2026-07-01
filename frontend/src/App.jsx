@@ -42,14 +42,15 @@ function ProtectedRoute() {
 // Global Main Panel Layout Wrapper
 function AuthenticatedLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [workspaceSearch, setWorkspaceSearch] = useState("");
 
   return (
    <WorkspaceProvider>
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)}  workspaceSearch={workspaceSearch} />
       
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <Header onMenuClick={() => setSidebarOpen(true)} setWorkspaceSearch={setWorkspaceSearch} workspaceSearch={workspaceSearch}/>
         
         <main className="flex-1 overflow-y-auto focus:outline-none">
           {/* Renders the internal page component */}

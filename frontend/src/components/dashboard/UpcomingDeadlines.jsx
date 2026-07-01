@@ -7,11 +7,16 @@ export default function UpcomingDeadlines({
   isProfessor,
 }) {
   // 1. Filter tasks based on role
+  const currentUserId =
+    currentUser?.id || currentUser?._id;
+
   const filteredTasks = isProfessor
     ? tasks
     : tasks.filter((task) =>
-        task.assignedTo?.some((user) => user._id === currentUser?._id)
-      );
+      task.assignedTo?.some(
+        (user) => user._id === currentUserId
+      )
+    );
 
   // 2. Compute upcoming (next 7 days) from the filtered tasks
   const upcomingTasks = filteredTasks
@@ -64,7 +69,7 @@ export default function UpcomingDeadlines({
               <div className="text-sm font-semibold text-orange-600">
                 {Math.ceil(
                   (new Date(task.dueDate) - new Date()) /
-                    (1000 * 60 * 60 * 24)
+                  (1000 * 60 * 60 * 24)
                 )}{" "}
                 days left
               </div>
