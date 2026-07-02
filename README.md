@@ -195,7 +195,6 @@ npm run dev
 - Email Notifications
 - Advanced Analytics
 - AI-Based Task Suggestions
-- Mobile Application
 
 ---
 
