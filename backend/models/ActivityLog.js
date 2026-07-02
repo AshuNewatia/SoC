@@ -15,7 +15,6 @@ const activityLogSchema = new mongoose.Schema(
     actionType: {
       type: String,
       required: true,
-      // Examples: 'WORKSPACE_CREATED', 'MEMBER_ADDED', 'TASK_CREATED', 'TASK_COMPLETED'
     },
     description: {
       type: String,

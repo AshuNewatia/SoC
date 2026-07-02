@@ -1,7 +1,37 @@
 import { Octokit } from "@octokit/rest";
-
-// Helper to initialize Octokit with the workspace's token
 const getOctokit = (token) => new Octokit({ auth: token });
+
+export const fetchGithubIssues = async (token, repoString) => {
+  if (!token || !repoString) return [];
+  const [owner, repo] = repoString.split("/");
+
+  try {
+    const octokit = getOctokit(token);
+    console.log("Fetching for:", repoString);
+    const response = await octokit.rest.issues.listForRepo({
+      owner,
+      repo,
+      state: 'all',
+      per_page: 50, 
+    });
+
+    console.log("GitHub Response Data:", response.data);
+    const pureIssues = response.data.filter(issue => !issue.pull_request);
+
+    console.log("Issues after filtering:", pureIssues.length); 
+    return pureIssues.map(issue => ({
+      title: issue.title,
+      description: issue.body || "No description provided.",
+      status: issue.state === 'closed' ? 'Done' : 'Todo',
+      githubIssueNumber: issue.number,
+      githubUrl: issue.html_url,
+    }));
+
+  } catch (error) {
+    console.error("Failed to fetch GitHub issues:", error.message);
+    throw new Error("Could not pull issues from GitHub. Please check the repo name and token permissions.");
+  }
+};
 
 export const createGithubIssue = async (token, repoString, title, description) => {
   if (!token || !repoString) return null;
@@ -15,7 +45,8 @@ export const createGithubIssue = async (token, repoString, title, description) =
       title,
       body: description || "No description provided.",
     });
-    return response.data.number; // Return the new issue number
+
+    return response.data.number; 
   } catch (error) {
     console.error("Failed to create GitHub issue:", error.message);
     return null;
@@ -26,7 +57,6 @@ export const updateGithubIssueState = async (token, repoString, issueNumber, sta
   if (!token || !repoString || !issueNumber) return null;
   const [owner, repo] = repoString.split("/");
 
-  // GitHub issues only have "open" or "closed" states
   const githubState = state === "Done" ? "closed" : "open";
 
   try {
@@ -38,6 +68,6 @@ export const updateGithubIssueState = async (token, repoString, issueNumber, sta
       state: githubState,
     });
   } catch (error) {
-    console.error("Failed to update GitHub issue:", error.message);
+    console.error(`Failed to update GitHub issue #${issueNumber}:`, error.message);
   }
 };

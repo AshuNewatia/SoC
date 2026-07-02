@@ -25,7 +25,6 @@ const userSchema = new mongoose.Schema({
   resetOtp: String,
 
   otpExpires: Date,
-
   role: {
     type: String,
     enum: ["student", "professor"],

@@ -8,10 +8,7 @@ import workspaceRoutes from "./routes/workspaceRoutes.js";
 import memberRoutes from "./routes/memberRoutes.js";
 import activityRoutes from "./routes/activityRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
-
-
 import connectDB from "./config/db.js";
-
 import authRoutes from "./routes/authRoutes.js";
 import personalTaskRoutes from "./routes/personalTaskRoutes.js";
 import quickNoteRoutes from "./routes/quickNoteRoutes.js";
@@ -19,34 +16,32 @@ import personalActivityRoutes from "./routes/personalActivityRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js"
 
 
-// Load env variables
 dotenv.config();
 
 const app = express();
 
-/* ---------------- Middleware & CORS ---------------- */
-// This array tells Express exactly who is allowed to talk to the database.
 const allowedOrigins = [
-  'http://localhost:5173', // For your local testing
-  process.env.CLIENT_URL   // Your live frontend URL
+  'http://localhost:5173', 
+  process.env.CLIENT_URL   
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests) 
-    // OR if the origin perfectly matches one of the URLs in our allowedOrigins array
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Blocked by CORS policy'));
     }
   },
-  credentials: true, // This allows secure cookies and tokens to be sent
+  credentials: true, 
 }));
 
-app.use(express.json()); // Parses incoming JSON payloads
-
-/* ---------------- Routes ---------------- */
+app.use(express.json()); 
+app.use((req, res, next) => {
+    console.log(`Incoming request: ${req.method} ${req.url}`);
+    next();
+});
+app.use('/api/webhooks', webhookRoutes)
 app.use("/api/auth", authRoutes);
 app.use("/api", taskRoutes);
 app.use("/api/workspaces", workspaceRoutes);
@@ -58,16 +53,12 @@ app.use("/api/personal-activity", personalActivityRoutes);
 app.use('/api', taskRoutes);
 app.use("/api/analytics", analyticsRoutes);
 
-
-/* ---------------- Health Check ---------------- */
 app.get("/", (req, res) => {
   res.send("CampusFlow Backend Running 🚀");
 });
 
-/* ---------------- HTTP Server ---------------- */
 const server = http.createServer(app);
 
-/* ---------------- Socket.io ---------------- */
 const io = new Server(server, {
   cors: {
     origin: [
@@ -79,9 +70,10 @@ const io = new Server(server, {
   },
 });
 
+app.set('io', io)
+
 initializeSocket(io);
 
-/* ---------------- Start Server ---------------- */
 const PORT = process.env.PORT || 5000;
 
 connectDB()

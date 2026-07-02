@@ -15,7 +15,6 @@ export const initializeSocket = (io) => {
       if (!workspaceStreams.has(workspaceId)) {
         workspaceStreams.set(workspaceId, new Map());
       }
-  
       workspaceStreams.get(workspaceId).set(socket.id, user);
 
       const workspaceUsers = Array.from(workspaceStreams.get(workspaceId).values());
@@ -45,7 +44,7 @@ export const initializeSocket = (io) => {
 
       if (workspaceId && workspaceStreams.has(workspaceId)) {
         const usersInWorkspace = workspaceStreams.get(workspaceId);
-        
+
         usersInWorkspace.delete(socket.id);
         socketToWorkspace.delete(socket.id);
 

@@ -1,8 +1,10 @@
 import Workspace from "../models/Workspace.js";
 import mongoose from "mongoose";
 import { logActivity } from "./activityController.js";
+import { fetchGithubIssues } from '../services/githubService.js';
+import Task from '../models/Task.js';
 
-// ─── CREATE ──────────────────────────────────────────────
+
 export const createWorkspace = async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -17,7 +19,7 @@ export const createWorkspace = async (req, res) => {
       description: description || "",
       owner,
       admins: [],
-      members: [owner], // owner is automatically a member
+      members: [owner], 
     });
 
     await workspace.save();
@@ -88,8 +90,7 @@ export const getWorkspaceById = async (req, res) => {
 
 export const updateWorkspace = async (req, res) => {
   try {
-    const { workspaceId } = req.params;
-    
+    const { workspaceId } = req.params;    
     const { name, description, githubRepo, githubToken } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
@@ -111,15 +112,35 @@ export const updateWorkspace = async (req, res) => {
             });
     }
 
-    // Update standard fields
     workspace.name = name?.trim() || workspace.name;
     workspace.description = description !== undefined ? description : workspace.description;
 
-    // ✅ FIX 2: Actually save the GitHub fields to the database document
     if (githubRepo !== undefined) workspace.githubRepo = githubRepo;
     if (githubToken !== undefined) workspace.githubToken = githubToken;
 
     await workspace.save();
+
+    if (githubRepo && githubToken && workspace.isModified('githubRepo')) {
+  try {
+    const githubIssues = await fetchGithubIssues(githubToken, githubRepo);
+
+
+    if (githubIssues.length > 0) {
+
+      const tasksToImport = githubIssues.map(issue => ({
+        ...issue,
+        workspace: workspace._id,
+        owner: req.user._id
+      }));
+
+  
+      await Task.insertMany(tasksToImport);
+      console.log(`Successfully imported ${tasksToImport.length} issues.`);
+    }
+  } catch (err) {
+    console.error("Auto-sync failed:", err.message);
+  }
+}
 
     await logActivity(
       workspace._id,
@@ -136,7 +157,6 @@ export const updateWorkspace = async (req, res) => {
 };
 
 
-// ─── DELETE (only owner) ────────────────────────────────
 export const deleteWorkspace = async (req, res) => {
   try {
     const { workspaceId } = req.params;
