@@ -31,7 +31,7 @@ export default function WorkspaceActivity() {
   useEffect(() => {
     const fetchActivities = async () => {
       try {
-        const res = await api.get(`/workspaces/${id}/activity`);
+        const res = await api.get(`/api/workspaces/${id}/activity`);
         setActivities(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error('Failed to fetch activity log:', err);
