@@ -30,7 +30,7 @@ export default function WorkspaceMembers() {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const res = await api.get(`/workspaces/${id}/members`);
+        const res = await api.get(`/api/workspaces/${id}/members`);
         setMembers(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error('Failed to fetch members:', err);
@@ -74,8 +74,8 @@ export default function WorkspaceMembers() {
   // Handlers
   const handleInvite = async () => {
     try {
-      await api.post(`/workspaces/${id}/members`, { email: inviteEmail });
-      const res = await api.get(`/workspaces/${id}/members`);
+      await api.post(`/api/workspaces/${id}/members`, { email: inviteEmail });
+      const res = await api.get(`/api/workspaces/${id}/members`);
       setMembers(res.data);
       setInviteEmail('');
       handleSuccess("Member added successfully");
@@ -88,8 +88,8 @@ export default function WorkspaceMembers() {
 
   const handlePromote = async (memberId) => {
     try {
-      await api.post(`/workspaces/${id}/admins/${memberId}`);
-      const res = await api.get(`/workspaces/${id}/members`);
+      await api.post(`/api/workspaces/${id}/admins/${memberId}`);
+      const res = await api.get(`/api/workspaces/${id}/members`);
       setMembers(res.data);
       handleSuccess("Promoted to admin successfully");
       setOpenMenu(null);
@@ -101,8 +101,8 @@ export default function WorkspaceMembers() {
 
   const handleDemote = async (memberId) => {
     try {
-      await api.delete(`/workspaces/${id}/admins/${memberId}`);
-      const res = await api.get(`/workspaces/${id}/members`);
+      await api.delete(`/api/workspaces/${id}/admins/${memberId}`);
+      const res = await api.get(`/api/workspaces/${id}/members`);
       setMembers(res.data);
       handleSuccess("Demoted to member successfully");
       setOpenMenu(null);
@@ -115,8 +115,8 @@ export default function WorkspaceMembers() {
   const handleRemove = async (memberId) => {
     if (!window.confirm('Are you sure you want to remove this member?')) return;
     try {
-      await api.delete(`/workspaces/${id}/members/${memberId}`);
-      const res = await api.get(`/workspaces/${id}/members`);
+      await api.delete(`/api/workspaces/${id}/members/${memberId}`);
+      const res = await api.get(`/api/workspaces/${id}/members`);
       setMembers(res.data);
       handleSuccess("Member removed successfully");
       setOpenMenu(null);
