@@ -41,7 +41,7 @@ app.use((req, res, next) => {
     console.log(`Incoming request: ${req.method} ${req.url}`);
     next();
 });
-app.use('/api/webhooks', webhookRoutes)
+app.use('/api/webhooks', webhookRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api", taskRoutes);
 app.use("/api/workspaces", workspaceRoutes);
