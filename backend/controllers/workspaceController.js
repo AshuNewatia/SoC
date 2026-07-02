@@ -39,14 +39,13 @@ export const createWorkspace = async (req, res) => {
   }
 };
 
-// ─── GET ALL (user’s workspaces) ─────────────────────────
 export const getWorkspaces = async (req, res) => {
   try {
     const workspaces = await Workspace.find({
       $or: [{ owner: req.user._id }, { members: req.user._id }],
     })
-      .populate("owner", "name email")   // optional, if you want owner details
-      .sort({ createdAt: -1 });          // latest first (friend’s improvement)
+      .populate("owner", "name email")   
+      .sort({ createdAt: -1 });          
 
     res.status(200).json(workspaces);
   } catch (error) {
@@ -55,7 +54,6 @@ export const getWorkspaces = async (req, res) => {
   }
 };
 
-// ─── GET BY ID (with permission check) ──────────────────
 export const getWorkspaceById = async (req, res) => {
   try {
     const { workspaceId } = req.params;
@@ -64,21 +62,14 @@ export const getWorkspaceById = async (req, res) => {
       return res.status(400).json({ message: "Invalid workspace id" });
     }
 
-     console.log("========== GET WORKSPACE ==========");
-    console.log("workspaceId =", workspaceId);
-    console.log("userId =", req.user._id);
-
     const workspace = await Workspace.findById(workspaceId)
       .populate("owner", "name email")
       .populate("members", "name email");
-
-    console.log("workspace =", workspace);
 
     if (!workspace) {
       return res.status(404).json({ message: "Workspace not found" });
     }
 
-    // ✅ your permission check (secure)
     const isOwner = workspace.owner._id.toString() === req.user._id.toString();
     const isMember = workspace.members.some(
       (member) => member._id.toString() === req.user._id.toString()
@@ -95,7 +86,6 @@ export const getWorkspaceById = async (req, res) => {
   }
 };
 
-// ─── UPDATE (only owner) ────────────────────────────────
 export const updateWorkspace = async (req, res) => {
   try {
     const { workspaceId } = req.params;
@@ -111,7 +101,6 @@ export const updateWorkspace = async (req, res) => {
       return res.status(404).json({ message: "Workspace not found" });
     }
 
-    // owner-only check
     const isOwner =
             workspace.owner.toString() ===
             req.user._id.toString();

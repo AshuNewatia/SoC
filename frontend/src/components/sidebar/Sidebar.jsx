@@ -121,7 +121,6 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
           </button>
         </div>
 
-        {/* ========== FIXED TOP SECTION ========== */}
         {/* Desktop logo */}
         <div className="hidden md:flex h-18 px-6 items-center shrink-0 mt-0">
           <div className="flex items-center gap-3">
@@ -153,7 +152,6 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
           </NavLink>
         </div>
 
-        {/* Workspace header – fixed */}
         <div className="px-4 mb-3 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -178,7 +176,6 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
           </div>
         </div>
 
-        {/* ========== SCROLLABLE WORKSPACE LIST ========== */}
         <div className="flex-1 overflow-y-auto px-4 pr-3 minimalist-scrollbar">
           <div className="space-y-2 pb-4">
             {workspaces.length === 0 ? (
@@ -211,7 +208,6 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
           </div>
         </div>
 
-        {/* ========== FIXED BOTTOM SECTION ========== */}
         <div className="px-4 pb-6 pt-3 border-t border-slate-200 bg-white shrink-0">
           <div className="space-y-2">
             <NavLink to="/Analytics" className={getLinkClass} onClick={onClose}>
