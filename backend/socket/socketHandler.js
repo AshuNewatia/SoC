@@ -15,7 +15,6 @@ export const initializeSocket = (io) => {
       if (!workspaceStreams.has(workspaceId)) {
         workspaceStreams.set(workspaceId, new Map());
       }
-
       workspaceStreams.get(workspaceId).set(socket.id, user);
 
       const workspaceUsers = Array.from(workspaceStreams.get(workspaceId).values());

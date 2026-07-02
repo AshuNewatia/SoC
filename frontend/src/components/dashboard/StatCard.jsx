@@ -1,4 +1,3 @@
-// src/components/dashboard/StatCard.jsx
 export default function StatCard({ stat }) {
   const Icon = stat.icon;
 
