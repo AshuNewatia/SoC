@@ -32,7 +32,7 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
   useEffect(() => {
     const fetchMembers = async () => {
       try {
-        const res = await api.get(`/workspaces/${workspaceId}/members`);
+        const res = await api.get(`/api/workspaces/${workspaceId}/members`);
         setMembers(res.data);
       } catch (err) {
         console.error(err);
@@ -41,10 +41,15 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
 
     if (task && isOpen) {
       fetchMembers();
+
+      const assignedIds = task.assignedTo?.map((user) =>
+        typeof user === "object" ? user._id : user
+      ) || [];
+
       setForm({
         title: task.title || "",
         description: task.description || "",
-        assignedTo: task.assignedTo?.map((user) => user._id) || [],
+        assignedTo: assignedIds,
         priority: task.priority || "Medium",
         dueDate: task.dueDate?.split("T")[0] || "",
       });
