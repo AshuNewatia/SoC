@@ -30,12 +30,23 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
 
   const handleCreateWorkspace = async (data) => {
     try {
-      await createWorkspace({
+      const res = await createWorkspace({
         ...data,
         owner: user.id,
       });
       await fetchWorkspaces();
+
       setCreateOpen(false);
+
+      const workspaceId = res._id || res?.data?._id;
+
+      if (workspaceId) {
+        navigate(`/workspace/${workspaceId}/overview`);
+
+        window.dispatchEvent(new CustomEvent("workspaceListChanged"));
+      } else {
+        console.warn("No workspace ID returned; navigation skipped.");
+      }
     } catch (err) {
       console.error("Error creating workspace", err);
     }
@@ -110,7 +121,6 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
           </button>
         </div>
 
-        {/* ========== FIXED TOP SECTION ========== */}
         {/* Desktop logo */}
         <div className="hidden md:flex h-18 px-6 items-center shrink-0 mt-0">
           <div className="flex items-center gap-3">
@@ -142,7 +152,6 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
           </NavLink>
         </div>
 
-        {/* Workspace header – fixed */}
         <div className="px-4 mb-3 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -154,7 +163,12 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
               </span>
             </div>
             <button
-              onClick={() => setCreateOpen(true)}
+              onClick={() => {
+                onClose();
+                setTimeout(() => {
+                  setCreateOpen(true);
+                }, 300);
+              }}
               className="text-primary hover:bg-primary/10 p-1.5 rounded-lg transition"
             >
               <Plus size={15} />
@@ -162,7 +176,6 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
           </div>
         </div>
 
-        {/* ========== SCROLLABLE WORKSPACE LIST ========== */}
         <div className="flex-1 overflow-y-auto px-4 pr-3 minimalist-scrollbar">
           <div className="space-y-2 pb-4">
             {workspaces.length === 0 ? (
@@ -195,7 +208,6 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
           </div>
         </div>
 
-        {/* ========== FIXED BOTTOM SECTION ========== */}
         <div className="px-4 pb-6 pt-3 border-t border-slate-200 bg-white shrink-0">
           <div className="space-y-2">
             <NavLink to="/Analytics" className={getLinkClass} onClick={onClose}>

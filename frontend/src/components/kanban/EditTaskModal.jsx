@@ -41,10 +41,15 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
 
     if (task && isOpen) {
       fetchMembers();
+
+      const assignedIds = task.assignedTo?.map((user) =>
+        typeof user === "object" ? user._id : user
+      ) || [];
+
       setForm({
         title: task.title || "",
         description: task.description || "",
-        assignedTo: task.assignedTo?.map((user) => user._id) || [],
+        assignedTo: assignedIds,
         priority: task.priority || "Medium",
         dueDate: task.dueDate?.split("T")[0] || "",
       });

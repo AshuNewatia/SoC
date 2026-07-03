@@ -10,6 +10,7 @@ import Hero from "../components/dashboard/Hero";
 import CreateWorkspaceModal from "../components/workspace/CreateWorkspaceModal";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import UpcomingDeadlines from "../components/dashboard/UpcomingDeadlines";
+import { handleSuccess,handleApiError } from "../utils/handleApiError";
 
 export default function Dashboard() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -20,7 +21,6 @@ export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // ---- 1. Fetch workspaces ----
   useEffect(() => {
     const fetchWorkspaces = async () => {
       try {
@@ -33,7 +33,6 @@ export default function Dashboard() {
     fetchWorkspaces();
   }, []);
 
-  // ---- 2. Fetch tasks for all workspaces ----
   useEffect(() => {
     const fetchTasksForWorkspaces = async () => {
       if (!workspaces.length) return;
@@ -84,7 +83,6 @@ export default function Dashboard() {
     fetchActivities();
   }, [workspaces]);
 
-  // ---- 3. Compute statistics ----
   const isProfessor = user?.role === "professor";
 
   const activeWorkspaces = workspaces.length;
@@ -104,7 +102,6 @@ export default function Dashboard() {
     return dueDate >= now && dueDate <= nextWeek;
   }).length;
 
-  // ---- 4. Build role‑based stat arrays (dynamic) ----
   const studentStats = [
     {
       title: "Assigned Tasks",
@@ -141,7 +138,7 @@ export default function Dashboard() {
     },
     {
       title: "Pending Reviews",
-      value: 0, // placeholder for mid‑eval
+      value: 0, // placeholder
       subtitle: "Awaiting approval",
       icon: CheckSquare,
     },
@@ -161,7 +158,6 @@ export default function Dashboard() {
 
   const dashboardStats = isProfessor ? professorStats : studentStats;
 
-  // ---- 5. Greeting logic ----
   const displayUser = {
     name: user?.name || "User",
     role: user?.role || "Student",
@@ -175,8 +171,7 @@ export default function Dashboard() {
 
   const handleCreateWorkspace = async (data) => {
     try {
-      // ✅ Use api.post directly to ensure your JWT token is attached!
-      const res = await api.post("/workspaces", data);
+      const res = await api.post("/api/workspaces", data);
       window.dispatchEvent(new CustomEvent("workspaceListChanged"));
 
       const newWorkspaceId = res?.data?.workspace?._id || res?.data?._id || res?._id;
@@ -185,10 +180,10 @@ export default function Dashboard() {
       } else {
         console.warn("Could not find workspace ID in the response to redirect!");
       }
+      handleSuccess("Workspace created successfully")
       setCreateOpen(false);
     } catch (err) {
-      console.error("Error creating workspace", err);
-      alert(`Failed to create workspace: ${err.response?.data?.message || err.message}`);
+      handleApiError(err);``
     }
   };
 
