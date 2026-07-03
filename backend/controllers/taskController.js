@@ -334,6 +334,12 @@ export const updateTask = async (req, res) => {
             { new: true }
         );
 
+        console.log("Sync Check:", {
+    issueNum: updatedTask.githubIssueNumber,
+    hasToken: !!workspace.githubToken,
+    repo: workspace.githubRepo
+});
+
         if (updatedTask.githubIssueNumber && workspace.githubToken && workspace.githubRepo) {
            const status = req.body.status || updatedTask.status;
            await updateGithubIssueState(
