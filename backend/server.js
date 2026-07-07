@@ -50,7 +50,7 @@ app.use("/api/workspaces", activityRoutes);
 app.use("/api/myboard", personalTaskRoutes);
 app.use("/api/notes", quickNoteRoutes);
 app.use("/api/personal-activity", personalActivityRoutes);
-app.use('/api', taskRoutes);
+app.use('/api/tasks', taskRoutes);
 app.use("/api/analytics", analyticsRoutes);
 
 app.get("/", (req, res) => {

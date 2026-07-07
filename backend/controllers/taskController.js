@@ -395,3 +395,32 @@ if (req.app.get('io')) {
         res.status(500).json({ message: "Server Error" });
     }
 }
+
+export const uploadAttachment = async (req, res) => {
+  try {
+    // This MUST match the parameter name in your router file exactly (:taskId -> taskId)
+    const { taskId } = req.params; 
+    
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded or invalid file type." });
+    }
+
+    const task = await Task.findById(taskId);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    const newAttachment = {
+      fileName: req.file.originalname,
+      fileUrl: req.file.path, 
+    };
+
+    task.attachments.push(newAttachment);
+    await task.save();
+
+    const io = req.app.get("io");
+    if (io) io.emit("taskUpdated", task);
+
+    res.status(200).json({ message: "File uploaded successfully", task });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
