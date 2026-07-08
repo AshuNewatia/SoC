@@ -15,6 +15,7 @@ import quickNoteRoutes from "./routes/quickNoteRoutes.js";
 import personalActivityRoutes from "./routes/personalActivityRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js"
 import webhookRoutes from "./routes/webhookRoutes.js"
+import notificationRoutes from "./routes/notificationRoutes.js"
 
 dotenv.config();
 
@@ -52,6 +53,8 @@ app.use("/api/notes", quickNoteRoutes);
 app.use("/api/personal-activity", personalActivityRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/notifications", notificationRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("CampusFlow Backend Running 🚀");
@@ -73,6 +76,14 @@ const io = new Server(server, {
 app.set('io', io)
 
 initializeSocket(io);
+
+io.on("connection", (socket) => {
+  console.log("User connected to socket:", socket.id);
+    socket.on("joinRoom", (userId) => {
+    socket.join(userId);
+    console.log(`User ${userId} joined their notification room`);
+  });
+});
 
 const PORT = process.env.PORT || 5000;
 
