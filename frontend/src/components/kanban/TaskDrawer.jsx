@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { X, CalendarDays, Flag, Trash2 } from "lucide-react";
 import DeleteTaskModal from "./DeleteTaskModal";
+import CommentSection from "./CommentSection";
 
 const priorityColors = {
   High: "bg-orange-100 text-orange-700",
@@ -22,7 +23,7 @@ const statusLabels = {
   completed: "Completed",
 };
 
-export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit }) {
+export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, members }) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   if (!task) return null;
@@ -57,22 +58,21 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit }) 
               className="fixed inset-0 bg-black/30 z-40"
             />
 
-            {/* Drawer – width increased to 480px */}
+            {/* Drawer – flex column, no overflow on whole drawer */}
             <motion.div
               initial={{ x: 500 }}
               animate={{ x: 0 }}
               exit={{ x: 500 }}
               transition={{ type: "spring", damping: 25 }}
-              className="fixed right-0 top-0 h-screen w-full sm:w-[480px] bg-white shadow-2xl z-50 overflow-y-auto"
+              className="fixed right-0 top-0 h-screen w-full sm:w-[480px] bg-white shadow-2xl z-50 flex flex-col overflow-hidden"
             >
-              {/* Header */}
-              <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-5 z-10">
+              {/* Header – fixed at top (shrink-0) */}
+              <div className="shrink-0 bg-white border-b border-slate-200 px-6 py-5 z-10">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 pr-4">
                     <h2 className="text-2xl font-bold text-slate-800 break-words">
                       {task.title || "Untitled Task"}
                     </h2>
-                    {/* Status badge in header */}
                     <span
                       className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium ${statusClass}`}
                     >
@@ -102,7 +102,8 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit }) 
                 </div>
               </div>
 
-              <div className="p-6">
+              {/* Body – scrollable area */}
+              <div className="flex-1 overflow-y-auto p-6">
                 {/* Description Card */}
                 <div className="rounded-2xl bg-slate-50 p-4 border border-slate-200">
                   <h3 className="font-semibold mb-3">Description</h3>
@@ -123,15 +124,13 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit }) 
                     </span>
                   </div>
 
-                  {/* Assigned Members – chips */}
+                  {/* Assigned Members */}
                   <div className="flex justify-between items-start">
                     <span className="text-slate-500">Assigned To</span>
-
                     <div className="text-right">
                       <div className="font-medium">
                         {memberCount} {memberCount === 1 ? "Member" : "Members"}
                       </div>
-
                       {task.assignedTo?.length > 0 && (
                         <div className="flex flex-wrap justify-end gap-2 mt-2">
                           {task.assignedTo.map((member) => (
@@ -150,35 +149,33 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit }) 
                   {/* Due Date */}
                   <div className="flex justify-between items-center">
                     <span className="text-slate-500">Due Date</span>
-
                     <span className="flex items-center gap-2">
                       <CalendarDays size={16} />
                       {task.dueDate
                         ? new Date(task.dueDate).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
                         : "Not set"}
                     </span>
                   </div>
 
-                  {/* Created At – new field */}
+                  {/* Created At */}
                   <div className="flex justify-between items-center">
                     <span className="text-slate-500">Created</span>
-
                     <span className="text-sm text-slate-700">
                       {task.createdAt
                         ? new Date(task.createdAt).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
                         : "Unknown"}
                     </span>
                   </div>
 
-                  {/* Status – replaced with badge */}
+                  {/* Status */}
                   <div className="flex justify-between items-center">
                     <span className="text-slate-500">Status</span>
                     <span
@@ -188,6 +185,10 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit }) 
                     </span>
                   </div>
                 </div>
+
+                {/* ===== COMMENTS SECTION ===== */}
+                {/* CommentSection handles its own internal scrolling */}
+                <CommentSection taskId={task._id} members={members} />
               </div>
             </motion.div>
           </>

@@ -3,6 +3,7 @@ import Workspace from "../models/Workspace.js";
 import User from "../models/User.js";
 import { createGithubIssue, updateGithubIssueState } from "../services/githubService.js";
 import { logActivity } from "./activityController.js";
+import Comment from "../models/Comment.js";
 
 
 export const createTask = async (req, res) => {
@@ -142,7 +143,20 @@ export const getTasks = async (req, res) => {
             .populate("createdBy", "name email")
             .populate("workspace", "name");
 
-        res.status(200).json(tasks);
+        const tasksWithCommentCount = await Promise.all(
+            tasks.map(async (task) => {
+                const commentCount = await Comment.countDocuments({
+                    task: task._id,
+                });
+
+                return {
+                    ...task.toObject(),
+                    commentCount,
+                };
+            })
+        );
+
+        return res.status(200).json(tasksWithCommentCount);
 
     } catch (error) {
         res.status(500).json({ message: "Server Error" });
@@ -335,18 +349,18 @@ export const updateTask = async (req, res) => {
         );
 
         if (updatedTask.githubIssueNumber && workspace.githubToken && workspace.githubRepo) {
-           const status = req.body.status || updatedTask.status;
-           await updateGithubIssueState(
+            const status = req.body.status || updatedTask.status;
+            await updateGithubIssueState(
                 workspace.githubToken,
                 workspace.githubRepo,
                 updatedTask.githubIssueNumber,
                 status
-                );
-             }
+            );
+        }
 
-if (req.app.get('io')) {
-    req.app.get('io').emit('taskUpdated', updatedTask);
-}
+        if (req.app.get('io')) {
+            req.app.get('io').emit('taskUpdated', updatedTask);
+        }
         const newAssignedUsers = updatedTask.assignedTo.map(
             id => id.toString()
         );
