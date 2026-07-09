@@ -16,6 +16,7 @@ import personalActivityRoutes from "./routes/personalActivityRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js"
 import webhookRoutes from "./routes/webhookRoutes.js"
 import commentRoutes from "./routes/commentRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js"
 
 
 dotenv.config();
@@ -43,7 +44,7 @@ app.use((req, res, next) => {
     console.log(`Incoming request: ${req.method} ${req.url}`);
     next();
 });
-app.use('/api/webhooks', webhookRoutes)
+app.use('/api/webhooks', webhookRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api", taskRoutes);
 app.use("/api/workspaces", workspaceRoutes);
@@ -52,9 +53,10 @@ app.use("/api/workspaces", activityRoutes);
 app.use("/api/myboard", personalTaskRoutes);
 app.use("/api/notes", quickNoteRoutes);
 app.use("/api/personal-activity", personalActivityRoutes);
-app.use('/api', taskRoutes);
+app.use('/api/tasks', taskRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/comments", commentRoutes)
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/", (req, res) => {
   res.send("CampusFlow Backend Running 🚀");
@@ -76,6 +78,14 @@ const io = new Server(server, {
 app.set('io', io)
 
 initializeSocket(io);
+
+io.on("connection", (socket) => {
+  console.log("User connected to socket:", socket.id);
+    socket.on("joinRoom", (userId) => {
+    socket.join(userId);
+    console.log(`User ${userId} joined their notification room`);
+  });
+});
 
 const PORT = process.env.PORT || 5000;
 

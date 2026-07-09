@@ -1,6 +1,8 @@
 import express from 'express';
 import { createTask, getTasks, updateTaskStatus, updateTask,deleteTask } from '../controllers/taskController.js';
 import { protect } from "../middleware/authMiddleware.js";
+import { upload } from '../config/cloudinary.js';
+import { uploadAttachment } from '../controllers/taskController.js';
 
 const router = express.Router();
 
@@ -29,5 +31,6 @@ router.delete(
  deleteTask
 );
 
+router.post('/:taskId/attachments',  upload.single('file'), uploadAttachment);
 
 export default router;

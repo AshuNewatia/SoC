@@ -1,4 +1,4 @@
-// src/components/task/TaskDrawer.jsx
+
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { X, CalendarDays, Flag, Trash2 } from "lucide-react";
@@ -35,7 +35,6 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, me
 
   return (
     <>
-      {/* Delete Confirmation Modal */}
       <DeleteTaskModal
         isOpen={deleteModalOpen}
         taskTitle={task.title}
@@ -49,7 +48,6 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, me
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -57,8 +55,11 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, me
               onClick={onClose}
               className="fixed inset-0 bg-black/30 z-40"
             />
+<<<<<<< HEAD
 
             {/* Drawer – flex column, no overflow on whole drawer */}
+=======
+>>>>>>> origin/main
             <motion.div
               initial={{ x: 500 }}
               animate={{ x: 0 }}
@@ -66,8 +67,12 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, me
               transition={{ type: "spring", damping: 25 }}
               className="fixed right-0 top-0 h-screen w-full sm:w-[480px] bg-white shadow-2xl z-50 flex flex-col overflow-hidden"
             >
+<<<<<<< HEAD
               {/* Header – fixed at top (shrink-0) */}
               <div className="shrink-0 bg-white border-b border-slate-200 px-6 py-5 z-10">
+=======
+              <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-5 z-10">
+>>>>>>> origin/main
                 <div className="flex items-start justify-between">
                   <div className="flex-1 pr-4">
                     <h2 className="text-2xl font-bold text-slate-800 break-words">
@@ -102,9 +107,13 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, me
                 </div>
               </div>
 
+<<<<<<< HEAD
               {/* Body – scrollable area */}
               <div className="flex-1 overflow-y-auto p-6">
                 {/* Description Card */}
+=======
+              <div className="p-6">
+>>>>>>> origin/main
                 <div className="rounded-2xl bg-slate-50 p-4 border border-slate-200">
                   <h3 className="font-semibold mb-3">Description</h3>
                   <p className="text-slate-600 whitespace-pre-wrap">
@@ -112,9 +121,7 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, me
                   </p>
                 </div>
 
-                {/* Details */}
                 <div className="mt-8 space-y-5">
-                  {/* Priority */}
                   <div className="flex justify-between items-center">
                     <span className="text-slate-500">Priority</span>
                     <span
@@ -123,8 +130,11 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, me
                       {task.priority || "None"}
                     </span>
                   </div>
+<<<<<<< HEAD
 
                   {/* Assigned Members */}
+=======
+>>>>>>> origin/main
                   <div className="flex justify-between items-start">
                     <span className="text-slate-500">Assigned To</span>
                     <div className="text-right">
@@ -146,7 +156,6 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, me
                     </div>
                   </div>
 
-                  {/* Due Date */}
                   <div className="flex justify-between items-center">
                     <span className="text-slate-500">Due Date</span>
                     <span className="flex items-center gap-2">
@@ -161,7 +170,10 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, me
                     </span>
                   </div>
 
+<<<<<<< HEAD
                   {/* Created At */}
+=======
+>>>>>>> origin/main
                   <div className="flex justify-between items-center">
                     <span className="text-slate-500">Created</span>
                     <span className="text-sm text-slate-700">
@@ -175,7 +187,40 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, me
                     </span>
                   </div>
 
+<<<<<<< HEAD
                   {/* Status */}
+=======
+                  <div className="mb-6">
+                      <h4 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-2">
+                      Proof of Work / Attachments
+                      </h4>
+                  {task.attachments && task.attachments.length > 0 ? (
+    <div className="space-y-2">
+      {task.attachments.map((file, idx) => (
+        <a
+          key={file._id || idx}
+          href={file.fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-between p-3.5 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100 transition text-sm font-medium group"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-slate-400 group-hover:text-primary transition">📎</span>
+            <span className="truncate text-slate-700 font-normal">{file.fileName}</span>
+          </div>
+          <span className="text-xs text-primary font-semibold hover:underline shrink-0">
+            Download / View
+          </span>
+        </a>
+      ))}
+    </div>
+  ) : (
+    <div className="p-4 border border-dashed border-slate-200 rounded-2xl text-slate-400 text-sm text-center">
+      No proofs or attachments submitted yet.
+    </div>
+  )}
+</div>
+>>>>>>> origin/main
                   <div className="flex justify-between items-center">
                     <span className="text-slate-500">Status</span>
                     <span
