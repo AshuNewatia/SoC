@@ -71,7 +71,7 @@ export default function CommentSection({ taskId, members = [] }) {
   }, [comments.length]);
 
   useEffect(() => {
-    const syncComments = () => {
+    const syncComments = (data) => {
       if (data.taskId !== taskId) return;
       fetchComments(false);
     };
