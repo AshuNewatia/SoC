@@ -17,7 +17,9 @@ import {
   deleteComment,
 } from "../../services/commentServices";
 
-import handleApiError from "../../utils/handleApiError"
+import {handleApiError} from "../../utils/handleApiError"
+import socket from "../../hooks/useSocket";
+
 
 export default function CommentSection({ taskId, members = [] }) {
   const [comments, setComments] = useState([]);

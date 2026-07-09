@@ -71,7 +71,7 @@ export const createComment = async (req, res) => {
     io.to(existingTask.workspace.toString()).emit(
       "commentCreated",
       {
-        taskId: task._id.toString(),
+        taskId: existingTask._id.toString(),
       }
     );
 
