@@ -7,22 +7,22 @@ export const getOverview = async (req, res) => {
     const totalTasks = await Task.countDocuments();
 
     const priorityStats = await Task.aggregate([
-  {
-    $group: {
-      _id: "$priority",
-      count: { $sum: 1 }
-    }
-  }
-]);
+      {
+        $group: {
+          _id: "$priority",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
 
-const taskStatus = await Task.aggregate([
-  {
-    $group: {
-      _id: "$status",
-      count: { $sum: 1 }
-    }
-  }
-]);
+    const taskStatus = await Task.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
 
     const completedTasks = await Task.countDocuments({
       status: "completed",
@@ -115,8 +115,8 @@ export const getMemberPerformance = async (req, res) => {
           completion:
             assigned > 0
               ? Math.round(
-                  (completed / assigned) * 100
-                )
+                (completed / assigned) * 100
+              )
               : 0,
         };
       })

@@ -15,7 +15,7 @@ import CreateProfile from "./pages/CreateProfile";
 import ViewProfile from "./pages/ViewProfile";
 
 import WorkspaceOverview from "./components/workspace/overview/WorkspaceOverview"
-import WorkspaceChat from "./components/workspace/WorkspaceChat";
+import WorkspaceAnalytics from "./components/workspace/WorkspaceAnalytics";
 import WorkspaceActivity from "./components/workspace/WorkspaceActivity";
 import WorkspaceMembers from "./components/workspace/WorkspaceMembers";
 import WorkspaceBoard from "./components/workspace/WorkspaceBoard";
@@ -104,7 +104,7 @@ function App() {
               <Route index element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<WorkspaceOverview />}/>
               <Route path="board" element={<WorkspaceBoard />} />
-              <Route path="chat" element={<WorkspaceChat />} />
+              <Route path="analytics" element={<WorkspaceAnalytics />} />
               <Route path="activity" element={<WorkspaceActivity />} />
               <Route path="members" element={<WorkspaceMembers />} />
             </Route>
