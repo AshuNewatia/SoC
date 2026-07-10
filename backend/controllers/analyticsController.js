@@ -1,59 +1,75 @@
 import Task from "../models/Task.js";
 import User from "../models/User.js";
 import ActivityLog from "../models/ActivityLog.js";
+import { getTaskFilter } from "../utils/analyticsFilter.js";
+import Workspace from "../models/Workspace.js";
+
+import PDFDocument from "pdfkit";
+
 
 export const getOverview = async (req, res) => {
   try {
-    const totalTasks = await Task.countDocuments();
+    const filter = await getTaskFilter(req.user);
 
-    const priorityStats = await Task.aggregate([
-  {
-    $group: {
-      _id: "$priority",
-      count: { $sum: 1 }
-    }
-  }
-]);
+    console.log("User:", req.user.name);
+    console.log("Role:", req.user.role);
+    console.log("User ID:", req.user._id);
 
-const taskStatus = await Task.aggregate([
-  {
-    $group: {
-      _id: "$status",
-      count: { $sum: 1 }
-    }
-  }
-]);
+    const totalTasks = await Task.countDocuments(filter);
 
     const completedTasks = await Task.countDocuments({
+      ...filter,
       status: "completed",
     });
 
     const pendingTasks = await Task.countDocuments({
+      ...filter,
       status: { $ne: "completed" },
     });
 
-    const totalUsers = await User.countDocuments();
+    // Count overdue tasks
+    const overdueTasks = await Task.countDocuments({
+      ...filter,
+      dueDate: { $lt: new Date() },
+      status: { $ne: "completed" },
+    });
 
     const productivity =
       totalTasks > 0
         ? Math.round((completedTasks / totalTasks) * 100)
         : 0;
 
+    let totalUsers = 0;
+
+    if (req.user.role === "professor") {
+      totalUsers = await User.countDocuments();
+    }
+
     res.json({
       totalTasks,
       completedTasks,
       pendingTasks,
-      totalUsers,
+      overdueTasks,
       productivity,
+      totalUsers,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Overview Error:", error);
+    res.status(500).json({
+      message: error.message,
+      stack: error.stack,
+    });
   }
 };
 
 export const getTaskStatus = async (req, res) => {
   try {
+    const filter = await getTaskFilter(req.user);
+
     const data = await Task.aggregate([
+      {
+        $match: filter,
+      },
       {
         $group: {
           _id: "$status",
@@ -70,7 +86,12 @@ export const getTaskStatus = async (req, res) => {
 
 export const getPriorityStats = async (req, res) => {
   try {
+    const filter = await getTaskFilter(req.user);
+
     const data = await Task.aggregate([
+      {
+        $match: filter,
+      },
       {
         $group: {
           _id: "$priority",
@@ -87,47 +108,74 @@ export const getPriorityStats = async (req, res) => {
 
 export const getMemberPerformance = async (req, res) => {
   try {
-    const users = await User.find().select("name");
+    // Students should not access team analytics
+    if (req.user.role === "student") {
+      return res.status(403).json({
+        message: "Students are not allowed to view member performance.",
+      });
+    }
+
+    // Find workspaces where the professor is owner/admin/member
+    const workspaces = await Workspace.find({
+      $or: [
+        { owner: req.user._id },
+        { admins: req.user._id },
+        { members: req.user._id },
+      ],
+    }).populate("members", "name email");
+
+    // Collect unique members
+    const memberMap = new Map();
+
+    workspaces.forEach((workspace) => {
+      workspace.members.forEach((member) => {
+        memberMap.set(member._id.toString(), member);
+      });
+    });
+
+    const members = Array.from(memberMap.values());
 
     const result = await Promise.all(
-      users.map(async (user) => {
+      members.map(async (member) => {
         const assigned = await Task.countDocuments({
-          assignedTo: user._id,
+          workspace: { $in: workspaces.map((w) => w._id) },
+          assignedTo: member._id,
         });
 
         const completed = await Task.countDocuments({
-          assignedTo: user._id,
+          workspace: { $in: workspaces.map((w) => w._id) },
+          assignedTo: member._id,
           status: "completed",
         });
 
         const overdue = await Task.countDocuments({
-          assignedTo: user._id,
+          workspace: { $in: workspaces.map((w) => w._id) },
+          assignedTo: member._id,
           status: { $ne: "completed" },
           dueDate: { $lt: new Date() },
         });
 
         return {
-          id: user._id,
-          name: user.name,
+          id: member._id,
+          name: member.name,
+          email: member.email,
           assigned,
           completed,
           overdue,
           completion:
             assigned > 0
-              ? Math.round(
-                  (completed / assigned) * 100
-                )
+              ? Math.round((completed / assigned) * 100)
               : 0,
         };
       })
     );
 
-    res.json(
-      result.sort(
-        (a, b) => b.completion - a.completion
-      )
-    );
+    result.sort((a, b) => b.completion - a.completion);
+
+    res.json(result);
   } catch (error) {
+    console.error("Member Performance Error:", error);
+
     res.status(500).json({
       message: error.message,
     });
@@ -139,9 +187,12 @@ export const getProductivity = async (req, res) => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
 
+    const filter = await getTaskFilter(req.user);
+
     const data = await Task.aggregate([
       {
         $match: {
+          ...filter,
           status: "completed",
           updatedAt: { $gte: sevenDaysAgo },
         },
@@ -192,30 +243,54 @@ export const getGithubAnalytics = async (req, res) => {
 
 export const getInsights = async (req, res) => {
   try {
-    // Top performer
-    const users = await User.find();
+    const filter = await getTaskFilter(req.user);
 
-    let topPerformer = {
-      name: "N/A",
-      completed: 0,
-    };
+    let completionRate = 0;
 
-    for (const user of users) {
-      const completed = await Task.countDocuments({
-        assignedTo: user._id,
+    if (req.user.role === "student") {
+      const assignedTasks = await Task.countDocuments(filter);
+
+      const completedTasks = await Task.countDocuments({
+        ...filter,
         status: "completed",
       });
 
-      if (completed > topPerformer.completed) {
-        topPerformer = {
-          name: user.name,
-          completed,
-        };
+      completionRate =
+        assignedTasks > 0
+          ? Math.round((completedTasks / assignedTasks) * 100)
+          : 0;
+    }
+
+    let topPerformer = null;
+
+    // Professors can see top performer
+    if (req.user.role === "professor") {
+      const users = await User.find().select("name");
+
+      for (const user of users) {
+        const completed = await Task.countDocuments({
+          ...filter,
+          assignedTo: user._id,
+          status: "completed",
+        });
+
+        if (
+          !topPerformer ||
+          completed > topPerformer.completed
+        ) {
+          topPerformer = {
+            name: user.name,
+            completed,
+          };
+        }
       }
     }
 
-    // Priority distribution
+    // Dominant Priority
     const priorities = await Task.aggregate([
+      {
+        $match: filter,
+      },
       {
         $group: {
           _id: "$priority",
@@ -233,12 +308,15 @@ export const getInsights = async (req, res) => {
     ]);
 
     const dominantPriority =
-      priorities[0]?._id || "None";
+      priorities.length > 0
+        ? priorities[0]._id
+        : "N/A";
 
-    // Completed tasks by day
+    // Most Active Day
     const trend = await Task.aggregate([
       {
         $match: {
+          ...filter,
           status: "completed",
         },
       },
@@ -275,11 +353,15 @@ export const getInsights = async (req, res) => {
 
     res.json({
       topPerformer,
+      completionRate,
       dominantPriority,
       mostActiveDay:
-        days[trend[0]?._id] || "N/A",
+        trend.length > 0
+          ? days[trend[0]._id]
+          : "N/A",
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       message: error.message,
     });
@@ -298,7 +380,10 @@ export const getProductivityPercentage = async (req, res) => {
       const end = new Date(start);
       end.setHours(23, 59, 59, 999);
 
+      const filter = await getTaskFilter(req.user);
+
       const assigned = await Task.countDocuments({
+        ...filter,
         createdAt: {
           $gte: start,
           $lte: end,
@@ -306,6 +391,7 @@ export const getProductivityPercentage = async (req, res) => {
       });
 
       const completed = await Task.countDocuments({
+        ...filter,
         status: "completed",
         updatedAt: {
           $gte: start,
@@ -363,3 +449,150 @@ function drawCard(doc, x, y, width, height, title, value, color) {
 
   doc.font("Helvetica");
 }
+
+export const exportAnalyticsReport = async (req, res) => {
+  try {
+    const filter = await getTaskFilter(req.user);
+
+    const tasks = await Task.find(filter)
+      .populate("assignedTo", "name")
+      .populate("workspace", "name");
+
+    const totalTasks = tasks.length;
+
+    const completedTasks = tasks.filter(
+      (task) => task.status === "completed"
+    ).length;
+
+    const pendingTasks = totalTasks - completedTasks;
+
+    const productivity =
+      totalTasks > 0
+        ? Math.round((completedTasks / totalTasks) * 100)
+        : 0;
+
+    const doc = new PDFDocument({
+      margin: 40,
+      size: "A4",
+    });
+
+    res.setHeader("Content-Type", "application/pdf");
+
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=${req.user.role}-analytics-report.pdf`
+    );
+
+    doc.pipe(res);
+
+    // HEADER
+    doc
+      .fontSize(24)
+      .font("Helvetica-Bold")
+      .text("CampusFlow Analytics Report", {
+        align: "center",
+      });
+
+    doc.moveDown();
+
+    doc
+      .fontSize(12)
+      .font("Helvetica")
+      .text(`Generated For : ${req.user.name}`);
+
+    doc.text(`Role : ${req.user.role}`);
+
+    doc.text(
+      `Generated On : ${new Date().toLocaleString()}`
+    );
+
+    doc.moveDown();
+
+    // SUMMARY
+    doc
+      .fontSize(18)
+      .font("Helvetica-Bold")
+      .text("Summary");
+
+    doc.moveDown(0.5);
+
+    doc
+      .fontSize(12)
+      .font("Helvetica")
+      .text(`Total Tasks : ${totalTasks}`);
+
+    doc.text(`Completed Tasks : ${completedTasks}`);
+
+    doc.text(`Pending Tasks : ${pendingTasks}`);
+
+    doc.text(`Productivity : ${productivity}%`);
+
+    doc.moveDown();
+
+    // TASK LIST
+    doc
+      .fontSize(18)
+      .font("Helvetica-Bold")
+      .text("Task Details");
+
+    doc.moveDown(0.5);
+
+    tasks.forEach((task, index) => {
+      doc
+        .fontSize(12)
+        .font("Helvetica-Bold")
+        .text(`${index + 1}. ${task.title}`);
+
+      doc
+        .font("Helvetica")
+        .fontSize(10)
+        .text(
+          `Assigned To : ${task.assignedTo?.length
+            ? task.assignedTo
+              .map((u) => u.name)
+              .join(", ")
+            : "Unassigned"
+          }`
+        );
+
+      doc.text(
+        `Workspace : ${task.workspace?.name || "N/A"
+        }`
+      );
+
+      doc.text(`Priority : ${task.priority}`);
+
+      doc.text(`Status : ${task.status}`);
+
+      doc.text(
+        `Due Date : ${task.dueDate
+          ? new Date(task.dueDate).toLocaleDateString()
+          : "N/A"
+        }`
+      );
+
+      doc.moveDown();
+    });
+
+    // FOOTER
+    doc.moveDown();
+
+    doc
+      .fontSize(10)
+      .fillColor("gray")
+      .text(
+        "Generated automatically by CampusFlow",
+        {
+          align: "center",
+        }
+      );
+
+    doc.end();
+  } catch (error) {
+    console.error("Export PDF Error:", error);
+
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
