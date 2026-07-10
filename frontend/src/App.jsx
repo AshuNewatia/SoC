@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react"; // 👈 Added useEffect
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { WorkspaceProvider } from "./context/workspaceContext";
 
@@ -14,9 +14,8 @@ import OAuthCallback from "./pages/OAuthCallback";
 import CreateProfile from "./pages/CreateProfile";
 import ViewProfile from "./pages/ViewProfile";
 
-
 import WorkspaceOverview from "./components/workspace/overview/WorkspaceOverview"
-import WorkspaceChat from "./components/workspace/WorkspaceChat";
+import WorkspaceAnalytics from "./components/workspace/WorkspaceAnalytics";
 import WorkspaceActivity from "./components/workspace/WorkspaceActivity";
 import WorkspaceMembers from "./components/workspace/WorkspaceMembers";
 import WorkspaceBoard from "./components/workspace/WorkspaceBoard";
@@ -24,8 +23,7 @@ import WorkspaceBoard from "./components/workspace/WorkspaceBoard";
 import Sidebar from "./components/sidebar/Sidebar";
 import Header from "./components/header/Header";
 import { useAuth } from "./context/authContext";
-
-// Auth Guard Guardrail
+import socket from "./services/socket"; 
 function ProtectedRoute() {
   const { user, loading } = useAuth();
   
@@ -35,14 +33,37 @@ function ProtectedRoute() {
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  // Renders the matched child route layouts/components
   return <Outlet />;
 }
 
-// Global Main Panel Layout Wrapper
 function AuthenticatedLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [workspaceSearch, setWorkspaceSearch] = useState("");
+  
+  const { user } = useAuth(); 
+
+  useEffect(() => {
+    if (!user) return;
+    const userId = user._id || user.id;
+    if (!userId) {
+      console.log("⚠️ Still missing ID! Click the arrow on this object to find where the ID is stored:", user);
+      return;
+    }
+
+    console.log(`🚀 Attempting to emit joinRoom for ID: ${userId}`);
+
+    socket.connect(); 
+    socket.emit("joinRoom", userId);
+
+    socket.on("connect", () => {
+      console.log("🟢 Success! Frontend socket successfully connected to backend server. ID:", socket.id);
+    });
+
+    return () => {
+      socket.off("joinRoom");
+      socket.off("connect");
+    };
+  }, [user]);
 
   return (
    <WorkspaceProvider>
@@ -53,7 +74,6 @@ function AuthenticatedLayout() {
         <Header onMenuClick={() => setSidebarOpen(true)} setWorkspaceSearch={setWorkspaceSearch} workspaceSearch={workspaceSearch}/>
         
         <main className="flex-1 overflow-y-auto focus:outline-none">
-          {/* Renders the internal page component */}
           <Outlet /> 
         </main>
       </div>
@@ -66,40 +86,30 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public Routes */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
         
-        {/* Profile Creation Route */}
         <Route path="/create-profile" element={<CreateProfile />} />
 
-        {/* Protected Routes Wrapper */}
-        {/* <Route element={<ProtectedRoute />}> */}
-          {/* Authenticated Layout Wrapper */}
           <Route element={<AuthenticatedLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/myboard" element={<MyBoard />} />
             <Route path="/profile" element={<ViewProfile />} />
-            
 
-            {/* Nested Workspace Routes */}
             <Route path="/workspace/:id" element={<WorkSpace />}>
-              {/* Redirect /workspace/:id to /workspace/:id/overview automatically */}
               <Route index element={<Navigate to="overview" replace />} />
               <Route path="overview" element={<WorkspaceOverview />}/>
               <Route path="board" element={<WorkspaceBoard />} />
-              <Route path="chat" element={<WorkspaceChat />} />
+              <Route path="analytics" element={<WorkspaceAnalytics />} />
               <Route path="activity" element={<WorkspaceActivity />} />
               <Route path="members" element={<WorkspaceMembers />} />
             </Route>
           </Route>
-        {/* </Route> */}
 
-        {/* Catch-all Fallback (404 / Redirect) */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Bell, Search, ChevronDown, Menu } from "lucide-react";
 import { useAuth } from '../../context/authContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import NotificationBell from "./notificationBell";
 
 export default function Header({
   title = "Overview",
@@ -15,7 +16,6 @@ export default function Header({
 
   const [showMobileSearch, setShowMobileSearch] = useState(false);
 
-  // Determine page title
   let pageTitle = "Overview";
   if (location.pathname === "/dashboard") {
     pageTitle = "Overview";
@@ -30,7 +30,7 @@ export default function Header({
   } else if (location.pathname.includes("/workspace/")) {
     if (location.pathname.includes("/overview")) pageTitle = "Workspace Overview";
     else if (location.pathname.includes("/board")) pageTitle = "Workspace Board";
-    else if (location.pathname.includes("/chat")) pageTitle = "Workspace Chat";
+    else if (location.pathname.includes("/analytics")) pageTitle = "Workspace Analytics";
     else if (location.pathname.includes("/activity")) pageTitle = "Workspace Activity";
     else if (location.pathname.includes("/members")) pageTitle = "Workspace Members";
   }
@@ -41,14 +41,11 @@ export default function Header({
   const day = today.getDate();
   const year = today.getFullYear();
   const formattedDate = `${weekday}, ${month} ${day} ${year}`;
-
-  // Only show search on dashboard
   const showSearch = location.pathname === "/dashboard";
 
   return (
     <>
       <header className="h-16 md:h-18 bg-white/90 backdrop-blur-md shadow-md px-4 md:px-8 flex items-center justify-between sticky top-0 z-30">
-        {/* Left Side: menu button + title + date */}
         <div className="flex items-center gap-3">
           <button
             onClick={onMenuClick}
@@ -67,12 +64,9 @@ export default function Header({
           </div>
         </div>
 
-        {/* Right Side */}
         <div className="flex items-center gap-2 md:gap-4">
-          {/* Search – only visible on dashboard */}
           {showSearch && (
             <>
-              {/* Mobile search toggle button */}
               <button
                 onClick={() => setShowMobileSearch(!showMobileSearch)}
                 className="md:hidden p-2 rounded-xl hover:bg-gray-100 transition-all"
@@ -80,8 +74,6 @@ export default function Header({
               >
                 <Search size={18} className="text-gray-600" />
               </button>
-
-              {/* Desktop search input */}
               <div className="hidden md:block relative">
                 <Search
                   size={18}
@@ -98,10 +90,9 @@ export default function Header({
             </>
           )}
 
-          <button className="relative p-2 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all duration-200">
-            <Bell size={20} />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500" />
-          </button>
+<div className="flex items-center gap-4">
+  <NotificationBell />
+</div>
 
           <button
             onClick={() => navigate('/profile')}
@@ -117,8 +108,6 @@ export default function Header({
           </button>
         </div>
       </header>
-
-      {/* Mobile Search Input (shown when toggled) */}
       {showSearch && showMobileSearch && (
         <div className="md:hidden px-4 pb-3 bg-white border-t border-slate-100">
           <div className="relative mt-3">

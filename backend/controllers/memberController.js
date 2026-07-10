@@ -1,6 +1,7 @@
 import Workspace from "../models/Workspace.js";
 import User from "../models/User.js";
 import { logActivity } from "./activityController.js";
+import { createAndSendNotification } from "../utils/notificationHelper.js";
 
 export const getWorkspaceMembers = async (req, res) => {
   try {
@@ -100,7 +101,6 @@ export const addMemberToWorkspace = async (req, res) => {
       });
     }
 
-    // Already member
     const alreadyMember =
       workspace.members.some(
         (member) =>
@@ -115,8 +115,16 @@ export const addMemberToWorkspace = async (req, res) => {
     }
 
     workspace.members.push(userToAdd._id);
-
     await workspace.save();
+
+    await createAndSendNotification(req, {
+      recipient: userToAdd._id, 
+      sender: req.user._id, 
+      type: "MEMBER_ADDED",
+      message: `You have been added to the workspace: "${workspace.name}"`,
+      workspace: workspace._id,
+      relatedId: workspace._id
+    });
 
     await logActivity(
       workspace._id,
@@ -137,11 +145,10 @@ export const addMemberToWorkspace = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("ADD MEMBER ERROR:");
-    console.error(error);
-
+    console.error("ADD MEMBER ERROR:", error);
     res.status(500).json({
       message: "Server Error",
+      details: error.message
     });
   }
 };
@@ -243,7 +250,6 @@ export const promoteToAdmin = async (req, res) => {
       });
     }
 
-    // Only owner
     if (
       workspace.owner.toString() !==
       req.user._id.toString()
@@ -265,25 +271,51 @@ export const promoteToAdmin = async (req, res) => {
       });
     }
 
-    if (!workspace.admins.includes(userId)) {
-      workspace.admins.push(userId);
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({
+        message: "User not found"
+      });
     }
 
+    if (workspace.admins.includes(userId)) {
+      return res.status(400).json({
+        message: "User is already an admin"
+      });
+    }
+
+    workspace.admins.push(userId);
     await workspace.save();
 
+        await createAndSendNotification(req, {
+            recipient: userId,
+            sender: req.user._id,
+            type: "ROLE_CHANGED",
+            message: `You have been promoted to Admin in workspace "${workspace.name}"`,
+            workspace: workspaceId,
+            relatedId: workspaceId
+        });
+    await logActivity(
+        workspace._id,
+        req.user._id,
+        "ROLE_CHANGED",
+        `promoted ${targetUser.name} to Admin`
+    );
+
     res.status(200).json({
-      message: "Admin added successfully"
+      message: "Admin added successfully",
+      workspace
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Error in promoteToAdmin:", error);
 
     res.status(500).json({
-      message: "Server Error"
+      message: "Server Error",
+      details: error.message
     });
   }
 };
-
 export const removeAdmin = async (req, res) => {
   try {
     const { workspaceId, userId } = req.params;

@@ -37,6 +37,16 @@ export const initializeSocket = (io) => {
       if (task?.workspace) io.to(task.workspace).emit("taskDeleted", task);
     });
 
+    socket.on("commentCreated", (comment) => {
+      if (comment?.workspace) io.to(comment.workspace).emit("commentCreated", comment);
+    });
+    socket.on("commentUpdated", (comment) => {
+      if (comment?.workspace) io.to(comment.workspace).emit("commentUpdated", comment);
+    });
+    socket.on("commentDeleted", (comment) => {
+      if (comment?.workspace) io.to(comment.workspace).emit("commentDeleted", comment);
+    });
+
     socket.on("disconnect", () => {
       console.log(`🔴 User Disconnected: ${socket.id}`);
 

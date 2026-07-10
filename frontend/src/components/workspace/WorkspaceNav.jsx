@@ -1,6 +1,6 @@
 import { NavLink, useParams } from "react-router-dom";
 
-const tabs = ["Overview", "Board", "Chat", "Activity", "Members"];
+const tabs = ["Overview", "Board", "Analytics", "Activity", "Members"];
 
 export default function WorkspaceNav() {
   const { id } = useParams();

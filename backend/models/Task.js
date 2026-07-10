@@ -12,8 +12,15 @@ const taskSchema = new mongoose.Schema(
         dueDate: { type: Date },
         githubIssueNumber: {
         type: Number,
-        default: null
-},
+        default: null, },
+        attachments: [
+              {
+                 fileName: { type: String, required: true },
+                 fileUrl: { type: String, required: true },
+                 uploadedAt: { type: Date, default: Date.now }
+               }
+             ],
+
     },
     
     {

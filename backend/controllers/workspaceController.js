@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { logActivity } from "./activityController.js";
 import { fetchGithubIssues } from '../services/githubService.js';
 import Task from '../models/Task.js';
-
+import { createAndSendNotification } from "../utils/notificationHelper.js";
 
 export const createWorkspace = async (req, res) => {
   try {

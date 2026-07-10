@@ -1,5 +1,6 @@
+// src/components/task/TaskCard.jsx
 import { motion } from "framer-motion";
-import { CalendarDays, Users } from "lucide-react";
+import { CalendarDays, Users, MessageCircle } from "lucide-react";
 
 const priorityColors = {
   High: "bg-orange-100 text-orange-700",
@@ -38,43 +39,46 @@ export default function TaskCard({ task, onClick }) {
           <p>
             {task.dueDate
               ? new Date(task.dueDate).toLocaleDateString("en-IN", {
-                weekday: "short",
-                day: "numeric",
-                month: "short",
-              })
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                })
               : "No Due Date"}
           </p>
         </div>
       </div>
 
-      {/* Assigned Members Count */}
+      {/* Footer: Assigned label on left, comment count + avatars on right */}
       <div className="flex items-center justify-between pt-2 border-t border-slate-100">
         <div className="flex items-center gap-2">
-          <Users
-            size={14}
-            className="text-slate-400"
-          />
-
-          <span className="text-sm text-slate-600">
-            Assigned
-          </span>
+          <Users size={14} className="text-slate-400" />
+          <span className="text-sm text-slate-600">Assigned</span>
         </div>
 
-        <div className="flex -space-x-2">
-          {task.assignedTo?.slice(0, 3).map(
-            (member) => (
+        <div className="flex items-center gap-3">
+          {/* Comment Count */}
+          <div className="flex items-center gap-1.5 text-slate-500">
+            <MessageCircle size={15} />
+            <span className="text-xs font-medium">
+              {task.commentCount || 0}
+            </span>
+          </div>
+
+          {/* Member Avatars */}
+          <div className="flex -space-x-2">
+            {task.assignedTo?.slice(0, 3).map((member) => (
               <div
                 key={member._id}
                 className="w-7 h-7 rounded-full bg-primary text-white text-xs flex items-center justify-center border-2 border-white"
               >
                 {member.name
                   ?.split(" ")
-                  .map(n => n[0])
+                  .map((n) => n[0])
                   .join("")
                   .slice(0, 2)}
               </div>
-            )
-          )}
+            ))}
+          </div>
         </div>
       </div>
     </motion.div>

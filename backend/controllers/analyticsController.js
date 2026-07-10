@@ -16,6 +16,23 @@ export const getOverview = async (req, res) => {
     console.log("User ID:", req.user._id);
 
     const totalTasks = await Task.countDocuments(filter);
+    const priorityStats = await Task.aggregate([
+      {
+        $group: {
+          _id: "$priority",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const taskStatus = await Task.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
 
     const completedTasks = await Task.countDocuments({
       ...filter,
@@ -164,7 +181,9 @@ export const getMemberPerformance = async (req, res) => {
           overdue,
           completion:
             assigned > 0
-              ? Math.round((completed / assigned) * 100)
+              ? Math.round(
+                (completed / assigned) * 100
+              )
               : 0,
         };
       })

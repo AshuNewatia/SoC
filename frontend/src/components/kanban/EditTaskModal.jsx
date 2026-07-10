@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Type, FileText, CalendarDays, Flag, Users } from "lucide-react";
+import { X, Check, Type, FileText, CalendarDays, Flag, Users, Paperclip, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import api from "../../services/api";
@@ -12,9 +12,11 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
     priority: "Medium",
     dueDate: "",
     assignedTo: [],
+    attachments: [], 
   });
   const [members, setMembers] = useState([]);
   const [searchMember, setSearchMember] = useState("");
+  const [uploading, setUploading] = useState(false); 
 
   const filteredMembers = members.filter((member) =>
     member.name.toLowerCase().includes(searchMember.toLowerCase())
@@ -52,12 +54,41 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
         assignedTo: assignedIds,
         priority: task.priority || "Medium",
         dueDate: task.dueDate?.split("T")[0] || "",
+        attachments: task.attachments || [], 
       });
     }
   }, [task, isOpen, workspaceId]);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    console.log("Task Prop Structure:", task);
+    console.log("Task ID being sent:", task?._id || task?.id);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      setUploading(true);
+      const res = await api.post(`/api/tasks/${task._id}/attachments`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setForm((prev) => ({
+        ...prev,
+        attachments: res.data.task.attachments,
+      }));
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert(err.response?.data?.message || "Failed to upload attachment");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -73,7 +104,6 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
     <AnimatePresence>
       {isOpen && task && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -81,8 +111,6 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
             onClick={onClose}
             className="fixed inset-0 bg-black/40 z-40"
           />
-
-          {/* Modal Container */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -93,12 +121,11 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col"
             >
-              {/* ===== STICKY HEADER ===== */}
               <div className="sticky top-0 bg-white border-b border-slate-200 px-7 py-5 z-20 flex justify-between items-start">
                 <div>
                   <h2 className="text-2xl font-semibold text-slate-900">Edit Task</h2>
                   <p className="text-sm text-slate-500 mt-1">
-                    Update task details and assignments.
+                    Update task details and attachments.
                   </p>
                 </div>
                 <button
@@ -109,9 +136,7 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
                 </button>
               </div>
 
-              {/* ===== SCROLLABLE BODY ===== */}
               <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
-                {/* Title */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
                     <Type size={16} className="text-slate-400" />
@@ -125,8 +150,6 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
                     className={inputClass}
                   />
                 </div>
-
-                {/* Description */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
                     <FileText size={16} className="text-slate-400" />
@@ -141,7 +164,6 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
                   />
                 </div>
 
-                {/* Priority */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
                     <Flag size={16} className="text-slate-400" />
@@ -166,7 +188,6 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
                   </div>
                 </div>
 
-                {/* Due Date */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
                     <CalendarDays size={16} className="text-slate-400" />
@@ -180,14 +201,58 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
                   />
                 </div>
 
-                {/* Assign Members */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
+                    <Paperclip size={16} className="text-slate-400" />
+                    Proof of Work / Attachments
+                  </label>
+
+                  {form.attachments.length > 0 && (
+                    <div className="space-y-2 mb-3">
+                      {form.attachments.map((file, idx) => (
+                        <a
+                          key={file._id || idx}
+                          href={file.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100 transition text-sm font-medium text-primary"
+                        >
+                          <span className="truncate max-w-[80%] text-slate-700">{file.fileName}</span>
+                          <span className="text-xs text-primary underline">View File</span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="relative">
+                    <label className={`w-full flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 px-4 py-4 cursor-pointer hover:border-primary/50 transition bg-slate-50/50 ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
+                      {uploading ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin text-primary" />
+                          <span className="text-sm font-medium text-slate-600">Uploading file to cloud...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Paperclip size={16} className="text-slate-400" />
+                          <span className="text-sm font-medium text-slate-600">Click to upload image or PDF proof</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept=".pdf,image/png,image/jpeg,image/jpg"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        disabled={uploading}
+                      />
+                    </label>
+                  </div>
+                </div>
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
                     <Users size={16} className="text-slate-400" />
                     Assign Members
                   </label>
 
-                  {/* Selected members chips */}
                   {form.assignedTo.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-3">
                       {members
@@ -245,7 +310,6 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
                 </div>
               </form>
 
-              {/* ===== FIXED FOOTER ===== */}
               <div className="sticky bottom-0 bg-white border-t border-slate-200 px-7 py-5 flex justify-end gap-3">
                 <button
                   type="button"
