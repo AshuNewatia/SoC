@@ -23,3 +23,6 @@ export const getInsights = () =>
 
 export const getProductivityPercentage = () =>
   api.get("/api/analytics/productivity-percentage");
+
+export const exportReport = () =>
+  api.get("/api/analytics/export", { responseType: "blob" });

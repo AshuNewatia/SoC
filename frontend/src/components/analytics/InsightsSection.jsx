@@ -9,6 +9,9 @@ import InsightCard from "./InsightCard";
 import { getInsights } from "../../services/analyticsService";
 
 export default function InsightsSection() {
+
+ const user = JSON.parse(localStorage.getItem("user"));
+
   const [insights, setInsights] = useState(null);
 
   useEffect(() => {
@@ -27,27 +30,51 @@ export default function InsightsSection() {
   if (!insights) return null;
 
   return (
-    <div className="grid gap-5 md:grid-rows-3">
-      <InsightCard
-        title="Top Performer"
-        value={insights.topPerformer.name}
-        description={`${insights.topPerformer.completed} completed tasks`}
-        icon={Trophy}
-      />
+  <div className="grid gap-5 md:grid-rows-3">
+    
+    {user.role === "professor" && (
+        <InsightCard
+      title="Top Performer"
+      value={insights?.topPerformer?.name || "N/A"}
+      description={
+        insights?.topPerformer
+          ? `${insights.topPerformer.completed} completed tasks`
+          : "No data available"
+      }
+      icon={Trophy}
+    />
+    )}
 
+    {user.role === "student" && (
       <InsightCard
-        title="Most Active Day"
-        value={insights.mostActiveDay}
-        description="Highest completion activity"
-        icon={Calendar}
-      />
+  title="Performance"
+  value={
+    insights.completionRate >= 90
+      ? "Excellent"
+      : insights.completionRate >= 70
+      ? "Good"
+      : insights.completionRate >= 50
+      ? "Average"
+      : "Needs Improvement"
+  }
+  description={`${insights.completionRate}% completion rate`}
+  icon={Trophy}
+/>
+    )}
 
-      <InsightCard
-        title="Dominant Priority"
-        value={insights.dominantPriority}
-        description="Most common task priority"
-        icon={Target}
-      />
-    </div>
-  );
+    <InsightCard
+      title="Most Active Day"
+      value={insights?.mostActiveDay || "N/A"}
+      description="Highest completion activity"
+      icon={Calendar}
+    />
+
+    <InsightCard
+      title="Dominant Priority"
+      value={insights?.dominantPriority || "N/A"}
+      description="Most common task priority"
+      icon={Target}
+    />
+  </div>
+);
 }

@@ -5,12 +5,14 @@ const COLORS = {
   High: "bg-red-500",
   Medium: "bg-blue-500",
   Low: "bg-green-500",
+  Critical: "bg-gray-500",
 };
 
 const DOTS = {
   High: "bg-red-500",
   Medium: "bg-blue-500",
   Low: "bg-green-500",
+  Critical: "bg-gray-500",
 };
 
 export default function PriorityChart() {
@@ -23,9 +25,10 @@ export default function PriorityChart() {
 
         const sorted = [...data].sort((a, b) => {
           const order = {
-            High: 1,
-            Medium: 2,
-            Low: 3,
+            Critical:1,
+            High: 2,
+            Medium: 3,
+            Low: 4,
           };
 
           return order[a._id] - order[b._id];
