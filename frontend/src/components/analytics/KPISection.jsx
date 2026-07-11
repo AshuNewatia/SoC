@@ -15,6 +15,7 @@ export default function KPISection() {
     completedTasks: 0,
     pendingTasks: 0,
     productivity: 0,
+    overdue: 0,
   });
 
   const [loading, setLoading] = useState(true);
@@ -75,9 +76,9 @@ export default function KPISection() {
       />
 
       <KPIStatCard
-        title="Productivity"
-        value={`${stats.productivity}%`}
-        subtitle="Overall efficiency"
+        title="Overdue"
+        value={stats.overdueTasks}
+        subtitle="Past due tasks"
         icon={AlertTriangle}
         color="red"
       />

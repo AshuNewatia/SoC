@@ -23,3 +23,6 @@ export const getWorkspaceInsights = (workspaceId) =>
 
 export const getWorkspaceDeadlines = (workspaceId) =>
   api.get(`/api/workspace-analytics/${workspaceId}/deadlines`);
+
+export const getCSVReport = (workspaceId) =>
+  api.get(`/api/workspace-analytics/${workspaceId}/CSV`, { responseType: "blob" });
