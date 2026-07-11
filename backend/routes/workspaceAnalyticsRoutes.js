@@ -9,6 +9,7 @@ import {
   getWorkspaceWorkload,
   getWorkspaceInsights,
   getWorkspaceDeadlines,
+  getCSVReport,
 } from "../controllers/workspaceAnalyticsController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -70,6 +71,8 @@ router.get(
   protect,
   getWorkspaceDeadlines
 );
+
+router.get("/:workspaceId/CSV",protect,getCSVReport);
 
 
 export default router;

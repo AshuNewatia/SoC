@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams,useOutletContext } from "react-router-dom";
+import { useParams, useOutletContext } from "react-router-dom";
 import { Download, FileText, FileSpreadsheet, ChevronDown } from "lucide-react";
 
 import KPISection from "../workspace/analytics/KPISection";
@@ -10,6 +10,8 @@ import MemberPerformance from "../workspace/analytics/MemberPerformance";
 import InsightsSection from "../workspace/analytics/InsightsSection";
 import WorkloadChart from "../workspace/analytics/WorkloadChart";
 import DeadlineSection from "./analytics/DeadlineSection";
+
+import { getCSVReport } from "../../services/workspaceAnalyticsService";
 
 import { useAuth } from "../../context/authContext";
 
@@ -51,11 +53,31 @@ export default function WorkspaceAnalytics() {
         console.log("Export PDF");
     };
 
-    const handleExportCSV = () => {
-        setExportOpen(false);
-        console.log("Export CSV");
-    };
+    const handleExportCSV = async () => {
+        try {
+            setExportOpen(false);
 
+            const res = await getCSVReport(workspaceId);
+
+            const url = URL.createObjectURL(res.data);
+
+            const link = document.createElement("a");
+
+            link.href = url;
+            link.download = `${workspace.name}-tasks.csv`;
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("CSV export failed:", error);
+        }
+    };
+    
     return (
         <div className="space-y-4">
             {/* Analytics Header */}

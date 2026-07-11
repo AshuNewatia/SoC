@@ -9,6 +9,7 @@ import {
   getInsights,
   getProductivityPercentage,
   exportAnalyticsReport,
+  getCSVReport
 } from "../controllers/analyticsController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -32,6 +33,8 @@ router.get("/insights", protect, getInsights);
 router.get("/productivity-percentage", protect, getProductivityPercentage);
 
 router.get("/export", protect, exportAnalyticsReport);
+
+router.get("/CSV",protect,getCSVReport);
 
 router.get("/", (req, res) => {
   res.json({ message: "Analytics route working" });
