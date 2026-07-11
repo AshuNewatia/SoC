@@ -625,10 +625,14 @@ const escapeCSV = (value) => {
 
 export const getCSVReport = async (req, res) => {
   try {
-    const tasks = await Task.find()
-      .populate("assignedTo", "name")
-      .populate("createdBy", "name")
-      .populate("workspace", "name");
+    const userId = req.user._id || req.user.id;
+
+const tasks = await Task.find({
+  assignedTo: userId,
+})
+  .populate("assignedTo", "name")
+  .populate("createdBy", "name")
+  .populate("workspace", "name");
 
     tasks.sort((a, b) => {
       const workspaceA = a.workspace?.name || "";
