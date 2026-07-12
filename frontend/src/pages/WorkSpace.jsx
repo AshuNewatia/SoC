@@ -7,10 +7,9 @@ import WorkspaceNav from "../components/workspace/WorkspaceNav";
 import WorkspaceHero from "../components/workspace/WorkspaceHero";
 import WorkspaceSettingsModal from "../components/workspace/WorkspaceSettingModal";
 import api from "../services/api"; 
-import { updateWorkspace, deleteWorkspace } from "../services/workspaceServices";
+import { updateWorkspace, deleteWorkspace, transferOwnership } from "../services/workspaceServices";
 import { getTasks } from "../services/taskServices"
 
-// Socket instance (reused, autoConnect false)
 const socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", {
   withCredentials: true,
   autoConnect: false,
@@ -67,12 +66,32 @@ export default function Workspace() {
     }
   };
 
+  const handleTransferOwnership = async (newOwnerId) => {
+  try {
+    await transferOwnership(id, newOwnerId);
+
+    handleSuccess("Ownership transferred successfully");
+
+    // Refresh workspace
+    const res = await api.get(`/api/workspaces/${id}`);
+    setWorkspace(res.data);
+
+    setSettingsOpen(false);
+
+    window.dispatchEvent(
+      new CustomEvent("workspaceListChanged")
+    );
+  } catch (err) {
+    console.error(err);
+    handleApiError(err);
+  }
+};
+
   useEffect(() => {
     if (!id) return;
 
     const fetchWorkspace = async () => {
       try {
-        // ✅ use api.get – token automatically added
         const res = await api.get(`/api/workspaces/${id}`);
         setWorkspace(res.data);
 
@@ -87,7 +106,6 @@ export default function Workspace() {
     fetchWorkspace();
     fetchTasks();
 
-    // Socket connection
     socket.connect();
     socket.emit("join_workspace", id);
 
@@ -101,12 +119,10 @@ export default function Workspace() {
     };
   }, [id]);
 
-  // Loading & error states (same as before)
   if (loading) {
   return (
     <div className="p-6 space-y-4 animate-pulse">
 
-      {/* Workspace Hero */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
         <div className="flex justify-between">
 
@@ -180,7 +196,6 @@ export default function Workspace() {
 
   if (error || !workspace) {
     return (
-      // Updated to use surface, rounded-xl, and red text alerts
       <div className="p-10 text-center text-red-500 bg-surface rounded-(--rounded-xl) border border-red-200 max-w-2xl mx-auto mt-10 shadow-sm">
 
         <h3 className="font-bold text-lg">Error Loading Workspace</h3>
@@ -188,6 +203,11 @@ export default function Workspace() {
       </div>
     );
   }
+  const currentUserId = localStorage.getItem("userId");
+
+  const isCreator =
+  String(workspace?.createdBy?._id || workspace?.createdBy) ===
+  String(currentUserId);
 
   return (
     <div className="p-6 space-y-4 font-sans bg-bg-light min-h-screen text-text-primary">
@@ -204,6 +224,8 @@ export default function Workspace() {
         workspace={workspace}
         onSave={handleUpdateWorkspace}
         onDelete={handleDeleteWorkspace}
+        onTransferOwnership={handleTransferOwnership}
+        isCreator={isCreator}
       />
     </div>
   );
