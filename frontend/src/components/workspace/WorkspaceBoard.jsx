@@ -1,4 +1,4 @@
-
+import api from "../../services/api";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Plus } from "lucide-react";
@@ -39,6 +39,7 @@ export default function KanbanBoard() {
   const [loading, setLoading] = useState(true);
   const [allTasks, setAllTasks] = useState([]);
   const [taskFilter, setTaskFilter] = useState("all");
+  const [members, setMembers] = useState([]);
 
   const currentUserName = user?.name || user?.email?.split("@")[0] || "Guest";
 
@@ -71,6 +72,18 @@ export default function KanbanBoard() {
       console.error("Error fetching tasks:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMembers = async () => {
+    try {
+      const res = await api.get(
+        `/api/workspaces/${workspaceId}/members`
+      );
+
+      setMembers(Array.isArray(res.data) ? res.data : []);
+    } catch (error) {
+      console.error("Failed to fetch workspace members:", error);
     }
   };
 
@@ -109,6 +122,7 @@ export default function KanbanBoard() {
     socket.on("taskDeleted", fetchTasks);
 
     fetchTasks();
+    fetchMembers();
 
     const handleGlobalCreate = () => setCreateOpen(true);
     window.addEventListener("openCreateTaskModal", handleGlobalCreate);
@@ -122,6 +136,20 @@ export default function KanbanBoard() {
       window.removeEventListener("openCreateTaskModal", handleGlobalCreate);
     };
   }, [workspaceId, currentUserName]);
+
+  useEffect(() => {
+    const syncTaskCommentCount = () => {
+      fetchTasks();
+    };
+
+    socket.on("commentCreated", syncTaskCommentCount);
+    socket.on("commentDeleted", syncTaskCommentCount);
+
+    return () => {
+      socket.off("commentCreated", syncTaskCommentCount);
+      socket.off("commentDeleted", syncTaskCommentCount);
+    };
+  }, [workspaceId]);
 
   const createTask = async (task) => {
     try {
@@ -222,6 +250,8 @@ export default function KanbanBoard() {
     setCreateOpen(true);
   };
 
+
+
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
@@ -270,6 +300,7 @@ export default function KanbanBoard() {
     <>
       <TaskDrawer
         task={selectedTask}
+        members={members}
         isOpen={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         onDelete={deleteTask}
@@ -315,8 +346,8 @@ export default function KanbanBoard() {
           <button
             onClick={() => setTaskFilter("all")}
             className={`px-4 py-2 rounded-xl text-sm font-medium ${taskFilter === "all"
-                ? "bg-primary text-white"
-                : "bg-white border border-border-light"
+              ? "bg-primary text-white"
+              : "bg-white border border-border-light"
               }`}
           >
             All Tasks
@@ -325,8 +356,8 @@ export default function KanbanBoard() {
           <button
             onClick={() => setTaskFilter("my")}
             className={`px-4 py-2 rounded-xl text-sm font-medium ${taskFilter === "my"
-                ? "bg-primary text-white"
-                : "bg-white border border-border-light"
+              ? "bg-primary text-white"
+              : "bg-white border border-border-light"
               }`}
           >
             My Tasks
@@ -335,8 +366,8 @@ export default function KanbanBoard() {
           <button
             onClick={() => setTaskFilter("created")}
             className={`px-4 py-2 rounded-xl text-sm font-medium ${taskFilter === "created"
-                ? "bg-primary text-white"
-                : "bg-white border border-border-light"
+              ? "bg-primary text-white"
+              : "bg-white border border-border-light"
               }`}
           >
             Created By Me
@@ -345,8 +376,8 @@ export default function KanbanBoard() {
           <button
             onClick={() => setTaskFilter("unassigned")}
             className={`px-4 py-2 rounded-xl text-sm font-medium ${taskFilter === "unassigned"
-                ? "bg-primary text-white"
-                : "bg-white border border-border-light"
+              ? "bg-primary text-white"
+              : "bg-white border border-border-light"
               }`}
           >
             Unassigned

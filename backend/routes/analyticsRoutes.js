@@ -8,26 +8,33 @@ import {
   getGithubAnalytics,
   getInsights,
   getProductivityPercentage,
+  exportAnalyticsReport,
+  getCSVReport
 } from "../controllers/analyticsController.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 
 const router = express.Router();
 
-router.get("/overview", getOverview);
+router.get("/overview", protect, getOverview);
 
-router.get("/task-status", getTaskStatus);
+router.get("/task-status", protect, getTaskStatus);
 
-router.get("/priority", getPriorityStats);
+router.get("/priority", protect, getPriorityStats);
 
-router.get("/member-performance", getMemberPerformance);
+router.get("/member-performance", protect, getMemberPerformance);
 
-router.get("/productivity", getProductivity);
+router.get("/productivity", protect, getProductivity);
 
-router.get("/github", getGithubAnalytics);
+router.get("/github", protect, getGithubAnalytics);
 
-router.get("/insights", getInsights);
+router.get("/insights", protect, getInsights);
 
-router.get("/productivity-percentage", getProductivityPercentage);
+router.get("/productivity-percentage", protect, getProductivityPercentage);
+
+router.get("/export", protect, exportAnalyticsReport);
+
+router.get("/CSV",protect,getCSVReport);
 
 router.get("/", (req, res) => {
   res.json({ message: "Analytics route working" });

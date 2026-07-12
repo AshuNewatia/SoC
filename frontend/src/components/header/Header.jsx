@@ -30,7 +30,7 @@ export default function Header({
   } else if (location.pathname.includes("/workspace/")) {
     if (location.pathname.includes("/overview")) pageTitle = "Workspace Overview";
     else if (location.pathname.includes("/board")) pageTitle = "Workspace Board";
-    else if (location.pathname.includes("/chat")) pageTitle = "Workspace Chat";
+    else if (location.pathname.includes("/analytics")) pageTitle = "Workspace Analytics";
     else if (location.pathname.includes("/activity")) pageTitle = "Workspace Activity";
     else if (location.pathname.includes("/members")) pageTitle = "Workspace Members";
   }
