@@ -696,7 +696,7 @@ export const getCSVReport = async (req, res) => {
     const csvContent = [header, ...rows].join("\n");
 
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
-    res.setHeader("Content-Disposition", `attachment; filename="tasks.csv`);
+    res.setHeader("Content-Disposition", `attachment; filename="tasks.csv"`);
     return res.send("\uFEFF" + csvContent);
   } catch (error) {
     console.error("CSV export error:", error);
