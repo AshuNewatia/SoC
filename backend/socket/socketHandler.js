@@ -1,23 +1,35 @@
 export const initializeSocket = (io) => {
   const workspaceStreams = new Map();
   const socketToWorkspace = new Map();
+  const socketToUser = new Map();
 
   io.on("connection", (socket) => {
     console.log(`🟢 User Connected: ${socket.id}`);
 
     socket.on("userJoined", (user) => {
       const { workspaceId } = user;
+      const { userId } = user;
       if (!workspaceId) return;
 
       socket.join(workspaceId);
+      socketToUser.set(socket.id, userId);
       socketToWorkspace.set(socket.id, workspaceId);
 
       if (!workspaceStreams.has(workspaceId)) {
         workspaceStreams.set(workspaceId, new Map());
       }
-      workspaceStreams.get(workspaceId).set(socket.id, user);
+      const workspace = workspaceStreams.get(workspaceId);
 
-      const workspaceUsers = Array.from(workspaceStreams.get(workspaceId).values());
+      if (!workspace.has(userId)) {
+        workspace.set(userId, {
+          user,
+          sockets: new Set(),
+        });
+      }
+
+      workspace.get(userId).sockets.add(socket.id);
+
+      const workspaceUsers = Array.from(workspaceStreams.get(workspaceId).values()).map(entry => entry.user);
       io.to(workspaceId).emit("onlineUsers", workspaceUsers);
     });
 
@@ -51,18 +63,39 @@ export const initializeSocket = (io) => {
       console.log(`🔴 User Disconnected: ${socket.id}`);
 
       const workspaceId = socketToWorkspace.get(socket.id);
+      const userId = socketToUser.get(socket.id);
 
-      if (workspaceId && workspaceStreams.has(workspaceId)) {
-        const usersInWorkspace = workspaceStreams.get(workspaceId);
+      if (!workspaceId || !userId) return;
 
-        usersInWorkspace.delete(socket.id);
-        socketToWorkspace.delete(socket.id);
+      const workspace = workspaceStreams.get(workspaceId);
 
-        if (usersInWorkspace.size === 0) {
-          workspaceStreams.delete(workspaceId);
-        } else {
-          io.to(workspaceId).emit("onlineUsers", Array.from(usersInWorkspace.values()));
-        }
+      if (!workspace) return;
+
+      const userEntry = workspace.get(userId);
+
+      if (!userEntry) return;
+
+      // Remove only this socket
+      userEntry.sockets.delete(socket.id);
+
+      // Remove mappings
+      socketToWorkspace.delete(socket.id);
+      socketToUser.delete(socket.id);
+
+      // If no sockets left, remove the user
+      if (userEntry.sockets.size === 0) {
+        workspace.delete(userId);
+      }
+
+      // If workspace becomes empty, remove it
+      if (workspace.size === 0) {
+        workspaceStreams.delete(workspaceId);
+      } else {
+        const workspaceUsers = Array.from(workspace.values()).map(
+          (entry) => entry.user
+        );
+
+        io.to(workspaceId).emit("onlineUsers", workspaceUsers);
       }
     });
   });

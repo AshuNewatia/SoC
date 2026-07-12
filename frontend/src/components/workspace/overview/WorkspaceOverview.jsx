@@ -19,9 +19,9 @@ export default function WorkspaceOverview() {
   );
   const { user } = useAuth();
   const currentUserName = user?.name || user?.email || "Guest";
+  const currentUserId = user?._id || user?.id;
   const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
-
   // Fetch workspace details
   useEffect(() => {
     const fetchWorkspace = async () => {
@@ -48,11 +48,11 @@ export default function WorkspaceOverview() {
   // Socket setup
   useEffect(() => {
     if (socket.connected) {
-      socket.emit("userJoined", { id: socket.id, name: currentUserName, workspaceId: id });
+      socket.emit("userJoined", { id: socket.id, name: currentUserName, workspaceId: id, userId: currentUserId });
     }
 
     socket.on("connect", () => {
-      socket.emit("userJoined", { id: socket.id, name: currentUserName, workspaceId: id });
+      socket.emit("userJoined", { id: socket.id, name: currentUserName, workspaceId: id, userId: currentUserId });
     });
 
     socket.on("onlineUsers", (users) => setOnlineUsers(users));
@@ -71,7 +71,7 @@ export default function WorkspaceOverview() {
       socket.off("taskUpdated");
       socket.off("taskDeleted");
     };
-  }, [currentUserName, id]);
+  }, [currentUserName, currentUserId, id]);
 
   const handleUpdateWorkspace = async (data) => {
     try {
