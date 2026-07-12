@@ -10,6 +10,9 @@ import {
   X,
   Search,
   Users,
+  Link as LinkIcon,
+  Copy,
+  Check,
 } from 'lucide-react';
 import api from '../../services/api';
 
@@ -23,10 +26,12 @@ export default function WorkspaceMembers() {
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteUrl, setInviteUrl] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [urlLoading, setUrlLoading] = useState(false);
 
   const [openMenu, setOpenMenu] = useState(null);
 
-  // Fetch members
   useEffect(() => {
     const fetchMembers = async () => {
       try {
@@ -64,14 +69,12 @@ export default function WorkspaceMembers() {
     };
   }, [id, socket]);
 
-  // Close dropdown on any click outside
   useEffect(() => {
     const closeMenu = () => setOpenMenu(null);
     document.addEventListener('click', closeMenu);
     return () => document.removeEventListener('click', closeMenu);
   }, []);
 
-  // Handlers
   const handleInvite = async () => {
     try {
       await api.post(`/api/workspaces/${id}/members`, { email: inviteEmail });
@@ -84,6 +87,28 @@ export default function WorkspaceMembers() {
       console.error(err);
       handleApiError(err);
     }
+  };
+
+  const generateInviteLink = async () => {
+    setUrlLoading(true);
+    try {
+      const response = await api.get(`/api/workspaces/${id}/invite-token`);
+      if (response.data.success) {
+        const cleanUrl = `${window.location.origin}/join/workspace/${response.data.inviteToken}`;
+        setInviteUrl(cleanUrl);
+      }
+    } catch (err) {
+      console.error("Could not fetch workspace invite token:", err);
+      handleApiError(err);
+    } finally {
+      setUrlLoading(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(inviteUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handlePromote = async (memberId) => {
@@ -149,7 +174,6 @@ export default function WorkspaceMembers() {
   };
 
   return (
-    // ✅ overflow-visible to show dropdown properly
     <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-sm font-sans overflow-visible">
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-slate-200">
@@ -277,13 +301,18 @@ export default function WorkspaceMembers() {
                 Invite Member
               </h3>
               <button
-                onClick={() => setInviteOpen(false)}
+                onClick={() => {
+                  setInviteOpen(false);
+                  setInviteUrl(''); // Reset link view
+                }}
                 className="p-1 rounded hover:bg-slate-100"
               >
                 <X size={20} />
               </button>
             </div>
 
+            {/* Email Option */}
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Invite via Email Address</label>
             <input
               type="email"
               placeholder="Enter email address"
@@ -292,9 +321,12 @@ export default function WorkspaceMembers() {
               className="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
 
-            <div className="flex justify-end gap-3 mt-5">
+            <div className="flex justify-end gap-3 mt-4">
               <button
-                onClick={() => setInviteOpen(false)}
+                onClick={() => {
+                  setInviteOpen(false);
+                  setInviteUrl('');
+                }}
                 className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-50"
               >
                 Cancel
@@ -303,9 +335,53 @@ export default function WorkspaceMembers() {
                 onClick={handleInvite}
                 className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90"
               >
-                Invite
+                Invite via Email
               </button>
             </div>
+
+            {/* 🔽 NEW SECTION: OR Divider & URL Link Generation Option */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200" /></div>
+              <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-slate-400 font-semibold">Or</span></div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+              <div className="flex items-center gap-2">
+                <LinkIcon size={16} className="text-primary" />
+                <h4 className="font-bold text-slate-700 text-xs uppercase tracking-wider">Invite via Secret URL Link</h4>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Anyone with access to this generated address string will bypass email filters and be added to the registry instantly.
+              </p>
+
+              {!inviteUrl ? (
+                <button
+                  onClick={generateInviteLink}
+                  disabled={urlLoading}
+                  className="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg transition disabled:opacity-50"
+                >
+                  {urlLoading ? "Generating Token..." : "Generate Invite Link"}
+                </button>
+              ) : (
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    readOnly
+                    value={inviteUrl}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 bg-white rounded-lg outline-none text-slate-600 select-all"
+                  />
+                  <button
+                    onClick={copyToClipboard}
+                    className={`p-2 rounded-lg border transition shrink-0 ${
+                      copied ? 'bg-green-50 text-green-600 border-green-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                  </button>
+                </div>
+              )}
+            </div>
+            
           </div>
         </div>
       )}

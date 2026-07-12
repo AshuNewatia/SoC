@@ -616,10 +616,10 @@ export const exportAnalyticsReport = async (req, res) => {
   }
 };
 
-
 const escapeCSV = (value) => {
   const stringValue = String(value ?? "");
   const escapedValue = stringValue.replaceAll('"', '""');
+
   return `"${escapedValue}"`;
 };
 
@@ -627,10 +627,12 @@ export const getCSVReport = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
 
-    const tasks = await Task.find()
-      .populate("assignedTo", "name")
-      .populate("createdBy", "name")
-      .populate("workspace", "name");
+const tasks = await Task.find({
+  assignedTo: userId,
+})
+  .populate("assignedTo", "name")
+  .populate("createdBy", "name")
+  .populate("workspace", "name");
 
     tasks.sort((a, b) => {
       const workspaceA = a.workspace?.name || "";
@@ -660,21 +662,56 @@ export const getCSVReport = async (req, res) => {
       "GitHub issue number",
     ];
 
-    const header = headers.map(escapeCSV).join(",");
+    const header = headers
+      .map(escapeCSV)
+      .join(",");
 
     const rows = tasks.map((task) => {
-      const title = task.title;
-      const workspace = task.workspace.name;
-      const description = task.description || "";
-      const status = task.status;
-      const priority = task.priority;
-      const assignedTo = task.assignedTo.map((user) => user.name).join(", ") || "Unassigned";
-      const createdBy = task.createdBy?.name || "User";
-      const createdAt = task.createdAt.toLocaleDateString("en-IN");
-      const dueDate = task.dueDate ? task.dueDate.toLocaleDateString("en-IN") : "No due date";
+      const workspace =
+        task.workspace?.name || "Unknown Workspace";
+
+      const title =
+        task.title || "";
+
+      const description =
+        task.description || "";
+
+      const status =
+        task.status || "";
+
+      const priority =
+        task.priority || "";
+
+      const assignedTo =
+        task.assignedTo
+          ?.filter(Boolean)
+          .map((user) => user.name)
+          .join(", ") || "Unassigned";
+
+      const createdBy =
+        task.createdBy?.name || "Unknown User";
+
+      const createdAt = task.createdAt
+        ? new Date(task.createdAt)
+            .toLocaleDateString("en-IN")
+        : "";
+
+      const dueDate = task.dueDate
+        ? new Date(task.dueDate)
+            .toLocaleDateString("en-IN")
+        : "No due date";
+
       const overdue =
-        task.dueDate && task.status !== "completed" && task.dueDate < new Date() ? "Yes" : "No";
-      const githubIssueNumber = task.githubIssueNumber ? `#${task.githubIssueNumber}` : "Not linked";
+        task.dueDate &&
+        task.status !== "completed" &&
+        new Date(task.dueDate) < new Date()
+          ? "Yes"
+          : "No";
+
+      const githubIssueNumber =
+        task.githubIssueNumber
+          ? `#${task.githubIssueNumber}`
+          : "Not linked";
 
       return [
         workspace,
@@ -693,13 +730,25 @@ export const getCSVReport = async (req, res) => {
         .join(",");
     });
 
-    const csvContent = [header, ...rows].join("\n");
+    const csvContent =
+      [header, ...rows].join("\n");
 
-    res.setHeader("Content-Type", "text/csv; charset=utf-8");
-    res.setHeader("Content-Disposition", `attachment; filename="tasks.csv"`);
+    res.setHeader(
+      "Content-Type",
+      "text/csv; charset=utf-8"
+    );
+
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="tasks.csv"'
+    );
     return res.send("\uFEFF" + csvContent);
+
   } catch (error) {
     console.error("CSV export error:", error);
-    return res.status(500).json({ message: "Failed to generate CSV report" });
+
+    return res.status(500).json({
+      message: "Failed to generate CSV report",
+    });
   }
 };

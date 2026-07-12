@@ -13,6 +13,7 @@ import MyBoard from "./pages/MyBoard";
 import OAuthCallback from "./pages/OAuthCallback";
 import CreateProfile from "./pages/CreateProfile";
 import ViewProfile from "./pages/ViewProfile";
+import JoinWorkspace from "./pages/JoinWorkspace";
 
 import WorkspaceOverview from "./components/workspace/overview/WorkspaceOverview"
 import WorkspaceAnalytics from "./components/workspace/WorkspaceAnalytics";
@@ -90,6 +91,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
+        <Route path="/join/workspace/:token" element={<JoinWorkspace />} />
         
         <Route path="/create-profile" element={<CreateProfile />} />
 
