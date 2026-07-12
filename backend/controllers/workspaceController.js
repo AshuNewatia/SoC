@@ -303,28 +303,58 @@ export const getInviteToken = async (req, res) => {
   }
 };
 
+
 export const joinWorkspaceWithToken = async (req, res) => {
   try {
     const { inviteToken } = req.body;
-    const userId = req.user._id; 
+    const userId = req.user._id;
+
+    console.log(`[JOIN ATTEMPT] User ${userId} is joining via token: ${inviteToken}`);
 
     const workspace = await Workspace.findOne({ inviteToken });
     if (!workspace) {
-      return res.status(400).json({ success: false, message: "Invalid or expired invite link." });
+      return res.status(400).json({ 
+        success: false, 
+        message: "This invitation link is invalid or has expired." 
+      });
     }
 
-    const isAlreadyMember = workspace.members.some(id => id.toString() === userId.toString()) || 
-                             workspace.createdBy.toString() === userId.toString();
+    // ✅ FIXED: Add optional chaining (?.) and fallbacks to prevent undefined .toString() crashes
+    const isOwner = workspace.createdBy 
+      ? workspace.createdBy.toString() === userId.toString() 
+      : false;
+
+    const isAlreadyMember = workspace.members 
+      ? workspace.members.some(id => id && id.toString() === userId.toString())
+      : false;
                              
-    if (isAlreadyMember) {
-      return res.status(200).json({ success: true, workspaceId: workspace._id, message: "Already a member." });
+    if (isOwner || isAlreadyMember) {
+      return res.status(200).json({ 
+        success: true, 
+        workspaceId: workspace._id.toString(),
+        message: "You are already associated with this workspace." 
+      });
+    }
+
+    // Initialize the members array if it somehow doesn't exist in the document
+    if (!workspace.members) {
+      workspace.members = [];
     }
 
     workspace.members.push(userId);
     await workspace.save();
 
-    return res.status(200).json({ success: true, workspaceId: workspace._id, message: "Successfully joined workspace!" });
+    return res.status(200).json({ 
+      success: true, 
+      workspaceId: workspace._id.toString(), 
+      message: "Successfully joined the workspace!" 
+    });
+
   } catch (error) {
-    return res.status(500).json({ message: "Server error during join procedure." });
+    console.error("[JOIN CRITICAL ERROR] Exception thrown:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal server error while processing token entry." 
+    });
   }
 };
