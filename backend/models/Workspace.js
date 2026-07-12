@@ -32,6 +32,11 @@ const workspaceSchema = new mongoose.Schema(
       type: String, 
       default: "" 
 },
+    inviteToken: { 
+      type: String, 
+      unique: true, 
+      sparse: true
+},
   },
   
   { timestamps: true }
