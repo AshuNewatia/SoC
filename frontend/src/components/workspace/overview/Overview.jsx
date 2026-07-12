@@ -59,7 +59,7 @@ export default function Overview({
           <div className="rounded-2xl border border-slate-200 p-4 md:p-5 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-center gap-2 md:gap-3">
               <Users className="text-indigo-500" size={18} md:size={20} />
-              <span className="text-xs md:text-sm text-slate-600">Members</span>
+              <span className="text-xs md:text-sm text-slate-600">Members Online</span>
             </div>
             <p className="text-2xl md:text-3xl font-bold mt-2 md:mt-3">{onlineUsers.length}</p>
           </div>

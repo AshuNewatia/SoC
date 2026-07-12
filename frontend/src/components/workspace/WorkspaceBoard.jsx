@@ -2,6 +2,7 @@ import api from "../../services/api";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Plus } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import socket from "../../hooks/useSocket";
 import { useAuth } from "../../context/authContext";
@@ -30,7 +31,6 @@ const emptyBoard = {
 export default function KanbanBoard() {
   const { id: workspaceId } = useParams();
   const { user } = useAuth();
-  const [board, setBoard] = useState(emptyBoard);
   const [selectedTask, setSelectedTask] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -40,27 +40,35 @@ export default function KanbanBoard() {
   const [allTasks, setAllTasks] = useState([]);
   const [taskFilter, setTaskFilter] = useState("all");
   const [members, setMembers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const currentUserName = user?.name || user?.email?.split("@")[0] || "Guest";
 
   const filteredTasks = allTasks.filter((task) => {
-    if (taskFilter === "all") return true;
+    let passesFilter = true;
 
     if (taskFilter === "my") {
-      return task.assignedTo?.some(
+      passesFilter = task.assignedTo?.some(
         (member) => member._id.toString() === user.id
       );
     }
 
     if (taskFilter === "created") {
-      return task.createdBy?._id?.toString() === user.id;
+      passesFilter =
+        task.createdBy?._id?.toString() === user.id;
     }
 
     if (taskFilter === "unassigned") {
-      return !task.assignedTo?.length;
+      passesFilter = !task.assignedTo?.length;
     }
 
-    return true;
+    const search = searchQuery.toLowerCase();
+
+    const matchesSearch =
+      task.title?.toLowerCase().includes(search) ||
+      task.description?.toLowerCase().includes(search);
+
+    return passesFilter && matchesSearch;
   });
 
   const fetchTasks = async () => {
@@ -87,27 +95,33 @@ export default function KanbanBoard() {
     }
   };
 
-  useEffect(() => {
-    setBoard({
-      columns: {
-        todo: {
-          id: "todo",
-          title: "To Do",
-          tasks: filteredTasks.filter((t) => t.status === "todo"),
-        },
-        progress: {
-          id: "progress",
-          title: "In Progress",
-          tasks: filteredTasks.filter((t) => t.status === "progress"),
-        },
-        completed: {
-          id: "completed",
-          title: "Completed",
-          tasks: filteredTasks.filter((t) => t.status === "completed"),
-        },
+  const board = {
+    columns: {
+      todo: {
+        id: "todo",
+        title: "To Do",
+        tasks: filteredTasks.filter(
+          (task) => task.status === "todo"
+        ),
       },
-    });
-  }, [allTasks, taskFilter]);
+
+      progress: {
+        id: "progress",
+        title: "In Progress",
+        tasks: filteredTasks.filter(
+          (task) => task.status === "progress"
+        ),
+      },
+
+      completed: {
+        id: "completed",
+        title: "Completed",
+        tasks: filteredTasks.filter(
+          (task) => task.status === "completed"
+        ),
+      },
+    },
+  };
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -341,48 +355,84 @@ export default function KanbanBoard() {
       </div>
 
       {/* Filter buttons – separate div, centered */}
-      <div className="bg-surface rounded-2xl shadow-sm border border-border-light px-5 py-3 mb-6">
-        <div className="flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => setTaskFilter("all")}
-            className={`px-4 py-2 rounded-xl text-sm font-medium ${taskFilter === "all"
-              ? "bg-primary text-white"
-              : "bg-white border border-border-light"
-              }`}
-          >
-            All Tasks
-          </button>
+      <div className="bg-surface rounded-2xl shadow-sm border border-border-light px-5 py-4 mb-6">
 
-          <button
-            onClick={() => setTaskFilter("my")}
-            className={`px-4 py-2 rounded-xl text-sm font-medium ${taskFilter === "my"
-              ? "bg-primary text-white"
-              : "bg-white border border-border-light"
-              }`}
-          >
-            My Tasks
-          </button>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
-          <button
-            onClick={() => setTaskFilter("created")}
-            className={`px-4 py-2 rounded-xl text-sm font-medium ${taskFilter === "created"
-              ? "bg-primary text-white"
-              : "bg-white border border-border-light"
-              }`}
-          >
-            Created By Me
-          </button>
+          {/* Search */}
+          <div className="relative w-full lg:max-w-md">
 
-          <button
-            onClick={() => setTaskFilter("unassigned")}
-            className={`px-4 py-2 rounded-xl text-sm font-medium ${taskFilter === "unassigned"
-              ? "bg-primary text-white"
-              : "bg-white border border-border-light"
-              }`}
-          >
-            Unassigned
-          </button>
+            <Search
+              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              value={searchQuery}
+              onChange={(e) =>
+                setSearchQuery(e.target.value)
+              }
+              className="w-full pl-11 pr-10 py-2.5 rounded-xl border border-border-light bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+            />
+
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-wrap gap-2">
+
+            <button
+              onClick={() => setTaskFilter("all")}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${taskFilter === "all"
+                ? "bg-primary text-white"
+                : "bg-white border border-border-light hover:bg-slate-50"
+                }`}
+            >
+              All Tasks
+            </button>
+
+            <button
+              onClick={() => setTaskFilter("my")}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${taskFilter === "my"
+                ? "bg-primary text-white"
+                : "bg-white border border-border-light hover:bg-slate-50"
+                }`}
+            >
+              My Tasks
+            </button>
+
+            <button
+              onClick={() => setTaskFilter("created")}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${taskFilter === "created"
+                ? "bg-primary text-white"
+                : "bg-white border border-border-light hover:bg-slate-50"
+                }`}
+            >
+              Created By Me
+            </button>
+
+            <button
+              onClick={() => setTaskFilter("unassigned")}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${taskFilter === "unassigned"
+                ? "bg-primary text-white"
+                : "bg-white border border-border-light hover:bg-slate-50"
+                }`}
+            >
+              Unassigned
+            </button>
+
+          </div>
         </div>
+
       </div>
 
       {/* Kanban Columns */}
