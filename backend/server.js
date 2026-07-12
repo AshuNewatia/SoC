@@ -55,7 +55,6 @@ app.use('/api/tasks', taskRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-
 app.get("/", (req, res) => {
   res.send("CampusFlow Backend Running 🚀");
 });
