@@ -1,5 +1,5 @@
 import api from "../../services/api";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { Search, X } from "lucide-react";
@@ -31,6 +31,8 @@ const emptyBoard = {
 export default function KanbanBoard() {
   const { id: workspaceId } = useParams();
   const { user } = useAuth();
+
+  // State
   const [selectedTask, setSelectedTask] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -41,35 +43,60 @@ export default function KanbanBoard() {
   const [taskFilter, setTaskFilter] = useState("all");
   const [members, setMembers] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [board, setBoard] = useState(emptyBoard);
 
   const currentUserName = user?.name || user?.email?.split("@")[0] || "Guest";
 
-  const filteredTasks = allTasks.filter((task) => {
-    let passesFilter = true;
+  // Memoized filtered tasks
+  const filteredTasks = useMemo(() => {
+    return allTasks.filter((task) => {
+      let passesFilter = true;
 
-    if (taskFilter === "my") {
-      passesFilter = task.assignedTo?.some(
-        (member) => member._id.toString() === user.id
-      );
-    }
+      if (taskFilter === "my") {
+        passesFilter = task.assignedTo?.some(
+          (member) => member._id.toString() === user.id
+        );
+      }
 
-    if (taskFilter === "created") {
-      passesFilter =
-        task.createdBy?._id?.toString() === user.id;
-    }
+      if (taskFilter === "created") {
+        passesFilter = task.createdBy?._id?.toString() === user.id;
+      }
 
-    if (taskFilter === "unassigned") {
-      passesFilter = !task.assignedTo?.length;
-    }
+      if (taskFilter === "unassigned") {
+        passesFilter = !task.assignedTo?.length;
+      }
 
-    const search = searchQuery.toLowerCase();
+      const search = searchQuery.toLowerCase();
+      const matchesSearch =
+        task.title?.toLowerCase().includes(search) ||
+        task.description?.toLowerCase().includes(search);
 
-    const matchesSearch =
-      task.title?.toLowerCase().includes(search) ||
-      task.description?.toLowerCase().includes(search);
+      return passesFilter && matchesSearch;
+    });
+  }, [allTasks, taskFilter, searchQuery, user.id]);
 
-    return passesFilter && matchesSearch;
-  });
+  // Rebuild board whenever filteredTasks changes
+  useEffect(() => {
+    setBoard({
+      columns: {
+        todo: {
+          id: "todo",
+          title: "To Do",
+          tasks: filteredTasks.filter((task) => task.status === "todo"),
+        },
+        progress: {
+          id: "progress",
+          title: "In Progress",
+          tasks: filteredTasks.filter((task) => task.status === "progress"),
+        },
+        completed: {
+          id: "completed",
+          title: "Completed",
+          tasks: filteredTasks.filter((task) => task.status === "completed"),
+        },
+      },
+    });
+  }, [filteredTasks]);
 
   const fetchTasks = async () => {
     try {
@@ -85,49 +112,24 @@ export default function KanbanBoard() {
 
   const fetchMembers = async () => {
     try {
-      const res = await api.get(
-        `/api/workspaces/${workspaceId}/members`
-      );
-
+      const res = await api.get(`/api/workspaces/${workspaceId}/members`);
       setMembers(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error("Failed to fetch workspace members:", error);
     }
   };
 
-  const board = {
-    columns: {
-      todo: {
-        id: "todo",
-        title: "To Do",
-        tasks: filteredTasks.filter(
-          (task) => task.status === "todo"
-        ),
-      },
-
-      progress: {
-        id: "progress",
-        title: "In Progress",
-        tasks: filteredTasks.filter(
-          (task) => task.status === "progress"
-        ),
-      },
-
-      completed: {
-        id: "completed",
-        title: "Completed",
-        tasks: filteredTasks.filter(
-          (task) => task.status === "completed"
-        ),
-      },
-    },
-  };
-
+  // Socket listeners
   useEffect(() => {
     if (!workspaceId) return;
 
     socket.on("connect", () => {
-      socket.emit("userJoined", { id: socket.id, name: currentUserName, workspaceId });
+      socket.emit("userJoined", {
+        id: socket.id,
+        name: currentUserName,
+        workspaceId,
+        userId: user.id,
+      });
     });
 
     socket.on("taskMoved", fetchTasks);
@@ -149,8 +151,9 @@ export default function KanbanBoard() {
       socket.off("taskDeleted");
       window.removeEventListener("openCreateTaskModal", handleGlobalCreate);
     };
-  }, [workspaceId, currentUserName]);
+  }, [workspaceId, currentUserName, user.id]);
 
+  // Comment sync
   useEffect(() => {
     const syncTaskCommentCount = () => {
       fetchTasks();
@@ -165,6 +168,7 @@ export default function KanbanBoard() {
     };
   }, [workspaceId]);
 
+  // CRUD operations
   const createTask = async (task) => {
     try {
       const res = await createTaskApi(workspaceId, {
@@ -210,6 +214,7 @@ export default function KanbanBoard() {
     }
   };
 
+  // Drag & Drop
   const onDragEnd = async (result) => {
     const { source, destination } = result;
     if (!destination) return;
@@ -243,61 +248,51 @@ export default function KanbanBoard() {
       };
     }
 
+    // Optimistic UI update on board
     setBoard(updatedBoard);
 
     try {
       await updateTaskStatusApi(movedTask._id, {
         status: destination.droppableId,
       });
-      socket.emit("taskMoved", movedTask);
+      socket.emit("taskMoved", {
+        ...movedTask,
+        status: destination.droppableId,
+        workspace: workspaceId,
+      });
     } catch (err) {
       console.error("Error moving task:", err);
       handleApiError(err);
+      // Rollback: fetch latest tasks
       await fetchTasks();
     }
   };
 
   const columns = Object.values(board.columns);
-
   const handleCreateTask = () => {
     setTargetColumn("todo");
     setCreateOpen(true);
   };
 
-
-
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-
-        {/* Header Skeleton */}
         <div className="bg-white rounded-2xl border border-slate-200 p-5">
           <div className="h-8 w-56 bg-slate-200 rounded-lg"></div>
           <div className="h-4 w-80 bg-slate-100 rounded mt-3"></div>
         </div>
-
-        {/* Filter Skeleton */}
         <div className="bg-white rounded-2xl border border-slate-200 p-4 flex gap-3">
           <div className="h-10 w-24 bg-slate-200 rounded-xl"></div>
           <div className="h-10 w-24 bg-slate-200 rounded-xl"></div>
           <div className="h-10 w-32 bg-slate-200 rounded-xl"></div>
           <div className="h-10 w-28 bg-slate-200 rounded-xl"></div>
         </div>
-
-        {/* Columns Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1, 2, 3].map((col) => (
-            <div
-              key={col}
-              className="bg-white rounded-2xl border border-slate-200 p-4"
-            >
+            <div key={col} className="bg-white rounded-2xl border border-slate-200 p-4">
               <div className="h-6 w-32 bg-slate-200 rounded mb-5"></div>
-
               {[1, 2, 3].map((card) => (
-                <div
-                  key={card}
-                  className="bg-slate-50 rounded-xl p-4 mb-4"
-                >
+                <div key={card} className="bg-slate-50 rounded-xl p-4 mb-4">
                   <div className="h-4 bg-slate-200 rounded w-3/4"></div>
                   <div className="h-3 bg-slate-100 rounded w-1/2 mt-3"></div>
                   <div className="h-3 bg-slate-100 rounded w-1/3 mt-2"></div>
@@ -335,7 +330,7 @@ export default function KanbanBoard() {
         onSave={handleEditTask}
       />
 
-      {/* Header Card – only heading and New Task button */}
+      {/* Header */}
       <div className="bg-surface rounded-2xl shadow-sm border border-border-light p-5 mb-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -354,29 +349,18 @@ export default function KanbanBoard() {
         </div>
       </div>
 
-      {/* Filter buttons – separate div, centered */}
+      {/* Filters */}
       <div className="bg-surface rounded-2xl shadow-sm border border-border-light px-5 py-4 mb-6">
-
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-
-          {/* Search */}
           <div className="relative w-full lg:max-w-md">
-
-            <Search
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               placeholder="Search tasks..."
               value={searchQuery}
-              onChange={(e) =>
-                setSearchQuery(e.target.value)
-              }
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-11 pr-10 py-2.5 rounded-xl border border-border-light bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
             />
-
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
@@ -386,56 +370,44 @@ export default function KanbanBoard() {
               </button>
             )}
           </div>
-
-          {/* Filters */}
           <div className="flex flex-wrap gap-2">
-
             <button
               onClick={() => setTaskFilter("all")}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${taskFilter === "all"
-                ? "bg-primary text-white"
-                : "bg-white border border-border-light hover:bg-slate-50"
-                }`}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                taskFilter === "all" ? "bg-primary text-white" : "bg-white border border-border-light hover:bg-slate-50"
+              }`}
             >
               All Tasks
             </button>
-
             <button
               onClick={() => setTaskFilter("my")}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${taskFilter === "my"
-                ? "bg-primary text-white"
-                : "bg-white border border-border-light hover:bg-slate-50"
-                }`}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                taskFilter === "my" ? "bg-primary text-white" : "bg-white border border-border-light hover:bg-slate-50"
+              }`}
             >
               My Tasks
             </button>
-
             <button
               onClick={() => setTaskFilter("created")}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${taskFilter === "created"
-                ? "bg-primary text-white"
-                : "bg-white border border-border-light hover:bg-slate-50"
-                }`}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                taskFilter === "created" ? "bg-primary text-white" : "bg-white border border-border-light hover:bg-slate-50"
+              }`}
             >
               Created By Me
             </button>
-
             <button
               onClick={() => setTaskFilter("unassigned")}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${taskFilter === "unassigned"
-                ? "bg-primary text-white"
-                : "bg-white border border-border-light hover:bg-slate-50"
-                }`}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
+                taskFilter === "unassigned" ? "bg-primary text-white" : "bg-white border border-border-light hover:bg-slate-50"
+              }`}
             >
               Unassigned
             </button>
-
           </div>
         </div>
-
       </div>
 
-      {/* Kanban Columns */}
+      {/* Board */}
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="w-full">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
