@@ -98,7 +98,7 @@ function LeaveWorkspaceModal({ isOpen, onClose, onConfirm, workspace }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 `z-[110]`"
+            className="fixed inset-0 bg-black/40 z-[110]"
           />
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
@@ -257,7 +257,6 @@ export default function WorkspaceSettingsModal({
   workspace,
   onSave,
   onDelete,
-  isCreator,
   onTransferOwnership,
 }) {
   const navigate = useNavigate();
