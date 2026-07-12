@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api'; // Use your custom api instance rather than raw axios
 import { Loader2, AlertTriangle } from 'lucide-react';

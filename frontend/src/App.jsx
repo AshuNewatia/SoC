@@ -25,17 +25,17 @@ import Sidebar from "./components/sidebar/Sidebar";
 import Header from "./components/header/Header";
 import { useAuth } from "./context/authContext";
 import socket from "./services/socket"; 
-function ProtectedRoute() {
-  const { user, loading } = useAuth();
+// function ProtectedRoute() {
+//   const { user, loading } = useAuth();
   
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  return <Outlet />;
-}
+//   if (loading) {
+//     return <div className="flex items-center justify-center h-screen">Loading...</div>;
+//   }
+//   if (!user) {
+//     return <Navigate to="/login" replace />;
+//   }
+//   return <Outlet />;
+// }
 
 function AuthenticatedLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
