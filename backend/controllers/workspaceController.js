@@ -4,6 +4,7 @@ import { logActivity } from "./activityController.js";
 import { fetchGithubIssues } from '../services/githubService.js';
 import Task from '../models/Task.js';
 import { createAndSendNotification } from "../utils/notificationHelper.js";
+import crypto from "crypto"
 
 export const createWorkspace = async (req, res) => {
   try {
@@ -278,4 +279,52 @@ export const transferOwnership = async (req, res) => {
             message:"Internal server error"
         });
     }
+};
+
+export const getInviteToken = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) return res.status(404).json({ message: "Workspace not found" });
+ 
+    // if (workspace.createdBy.toString() !== req.user._id.toString()) {
+    //   return res.status(403).json({ message: "Only owners can generate invite links" });
+    // }
+
+    if (!workspace.inviteToken) {
+      workspace.inviteToken = new mongoose.Types.ObjectId().toString();
+      await workspace.save();
+    }
+
+    return res.status(200).json({ success: true, inviteToken: workspace.inviteToken });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error generating link." });
+  }
+};
+
+export const joinWorkspaceWithToken = async (req, res) => {
+  try {
+    const { inviteToken } = req.body;
+    const userId = req.user._id; 
+
+    const workspace = await Workspace.findOne({ inviteToken });
+    if (!workspace) {
+      return res.status(400).json({ success: false, message: "Invalid or expired invite link." });
+    }
+
+    const isAlreadyMember = workspace.members.some(id => id.toString() === userId.toString()) || 
+                             workspace.createdBy.toString() === userId.toString();
+                             
+    if (isAlreadyMember) {
+      return res.status(200).json({ success: true, workspaceId: workspace._id, message: "Already a member." });
+    }
+
+    workspace.members.push(userId);
+    await workspace.save();
+
+    return res.status(200).json({ success: true, workspaceId: workspace._id, message: "Successfully joined workspace!" });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error during join procedure." });
+  }
 };
