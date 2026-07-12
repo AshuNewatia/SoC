@@ -8,7 +8,7 @@ import { createAndSendNotification } from "../utils/notificationHelper.js";
 export const createWorkspace = async (req, res) => {
   try {
     const { name, description } = req.body;
-    const owner = req.user._id; // ✅ from JWT — secure
+    const owner = req.user._id; 
 
     if (!name || !name.trim()) {
       return res.status(400).json({ message: "Workspace name is required" });
@@ -186,4 +186,96 @@ export const deleteWorkspace = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
   }
+};
+
+export const leaveWorkspace = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    const userId = req.user._id; 
+
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) {
+      return res.status(404).json({ success: false, message: "Workspace not found" });
+    }
+
+    if (workspace.owner.toString() === userId.toString()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "As the creator, you cannot leave. Delete the workspace or transfer ownership first." 
+      });
+    }
+
+    const isMember = workspace.members.some(memberId => memberId.toString() === userId.toString());
+    if (!isMember) {
+      return res.status(400).json({ success: false, message: "You are not a member of this workspace" });
+    }
+
+    workspace.members = workspace.members.filter(
+      (memberId) => memberId.toString() !== userId.toString()
+    );
+
+    await workspace.save();
+
+    return res.status(200).json({ 
+      success: true, 
+      message: "Successfully left the workspace." 
+    });
+
+  } catch (error) {
+    console.error("Error leaving workspace:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+export const transferOwnership = async (req, res) => {
+    try {
+        const { workspaceId } = req.params;
+        const { newOwnerId } = req.body;
+
+        const workspace = await Workspace.findById(workspaceId);
+
+        if (!workspace)
+            return res.status(404).json({
+                success:false,
+                message:"Workspace not found"
+            });
+        if (String(workspace.owner) !== String(req.user._id)) {
+            return res.status(403).json({
+                success:false,
+                message:"Only the owner can transfer ownership."
+            });
+        }
+
+        const isMember = workspace.members.some(
+            m => String(m) === String(newOwnerId)
+        );
+
+        if (!isMember) {
+            return res.status(400).json({
+                success:false,
+                message:"New owner must already be a workspace member."
+            });
+        }
+
+        workspace.owner = newOwnerId;
+
+        if (!workspace.admins.some(a => String(a) === String(newOwnerId))) {
+            workspace.admins.push(newOwnerId);
+        }
+
+        await workspace.save();
+
+        return res.json({
+            success:true,
+            message:"Ownership transferred successfully."
+        });
+
+    } catch(err){
+        console.error(err);
+        return res.status(500).json({
+            success:false,
+            message:"Internal server error"
+        });
+    }
 };

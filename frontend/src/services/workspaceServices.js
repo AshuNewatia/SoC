@@ -14,3 +14,12 @@ export const updateWorkspace = (id, data) =>
 
 export const deleteWorkspace = (id) =>
   api.delete(`/api/workspaces/${id}`);
+
+export const transferOwnership = async (workspaceId, newOwnerId) => {
+  return api.patch(
+    `/api/workspaces/${workspaceId}/transfer-owner`,
+    {
+      newOwnerId,
+    }
+  );
+};
