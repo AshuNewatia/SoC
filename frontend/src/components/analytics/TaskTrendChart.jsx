@@ -12,6 +12,9 @@ import {
 import { getProductivity } from "../../services/analyticsService";
 
 export default function TaskTrendChart() {
+
+const user = JSON.parse(localStorage.getItem("user"));
+
   const [data, setData] = useState([]);
 
   useEffect(() => {
@@ -62,7 +65,9 @@ if (!data.length) {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-text-primary">
-            Task Completion Trend
+            {user.role === "professor"
+        ? "Task Completion Trend"
+        : "My Task History"}
           </h2>
 
           <p className="text-sm text-text-secondary mt-1">

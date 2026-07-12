@@ -1,50 +1,55 @@
 import React, { useEffect, useState } from "react";
-import { getPriorityStats } from "../../services/analyticsService";
+import { getWorkspacePriorityStats } from "../../../services/workspaceAnalyticsService";
 
 const COLORS = {
+  Critical: "bg-purple-500",
   High: "bg-red-500",
   Medium: "bg-blue-500",
   Low: "bg-green-500",
-  Critical: "bg-gray-500",
 };
 
 const DOTS = {
+  Critical: "bg-purple-500",
   High: "bg-red-500",
   Medium: "bg-blue-500",
   Low: "bg-green-500",
-  Critical: "bg-gray-500",
 };
 
-export default function PriorityChart() {
+export default function PriorityChart({workspaceId}) {
   const [data, setData] = useState([]);
 
-  useEffect(() => {
-    const fetchPriorityData = async () => {
-      try {
-        const { data } = await getPriorityStats();
+ useEffect(() => {
+  if (!workspaceId) return;
 
-        const sorted = [...data].sort((a, b) => {
-          const order = {
-            Critical:1,
-            High: 2,
-            Medium: 3,
-            Low: 4,
-          };
-
-          return order[a._id] - order[b._id];
-        });
-
-        setData(sorted);
-      } catch (error) {
-        console.error(
-          "Failed to fetch priority analytics",
-          error
+  const fetchPriorityData = async () => {
+    try {
+      const { data } =
+        await getWorkspacePriorityStats(
+          workspaceId
         );
-      }
-    };
 
-    fetchPriorityData();
-  }, []);
+      const sorted = [...data].sort((a, b) => {
+        const order = {
+          Critical: 1,
+          High: 2,
+          Medium: 3,
+          Low: 4,
+        };
+
+        return order[a._id] - order[b._id];
+      });
+
+      setData(sorted);
+    } catch (error) {
+      console.error(
+        "Failed to fetch workspace priority analytics",
+        error
+      );
+    }
+  };
+
+  fetchPriorityData();
+}, [workspaceId]);
 
   const totalTasks = data.reduce(
     (sum, item) => sum + item.count,
