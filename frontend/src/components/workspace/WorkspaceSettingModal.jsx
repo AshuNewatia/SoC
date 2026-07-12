@@ -98,7 +98,7 @@ function LeaveWorkspaceModal({ isOpen, onClose, onConfirm, workspace }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 z-[110]"
+            className="fixed inset-0 bg-black/40 `z-[110]`"
           />
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
@@ -263,14 +263,15 @@ export default function WorkspaceSettingsModal({
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [githubRepo, setGithubRepo] = useState("");
-  const [githubToken, setGithubToken] = useState("");
+  const [githubRepo, setGithubRepo] = useState(workspace?.githubRepo || "");
+  const [githubToken, setGithubToken] = useState(workspace?.githubToken || "");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [leaveLoading, setLeaveLoading] = useState(false);
   const [error, setError] = useState("");
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState("");
+  const [showGuide, setShowGuide] = useState(false);
 
 
   useEffect(() => {
@@ -436,50 +437,99 @@ export default function WorkspaceSettingsModal({
             </div>
 
             <hr className="border-slate-200" />
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <GitBranch size={18} className="text-primary" />
-                <h3 className="font-semibold text-slate-800">
-                  GitHub Integration
-                </h3>
-              </div>
-              <p className="text-sm text-slate-500">
-                Link this workspace to a GitHub repository to automatically sync task cards with repository issues.
-              </p>
+            {/* ===== GITHUB INTEGRATION CONTAINER ===== */}
+<div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+  <div className="flex items-center gap-2 mb-2">
+    <GitBranch size={18} className="text-primary" />
+    <h3 className="font-semibold text-slate-800">
+      GitHub Integration
+    </h3>
+  </div>
+  <p className="text-sm text-slate-500">
+    Link this workspace to a GitHub repository to automatically sync task cards with repository issues.
+  </p>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  GitHub Repository
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., AshuNewatia/CampusFlow"
-                  value={githubRepo}
-                  onChange={(e) => setGithubRepo(e.target.value)}
-                  className={inputClass}
-                />
-                <p className="text-xs text-slate-500 mt-2">
-                  Format: owner/repository-name
-                </p>
-              </div>
+  {/* GitHub Repository Input */}
+  <div>
+    <label className="block text-sm font-medium text-slate-700 mb-2">
+      GitHub Repository
+    </label>
+    <input
+      type="text"
+      placeholder="e.g., AshuNewatia/CampusFlow"
+      value={githubRepo}
+      onChange={(e) => setGithubRepo(e.target.value)}
+      className={inputClass}
+    />
+    <p className="text-xs text-slate-500 mt-2">
+      Format: owner/repository-name
+    </p>
+  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Personal Access Token (Classic)
-                </label>
-                <input
-                  type="password"
-                  placeholder="ghp_xxxxxxxxxxxxxxx"
-                  value={githubToken}
-                  onChange={(e) => setGithubToken(e.target.value)}
-                  className={inputClass}
-                />
-                <p className="text-xs text-slate-500 mt-2">
-                  Needs <span className="font-semibold">repo</span> permissions to create and manage issues.
-                </p>
-              </div>
-            </div>
+  {/* Personal Access Token Input */}
+  <div>
+    <label className="block text-sm font-medium text-slate-700 mb-2">
+      Personal Access Token (Classic)
+    </label>
+    <input
+      type="password"
+      placeholder="ghp_xxxxxxxxxxxxxxx"
+      value={githubToken}
+      onChange={(e) => setGithubToken(e.target.value)}
+      className={inputClass}
+    />
+    <p className="text-xs text-slate-500 mt-2">
+      Needs <span className="font-semibold">repo</span> permissions to create and manage issues.
+    </p>
+  </div>
+
+  {/* Collapsible Accordion Guide */}
+  <div className="border border-slate-200 bg-white rounded-xl overflow-hidden mt-2">
+    <button
+      type="button"
+      onClick={() => setShowGuide(!showGuide)}
+      className="w-full px-3 py-2 bg-slate-100/70 hover:bg-slate-100 flex items-center justify-between transition text-left"
+    >
+      <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wide flex items-center gap-1.5">
+        How to link repository?
+      </span>
+      <span className="text-[10px] text-slate-400 font-semibold">
+        {showGuide ? "Hide Steps ▲" : "Show Steps ▼"}
+      </span>
+    </button>
+
+    {showGuide && (
+      <div className="p-3 border-t border-slate-100 bg-white text-[11px] text-slate-500 space-y-2.5 leading-relaxed">
+        <div>
+          <span className="font-bold text-slate-700 block">1. Repository Format</span>
+          <p>Provide the core repository pathway without web prefixes. E.g. <code className="font-semibold text-slate-700">AshuNewatia/CampusFlow</code>.</p>
+        </div>
+        <div className="border-t border-slate-100 pt-1.5">
+          <span className="font-bold text-slate-700 block">2. Classic Tokens</span>
+          <p>Create a classic token target inside GitHub profile Settings → Developer Settings → Personal Access Tokens.</p>
+        </div>
+        <div className="border-t border-slate-100 pt-1.5">
+          <span className="font-bold text-slate-700 block">3. Token Scopes</span>
+          <p>Check the explicit <strong className="text-primary">repo</strong> permission box, click generate, copy the code string, and paste it above.</p>
+        </div>
+
+        {/* Dynamic Relative Asset PDF Link */}
+        <div className="border-t border-slate-100 pt-2 flex justify-start">
+          <a
+            href="/github-setup.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-semibold text-primary hover:underline transition"
+          >
+            Open Complete Setup PDF Guide →
+          </a>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
           </form>
+
 
 <div className="sticky bottom-0 bg-white border-t border-slate-200 px-7 py-5">
 

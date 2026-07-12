@@ -8,7 +8,7 @@ import crypto from "crypto"
 
 export const createWorkspace = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, githubRepo, githubToken } = req.body;
     const owner = req.user._id; 
 
     if (!name || !name.trim()) {
@@ -21,6 +21,8 @@ export const createWorkspace = async (req, res) => {
       owner,
       admins: [],
       members: [owner], 
+      githubRepo: githubRepo ? githubRepo.trim() : "",
+      githubToken: githubToken ? githubToken.trim() : "",
     });
 
     await workspace.save();
@@ -115,6 +117,8 @@ export const updateWorkspace = async (req, res) => {
 
     workspace.name = name?.trim() || workspace.name;
     workspace.description = description !== undefined ? description : workspace.description;
+    workspace.githubRepo = githubRepo !== undefined ? githubRepo : workspace.githubRepo;
+    workspace.githubToken = githubToken !== undefined ? githubToken : workspace.githubToken;
 
     if (githubRepo !== undefined) workspace.githubRepo = githubRepo;
     if (githubToken !== undefined) workspace.githubToken = githubToken;
