@@ -15,6 +15,7 @@ import quickNoteRoutes from "./routes/quickNoteRoutes.js";
 import personalActivityRoutes from "./routes/personalActivityRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js"
 import webhookRoutes from "./routes/webhookRoutes.js"
+import myBoardRoutes from "./routes/myBoardRoutes.js";
 
 dotenv.config();
 
@@ -52,6 +53,7 @@ app.use("/api/notes", quickNoteRoutes);
 app.use("/api/personal-activity", personalActivityRoutes);
 app.use('/api', taskRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/my-board", myBoardRoutes);
 
 app.get("/", (req, res) => {
   res.send("CampusFlow Backend Running 🚀");
