@@ -30,6 +30,9 @@ import {
   createPersonalActivity,
 } from "../api/personalActivityApi";
 
+import { getMyBoardTasks } from "../api/myBoardApi";
+import { updateTaskStatus } from "../api/taskApi";
+
 const STORAGE_KEY = "myboard_tasks";
 
 
@@ -43,11 +46,28 @@ export default function MyBoard() {
     completed: [],
   });
 
+  // added
+  const [boardFilter, setBoardFilter] = useState("personal");
+  const [counts, setCounts] = useState({
+    personal: 0,
+    assigned: 0,
+    all: 0,
+  });
+
   const loadTasks = async () => {
     try {
-      const data = await getMyTasks();
+      const response = await getMyBoardTasks(boardFilter);
 
-      const taskList = Array.isArray(data) ? data : data.tasks ?? [];
+      const data = response.data;
+
+      // Save the counts
+      setCounts(
+        data.counts || {
+          personal: 0,
+          assigned: 0,
+          all: 0,
+        }
+      );
 
       const grouped = {
         todo: [],
@@ -55,9 +75,7 @@ export default function MyBoard() {
         completed: [],
       };
 
-      const taskArray = Array.isArray(data)
-        ? data
-        : data?.tasks || [];
+      const taskArray = data.tasks || [];
 
       taskArray.forEach((task) => {
         if (grouped[task.status]) {
@@ -81,7 +99,7 @@ export default function MyBoard() {
 
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [boardFilter]);
 
 
   const [showModal, setShowModal] = useState(false);
@@ -140,9 +158,21 @@ export default function MyBoard() {
     };
 
     try {
-      await updatePersonalTask(movedTask._id, {
-        status: destination.droppableId,
-      });
+
+      if (movedTask.taskType === "personal") {
+
+        await updatePersonalTask(movedTask._id, {
+          status: destination.droppableId,
+        });
+
+      } else if (movedTask.taskType === "workspace") {
+
+        await updateTaskStatus(movedTask._id, {
+          status: destination.droppableId,
+        });
+
+      }
+
     } catch (error) {
       console.error(error);
     }
@@ -429,6 +459,7 @@ export default function MyBoard() {
           </div>
           <button
             onClick={() => setShowModal(true)}
+            disabled={boardFilter !== "personal"}
             className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-xl font-medium transition shadow-sm text-sm"
           >
             <Plus size={16} />
@@ -708,68 +739,68 @@ export default function MyBoard() {
             <div className="text-xs font-medium px-3 py-1 rounded-full bg-primary/10 text-primary">
               {stats.total} Total
             </div>
-        </div>
-        {/* Distribution */}
-        <div className="space-y-5 flex-1">
-          {taskDistribution.map((item) => {
-            const colors = {
-              "To Do": {
-                dot: "bg-slate-400",
-                bar: "bg-slate-400",
-                light: "bg-slate-100",
-              },
-              "In Progress": {
-                dot: "bg-blue-500",
-                bar: "bg-blue-500",
-                light: "bg-blue-100",
-              },
-              Completed: {
-                dot: "bg-green-500",
-                bar: "bg-green-500",
-                light: "bg-green-100",
-              },
-            };
+          </div>
+          {/* Distribution */}
+          <div className="space-y-5 flex-1">
+            {taskDistribution.map((item) => {
+              const colors = {
+                "To Do": {
+                  dot: "bg-slate-400",
+                  bar: "bg-slate-400",
+                  light: "bg-slate-100",
+                },
+                "In Progress": {
+                  dot: "bg-blue-500",
+                  bar: "bg-blue-500",
+                  light: "bg-blue-100",
+                },
+                Completed: {
+                  dot: "bg-green-500",
+                  bar: "bg-green-500",
+                  light: "bg-green-100",
+                },
+              };
 
-            const color = colors[item.label];
+              const color = colors[item.label];
 
-            return (
-              <div key={item.label}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-3 h-3 rounded-full ${color.dot}`} />
+              return (
+                <div key={item.label}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${color.dot}`} />
 
-                    <span className="font-medium text-text-primary">
-                      {item.label}
+                      <span className="font-medium text-text-primary">
+                        {item.label}
+                      </span>
+                    </div>
+
+                    <span
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-full ${color.light}`}
+                    >
+                      {item.count}
                     </span>
                   </div>
 
-                  <span
-                    className={`text-xs font-semibold px-2.5 py-1 rounded-full ${color.light}`}
-                  >
-                    {item.count}
-                  </span>
-                </div>
+                  <div className="relative h-2 rounded-full bg-border-light overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${color.bar}`}
+                      style={{
+                        width: `${maxTasks ? (item.count / maxTasks) * 100 : 0}%`,
+                      }}
+                    />
+                  </div>
 
-                <div className="relative h-2 rounded-full bg-border-light overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ${color.bar}`}
-                    style={{
-                      width: `${maxTasks ? (item.count / maxTasks) * 100 : 0}%`,
-                    }}
-                  />
+                  <div className="mt-1 text-right text-xs text-text-secondary">
+                    {stats.total
+                      ? Math.round((item.count / stats.total) * 100)
+                      : 0}
+                    %
+                  </div>
                 </div>
-
-                <div className="mt-1 text-right text-xs text-text-secondary">
-                  {stats.total
-                    ? Math.round((item.count / stats.total) * 100)
-                    : 0}
-                  %
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
       </div>
 
       {/* Recent Activity */}
@@ -863,7 +894,49 @@ export default function MyBoard() {
 
       {/* Personal Kanban */}
 
-      <h2 className="text-lg font-semibold text-text-primary mb-4">Personal Tasks</h2>
+      <div className="flex items-center justify-between mb-4">
+
+        <h2 className="text-lg font-semibold text-text-primary">
+          My Board
+        </h2>
+
+        <div className="flex gap-2">
+
+          <button
+            onClick={() => setBoardFilter("personal")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${boardFilter === "personal"
+              ? "bg-primary text-white"
+              : "bg-slate-100 text-slate-700"
+              }`}
+          >
+            My Personal Tasks({counts.personal})
+          </button>
+
+          <button
+            onClick={() => setBoardFilter("assigned")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${boardFilter === "assigned"
+              ? "bg-primary text-white"
+              : "bg-slate-100 text-slate-700"
+              }`}
+          >
+            Assigned To Me ({counts.assigned})
+          </button>
+
+          <button
+            onClick={() => setBoardFilter("all")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${boardFilter === "all"
+              ? "bg-primary text-white"
+              : "bg-slate-100 text-slate-700"
+              }`}
+          >
+            All Tasks ({counts.all})
+          </button>
+
+        </div>
+
+      </div>
+
+
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="grid lg:grid-cols-3 gap-5">
           <BoardColumn

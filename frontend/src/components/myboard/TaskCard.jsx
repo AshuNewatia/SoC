@@ -1,97 +1,136 @@
 import React from "react";
-import { Calendar, Trash2, Pencil } from "lucide-react";
+import {
+  Calendar,
+  Pencil,
+  Trash2,
+  FolderKanban,
+  Tag,
+} from "lucide-react";
 
 export default function TaskCard({ task, onDelete, onOpen }) {
-  const isOverdue =
-    task.dueDate && new Date(task.dueDate) < new Date();
-
-  const priorityStyles = {
-    Low: "bg-green-100 text-green-700",
-    Medium: "bg-yellow-100 text-yellow-700",
-    High: "bg-red-100 text-red-700",
+  const priorityColors = {
+    Low: "text-green-600 bg-green-50",
+    Medium: "text-yellow-700 bg-yellow-50",
+    High: "text-orange-700 bg-orange-50",
+    Critical: "text-red-600 bg-red-50",
   };
 
-  const tagStyles = {
-    Frontend: "bg-blue-100 text-blue-700",
-    Backend: "bg-purple-100 text-purple-700",
-    Bug: "bg-red-100 text-red-700",
-    Feature: "bg-green-100 text-green-700",
-    Research: "bg-yellow-100 text-yellow-700",
-    Design: "bg-pink-100 text-pink-700",
-    General: "bg-slate-100 text-slate-700",
-  };
+  const overdue =
+    task.dueDate &&
+    new Date(task.dueDate) < new Date();
 
   return (
-    <div
-      className="bg-surface rounded-xl border border-border-light p-4 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 cursor-pointer"
-    >
+    <div className="group bg-white rounded-xl border border-slate-200 hover:border-blue-300 hover:shadow-lg transition-all duration-200 p-4">
+
       {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-2">
-        <h3 className="font-semibold text-text-primary text-sm line-clamp-2">
+      <div className="flex justify-between items-start">
+
+        <h3 className="font-semibold text-slate-800 text-[15px] leading-5 line-clamp-2">
           {task.title}
         </h3>
+
         <span
-          className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityStyles[task.priority] || "bg-slate-100 text-slate-700"
+          className={`text-[11px] px-2 py-1 rounded-md font-medium ${priorityColors[task.priority]
             }`}
         >
           {task.priority}
         </span>
+
       </div>
 
       {/* Description */}
+
       {task.description && (
-        <p className="text-xs text-text-secondary mb-3 line-clamp-2">
+        <p className="mt-3 text-sm text-slate-500 line-clamp-2 leading-5">
           {task.description}
         </p>
       )}
 
-      {/* Due Date */}
-      <div className="flex items-center gap-1.5 text-xs text-text-secondary mb-3">
-        <Calendar size={12} />
-        <span className={isOverdue ? "text-red-500 font-medium" : ""}>
-          {task.dueDate
-            ? new Date(task.dueDate).toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
-            : "No due date"}
-        </span>
-      </div>
+      {/* Divider */}
 
-      {/* Footer */}
-      <div className="flex items-center justify-between">
-        <span
-          className={`text-xs px-2 py-1 rounded-md font-medium ${tagStyles[task.tag] || "bg-slate-100 text-slate-700"
+      <div className="my-4 border-t border-slate-100"></div>
+
+      {/* Workspace */}
+
+      <div className="space-y-2 text-xs">
+
+        {task.taskType === "workspace" ? (
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] uppercase tracking-wide text-blue-500 font-semibold">
+              Workspace Task
+            </span>
+
+            <div className="flex items-center gap-2">
+              <FolderKanban size={14} className="text-slate-500" />
+              <span className="text-sm font-medium text-slate-600">
+                {task.workspaceName}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="text-green-600 font-medium">
+            Personal Task
+          </div>
+        )}
+        {task.taskType === "personal" && (
+          <div className="flex items-center gap-2 text-slate-600">
+            <Tag size={14} />
+            {task.tag || "No Tag"}
+          </div>
+        )}
+
+        <div
+          className={`flex items-center gap-2 ${overdue
+            ? "text-red-500"
+            : "text-slate-500"
             }`}
         >
-          {task.tag}
-        </span>
+          <Calendar size={14} />
 
-        <div className="flex items-center gap-2">
+          {task.dueDate
+            ? new Date(task.dueDate).toLocaleDateString(
+              "en-IN",
+              {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              }
+            )
+            : "No due date"}
+        </div>
+
+      </div>
+
+      {/* Actions */}
+
+      {task.taskType === "personal" && (
+
+        <div className="mt-4 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition">
 
           <button
             onClick={(e) => {
               e.stopPropagation();
               onOpen(task);
             }}
-            className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-1.5 rounded transition"
+            className="p-2 rounded-lg hover:bg-blue-50 text-slate-500 hover:text-blue-600"
           >
             <Pencil size={16} />
           </button>
-
 
           <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete(task._id);
             }}
-            className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1 rounded transition"
+            className="p-2 rounded-lg hover:bg-red-50 text-slate-500 hover:text-red-600"
           >
-            <Trash2 size={14} />
+            <Trash2 size={16} />
           </button>
+
         </div>
-      </div>
+
+      )}
+
     </div>
   );
 }
