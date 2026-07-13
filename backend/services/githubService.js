@@ -57,15 +57,20 @@ export const updateGithubIssueState = async (token, repoString, issueNumber, sta
   if (!token || !repoString || !issueNumber) return null;
   const [owner, repo] = repoString.split("/");
 
-  const githubState = state === "Done" ? "closed" : "open";
+  const normalizedState = String(state).toLowerCase();
+  const githubState = (normalizedState === "done" || normalizedState === "completed") ? "closed" : "open";
+
 
   try {
     const octokit = getOctokit(token);
     await octokit.rest.issues.update({
       owner,
       repo,
-      issue_number: issueNumber,
+      issue_number: Number(issueNumber), 
       state: githubState,
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28", 
+      },
     });
   } catch (error) {
     console.error(`Failed to update GitHub issue #${issueNumber}:`, error.message);
