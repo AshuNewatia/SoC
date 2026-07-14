@@ -10,6 +10,7 @@ import {
   getWorkspaceInsights,
   getWorkspaceDeadlines,
   getCSVReport,
+  getWorkspaceGithubAnalytics,
 } from "../controllers/workspaceAnalyticsController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -73,6 +74,7 @@ router.get(
 );
 
 router.get("/:workspaceId/CSV",protect,getCSVReport);
+router.get("/github-stats", getWorkspaceGithubAnalytics);
 
 
 export default router;
