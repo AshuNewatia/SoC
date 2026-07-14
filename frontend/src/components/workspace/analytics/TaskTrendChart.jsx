@@ -11,6 +11,7 @@ import {
 } from "recharts";
 
 import { getWorkspaceCompletionTrend } from "../../../services/workspaceAnalyticsService";
+import Skeleton from "../../common/Skeleton";
 
 
 export default function TaskTrendChart({
@@ -21,26 +22,26 @@ export default function TaskTrendChart({
 
 
   useEffect(() => {
-  if (!workspaceId) return;
+    if (!workspaceId) return;
 
-  const fetchTrendData = async () => {
-    try {
-      const { data } =
-        await getWorkspaceCompletionTrend(workspaceId);
+    const fetchTrendData = async () => {
+      try {
+        const { data } =
+          await getWorkspaceCompletionTrend(workspaceId);
 
-      setData(data);
-    } catch (error) {
-      console.error(
-        "Failed to fetch workspace completion trend",
-        error
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+        setData(data);
+      } catch (error) {
+        console.error(
+          "Failed to fetch workspace completion trend",
+          error
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchTrendData();
-}, [workspaceId]);
+    fetchTrendData();
+  }, [workspaceId]);
 
   const totalCompleted = data.reduce(
     (sum, item) => sum + item.completed,
@@ -50,12 +51,26 @@ export default function TaskTrendChart({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <div className="h-[360px] bg-slate-100 animate-pulse rounded-xl" />
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+
+        <Skeleton className="h-7 w-52" />
+
+        <Skeleton className="h-4 w-56 mt-3" />
+
+        <div className="flex justify-between mt-6">
+
+          <div>
+            <Skeleton className="h-8 w-10" />
+            <Skeleton className="h-3 w-16 mt-2" />
+          </div>
+
+        </div>
+
+        <Skeleton className="h-80 rounded-xl mt-6" />
+
       </div>
     );
   }
-
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
@@ -85,11 +100,28 @@ export default function TaskTrendChart({
 
 
       {data.length === 0 ? (
-        <div className="h-[320px] flex items-center justify-center text-text-secondary">
-          No completed tasks in the last 7 days
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10">
+
+          <div className="flex flex-col items-center justify-center h-80 text-center">
+
+            <Calendar
+              size={42}
+              className="text-slate-400"
+            />
+
+            <h3 className="mt-5 text-lg font-semibold text-text-primary">
+              No Completion History
+            </h3>
+
+            <p className="mt-2 text-sm text-text-secondary max-w-sm">
+              Complete some tasks to generate productivity trends.
+            </p>
+
+          </div>
+
         </div>
       ) : (
-        <div className="h-[320px]">
+        <div className="h-80">
           <ResponsiveContainer
             width="100%"
             height="100%"

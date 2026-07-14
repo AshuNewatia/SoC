@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { GitCommit, GitPullRequest, GitMerge } from "lucide-react";
+import Skeleton from "../../common/Skeleton";
 
 export default function GithubAnalytics({ githubRepo, workspaceId }) {
   const [repoData, setRepoData] = useState(null);
@@ -37,18 +38,36 @@ export default function GithubAnalytics({ githubRepo, workspaceId }) {
     fetchGitStats();
   }, [githubRepo, workspaceId]); 
 
-  if (loading) {
+ if (loading) {
     return (
-      <div className="bg-white border border-border-light rounded-2xl p-6 my-4 animate-pulse">
-        <div className="h-5 bg-slate-200 rounded w-1/3 mb-4"></div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="h-20 bg-slate-50 rounded-xl"></div>
-          <div className="h-20 bg-slate-50 rounded-xl"></div>
-          <div className="h-20 bg-slate-50 rounded-xl"></div>
+        <div className="bg-white border border-border-light rounded-2xl p-6 shadow-sm">
+
+            <Skeleton className="h-6 w-52"/>
+
+            <Skeleton className="h-4 w-40 mt-3"/>
+
+            <div className="grid md:grid-cols-3 gap-5 mt-8">
+
+                {[1,2,3].map((item)=>(
+                    <div
+                        key={item}
+                        className="border rounded-xl p-5"
+                    >
+
+                        <Skeleton className="w-12 h-12 rounded-xl"/>
+
+                        <Skeleton className="h-8 w-20 mt-5"/>
+
+                        <Skeleton className="h-3 w-28 mt-3"/>
+
+                    </div>
+                ))}
+
+            </div>
+
         </div>
-      </div>
     );
-  }
+}
 
   if (error) {
     return (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import { formatDistanceToNow, format } from 'date-fns';
+import Skeleton from '../common/Skeleton';
 import {
   UserPlus,
   UserMinus,
@@ -31,15 +32,15 @@ export default function WorkspaceActivity() {
   // ------------------------------------------------
 
   const fetchActivities = async () => {
-      try {
-        const res = await api.get(`/api/workspaces/${id}/activity`);
-        setActivities(Array.isArray(res.data) ? res.data : []);
-      } catch (err) {
-        console.error('Failed to fetch activity log:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    try {
+      const res = await api.get(`/api/workspaces/${id}/activity`);
+      setActivities(Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error('Failed to fetch activity log:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchActivities();
@@ -49,7 +50,7 @@ export default function WorkspaceActivity() {
     }
 
     return () => {
-      if (socket) socket.off('activity_updated',fetchActivities);
+      if (socket) socket.off('activity_updated', fetchActivities);
     };
   }, [id, socket]);
 
@@ -229,13 +230,55 @@ export default function WorkspaceActivity() {
       {/* Activity Feed */}
       <div className="max-h-[70vh] overflow-y-auto bg-white">
         {loading ? (
-          <div className="p-8 text-center text-slate-500">Loading live activity...</div>
+          <div className="p-6">
+
+            {[1, 2, 3, 4, 5, 6].map((item) => (
+              <div
+                key={item}
+                className="relative flex gap-4 py-5"
+              >
+
+                {/* Timeline */}
+                {item !== 6 && (
+                  <div className="absolute left-5 top-14 bottom-0 w-px bg-slate-200" />
+                )}
+                {/* Avatar */}
+                <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+                {/* Content */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-4 flex-1 max-w-sm" />
+                  </div>
+                  <div className="flex gap-3 mt-3">
+                    <Skeleton className="h-3 w-28" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </div>
+              </div>))}
+          </div>
         ) : Object.keys(groupedActivities).length === 0 ? (
-          <div className="p-8 text-center text-slate-500">
-            <p className="text-lg mb-2">🚀 No activity yet</p>
-            <p className="text-sm">
-              Activity will appear here when members create tasks, complete work, or manage the workspace.
+          <div className="flex flex-col items-center justify-center h-[420px] px-6 text-center">
+
+            <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-6">
+
+              <Clock
+                size={34}
+                className="text-primary"
+              />
+
+            </div>
+
+            <h3 className="text-2xl font-semibold text-text-primary">
+              No Activity Yet
+            </h3>
+
+            <p className="text-text-secondary mt-3 max-w-md leading-relaxed">
+              Workspace activity will appear here whenever members create,
+              update, complete, assign tasks or make changes inside the
+              workspace.
             </p>
+
           </div>
         ) : (
           Object.entries(groupedActivities).map(([groupLabel, items]) => (

@@ -6,7 +6,7 @@ export default function EmptyState({
   description = "Data will appear here once your workspace becomes active.",
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm h-[360px] flex items-center justify-center">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm h-90 flex items-center justify-center">
       <div className="text-center max-w-sm px-8">
 
         <div className="mx-auto w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">

@@ -8,6 +8,7 @@ import {
 
 import KPIStatCard from "./KPIStatCard";
 import { getOverview } from "../../services/analyticsService";
+import Skeleton from "../common/Skeleton";
 
 export default function KPISection() {
   const [stats, setStats] = useState({
@@ -38,16 +39,29 @@ export default function KPISection() {
 
   if (loading) {
     return (
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        {[1, 2, 3, 4].map((item) => (
-          <div
-            key={item}
-            className="h-32 rounded-2xl border border-border-light animate-pulse"
-          />
-        ))}
-      </div>
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {[1,2,3,4].map((item)=>(
+                <div
+                    key={item}
+                    className="rounded-2xl border border-border-light bg-surface p-5 shadow-sm"
+                >
+                    <Skeleton className="h-1 w-12 rounded-full mb-5"/>
+
+                    <div className="flex justify-between">
+
+                        <div className="space-y-4">
+                            <Skeleton className="h-4 w-24"/>
+                            <Skeleton className="h-8 w-16"/>
+                            <Skeleton className="h-3 w-28"/>
+                        </div>
+
+                        <Skeleton className="w-11 h-11 rounded-xl"/>
+                    </div>
+                </div>
+            ))}
+        </div>
     );
-  }
+}
 
   return (
     <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">

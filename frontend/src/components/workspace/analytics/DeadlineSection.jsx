@@ -9,6 +9,7 @@ import {
 import {
   getWorkspaceDeadlines,
 } from "../../../services/workspaceAnalyticsService";
+import Skeleton from "../../common/Skeleton";
 
 export default function DeadlineSection({ workspaceId }) {
   const [data, setData] = useState({
@@ -40,21 +41,42 @@ export default function DeadlineSection({ workspaceId }) {
     fetchDeadlines();
   }, [workspaceId]);
 
-  if (loading) {
+ if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-        <div className="animate-pulse">
-          <div className="h-6 w-52 bg-slate-200 rounded" />
-          <div className="h-4 w-72 bg-slate-100 rounded mt-3" />
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
 
-          <div className="grid lg:grid-cols-2 gap-5 mt-6">
-            <div className="h-64 bg-slate-100 rounded-xl" />
-            <div className="h-64 bg-slate-100 rounded-xl" />
-          </div>
+            <Skeleton className="h-7 w-52"/>
+
+            <Skeleton className="h-4 w-72 mt-3"/>
+
+            <div className="grid lg:grid-cols-2 gap-6 mt-8">
+
+                {[1,2].map((col)=>(
+                    <div key={col}>
+
+                        <Skeleton className="h-5 w-40 mb-5"/>
+
+                        {[1,2,3].map((card)=>(
+                            <div
+                                key={card}
+                                className="border rounded-xl p-4 mb-3"
+                            >
+
+                                <Skeleton className="h-4 w-40"/>
+
+                                <Skeleton className="h-3 w-24 mt-3"/>
+
+                            </div>
+                        ))}
+
+                    </div>
+                ))}
+
+            </div>
+
         </div>
-      </div>
     );
-  }
+}
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -109,7 +131,7 @@ export default function DeadlineSection({ workspaceId }) {
           </div>
 
 
-          <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
 
             {!data.overdue?.length ? (
               <div className="h-48 flex flex-col items-center justify-center text-center">
@@ -169,11 +191,24 @@ export default function DeadlineSection({ workspaceId }) {
           </div>
 
 
-          <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
 
             {!data.upcoming?.length ? (
-              <div className="h-48 flex items-center justify-center text-sm text-text-secondary">
-                No upcoming deadlines
+              <div className="h-56 flex flex-col items-center justify-center text-center">
+
+                <CalendarDays
+                  size={34}
+                  className="text-blue-500"
+                />
+
+                <h3 className="mt-4 font-semibold text-text-primary">
+                  Nothing Upcoming
+                </h3>
+
+                <p className="text-sm text-text-secondary mt-2 max-w-xs">
+                  No deadlines are scheduled for the next few days.
+                </p>
+
               </div>
             ) : (
               data.upcoming.map((task) => (
@@ -213,13 +248,13 @@ function TaskDeadlineItem({ task, overdue = false }) {
 
             {task.dueDate
               ? new Date(task.dueDate).toLocaleDateString(
-                  "en-IN",
-                  {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  }
-                )
+                "en-IN",
+                {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                }
+              )
               : "No deadline"}
 
           </div>
@@ -228,11 +263,10 @@ function TaskDeadlineItem({ task, overdue = false }) {
 
 
         <span
-          className={`shrink-0 px-2 py-1 rounded-lg text-xs font-medium ${
-            overdue
+          className={`shrink-0 px-2 py-1 rounded-lg text-xs font-medium ${overdue
               ? "bg-red-50 text-red-600"
               : "bg-blue-50 text-blue-600"
-          }`}
+            }`}
         >
           {overdue ? "Overdue" : "Upcoming"}
         </span>
