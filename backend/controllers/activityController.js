@@ -1,4 +1,5 @@
 import ActivityLog from "../models/ActivityLog.js";
+import Workspace from "../models/Workspace.js";
 
 export const getWorkspaceActivities = async (req, res) => {
   try {
@@ -6,9 +7,9 @@ export const getWorkspaceActivities = async (req, res) => {
 
     const activities = await ActivityLog.find({ workspaceId: id })
       .populate("userId", "name email avatar")
-      .populate("workspaceId", "name") 
-      .sort({ createdAt: -1 }) 
-      .limit(50); 
+      .populate("workspaceId", "name")
+      .sort({ createdAt: -1 })
+      .limit(50);
 
     res.status(200).json(activities);
   } catch (error) {
@@ -25,7 +26,10 @@ export const logActivity = async (workspaceId, userId, actionType, description) 
       actionType,
       description,
     });
-    
+
+    await Workspace.findByIdAndUpdate(workspaceId, {
+      lastActivityAt: new Date()
+    })
     return newActivity;
   } catch (error) {
     console.error("Failed to log activity:", error);

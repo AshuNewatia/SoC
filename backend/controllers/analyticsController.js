@@ -742,7 +742,6 @@ const tasks = await Task.find({
       "Content-Disposition",
       'attachment; filename="tasks.csv"'
     );
-
     return res.send("\uFEFF" + csvContent);
 
   } catch (error) {
