@@ -2,7 +2,7 @@ import Task from "../models/Task.js";
 import Workspace from "../models/Workspace.js";
 import User from "../models/User.js";
 import mongoose from "mongoose";
-
+import axios from 'axios'
 // ======================================================
 // HELPER 1: FIND WORKSPACE AND USER ROLE
 // ======================================================
@@ -596,5 +596,72 @@ export const getCSVReport = async (req, res) => {
   } catch (error) {
     console.error("CSV export error:", error);
     return res.status(500).json({ message: "Failed to generate CSV report" });
+  }
+};
+
+export const getWorkspaceGithubAnalytics = async (req, res) => {
+  try {
+    const repoPath = req.query.repo;
+    if (!repoPath || repoPath === "undefined") {
+      return res.status(400).json({ 
+        success: false, 
+        message: "No GitHub repository path was provided to the analytics engine." 
+      });
+    }
+
+    const token = process.env.GITHUB_GLOBAL_TOKEN; 
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+ 
+    let totalCommits = 0;
+    try {
+      const commitRes = await axios.get(`https://api.github.com/repos/${repoPath}/commits?per_page=1`, { headers });
+      const linkHeader = commitRes.headers.link;
+      if (linkHeader) {
+        const match = linkHeader.match(/&page=(\d+)[^>]*>;\s*rel="last"/);
+        totalCommits = match ? parseInt(match[1], 10) : 1;
+      } else {
+        totalCommits = commitRes.data.length;
+      }
+    } catch (err) {
+      console.error("Error fetching commits count:", err.message);
+    }
+
+    let openPRs = 0;
+    try {
+      const openPrRes = await axios.get(`https://api.github.com/repos/${repoPath}/pulls?state=open&per_page=1`, { headers });
+      const linkHeader = openPrRes.headers.link;
+      if (linkHeader) {
+        const match = linkHeader.match(/&page=(\d+)[^>]*>;\s*rel="last"/);
+        openPRs = match ? parseInt(match[1], 10) : 1;
+      } else {
+        openPRs = openPrRes.data.length;
+      }
+    } catch (err) {}
+
+    let closedPRs = 0;
+    try {
+      const closedPrRes = await axios.get(`https://api.github.com/repos/${repoPath}/pulls?state=closed&per_page=1`, { headers });
+      const linkHeader = closedPrRes.headers.link;
+      if (linkHeader) {
+        const match = linkHeader.match(/&page=(\d+)[^>]*>;\s*rel="last"/);
+        closedPRs = match ? parseInt(match[1], 10) : 1;
+      } else {
+        closedPRs = closedPrRes.data.length;
+      }
+    } catch (err) {}
+    return res.status(200).json({
+      success: true,
+      repository: repoPath,
+      stats: {
+        totalCommits,
+        openPRs,
+        closedPRs,
+        totalPRs: openPRs + closedPRs
+      }
+    });
+
+  } catch (error) {
+    console.error("GitHub Analytics error:", error);
+    return res.status(500).json({ message: "Failed to load repo statistics." });
   }
 };

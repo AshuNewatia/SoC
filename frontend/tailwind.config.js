@@ -1,7 +1,9 @@
 // tailwind.config.js
 export default {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      fontFamily: ['Roborto', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       colors: {
         primary: '#0EA5E9',
         'primary-hover': '#0284C7',
