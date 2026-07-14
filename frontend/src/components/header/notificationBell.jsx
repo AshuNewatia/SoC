@@ -106,37 +106,42 @@ export default function NotificationBell() {
               </div>
             ) : (
               notifications.map((notif) => (
-                <div 
-                  key={notif._id || Math.random()} 
-                  className={`p-4 flex gap-3 hover:bg-slate-50/60 transition relative group ${
-                    !notif.isRead ? "bg-blue-50/20" : ""
-                  }`}
-                >
-                  <div className="shrink-0 mt-0.5">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-                      <MessageSquare size={16} />
-                    </div>
-                  </div>
+  <div 
+    key={notif._id || Math.random()} 
+    className={`p-4 flex gap-3 hover:bg-slate-50/60 transition relative group ${
+      !notif.isRead ? "bg-blue-50/20" : ""
+    }`}
+  >
+    <div className="shrink-0 mt-0.5">
+      {notif.type === "OWNERSHIP_TRANSFERRED" ? (
+        <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-base shadow-xs">
+          👑
+        </div>
+      ) : (
+        <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shadow-xs">
+          <MessageSquare size={16} />
+        </div>
+      )}
+    </div>
 
-                  <div className="flex-1 space-y-1 pr-4 font-sans">
-                    <p className={`text-xs leading-relaxed wrap-break-word ${
-                      !notif.isRead ? "text-slate-900 font-medium" : "text-slate-600"
-                    }`}>
-                      {notif.message}
-                    </p>
-                    
-                    <span className="text-[10px] text-slate-400 block mt-1">
-                      {new Date(notif.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })} at {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-
-                  {!notif.isRead && (
-                    <div className="absolute right-4 top-5">
-                      <Circle size={6} className="fill-blue-600 text-blue-600" />
-                    </div>
-                  )}
-                </div>
-              ))
+    <div className="flex-1 space-y-1 pr-4 font-sans">
+      <p className={`text-xs leading-relaxed break-words ${
+        !notif.isRead ? "text-slate-900 font-medium" : "text-slate-600"
+      }`}>
+        {notif.message}
+      </p>
+      
+      <span className="text-[10px] text-slate-400 block mt-1">
+        {new Date(notif.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })} at {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+      </span>
+    </div>
+    {!notif.isRead && (
+      <div className="absolute right-4 top-5">
+        <Circle size={6} className="fill-blue-600 text-blue-600" />
+      </div>
+    )}
+  </div>
+))
             )}
           </div>
 

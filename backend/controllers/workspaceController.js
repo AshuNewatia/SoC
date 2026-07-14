@@ -5,6 +5,7 @@ import { fetchGithubIssues } from '../services/githubService.js';
 import Task from '../models/Task.js';
 import { createAndSendNotification } from "../utils/notificationHelper.js";
 import crypto from "crypto"
+import ActivityLog from "../models/ActivityLog.js";
 
 export const createWorkspace = async (req, res) => {
   try {
@@ -237,6 +238,7 @@ export const transferOwnership = async (req, res) => {
     try {
         const { workspaceId } = req.params;
         const { newOwnerId } = req.body;
+        const currentOwnerId = req.user._id;
 
         const workspace = await Workspace.findById(workspaceId);
 
@@ -263,6 +265,18 @@ export const transferOwnership = async (req, res) => {
             });
         }
 
+        let newOwnerName = "a member";
+        try {
+            if (newOwnerId) {
+                const newOwnerUser = await User.findById(newOwnerId).select("name");
+                if (newOwnerUser?.name) {
+                    newOwnerName = newOwnerUser.name;
+                }
+            }
+        } catch (userErr) {
+               console.error("Non-blocking error fetching new owner name:", userErr.message);
+          }
+
         workspace.owner = newOwnerId;
 
         if (!workspace.admins.some(a => String(a) === String(newOwnerId))) {
@@ -270,11 +284,35 @@ export const transferOwnership = async (req, res) => {
         }
 
         await workspace.save();
+        const logEntry = await ActivityLog.create({
+            workspaceId: workspaceId,
+            userId: currentOwnerId,
+            actionType: "OWNERSHIP_TRANSFERRED",
+            description: `transferred ownership of this workspace`,
+        });
+
+        const populatedLog = await logEntry.populate("userId", "name email");
+
+        const io = req.app.get("io");
+        if (io) {
+            io.to(`workspace_${workspaceId}`).emit("newActivityLogEntry", populatedLog);
+            console.log(`⚡ Ownership transfer broadcasted to room: workspace_${workspaceId}`);
+        }
+
+        await createAndSendNotification(req, {
+            recipient: newOwnerId, 
+            sender: currentOwnerId,
+            type: "OWNERSHIP_TRANSFERRED",
+            message: `You have been promoted to Owner of the workspace: "${workspace.name}"`,
+            workspace: workspaceId,
+            relatedId: workspace._id
+        });
 
         return res.json({
             success:true,
             message:"Ownership transferred successfully."
         });
+
 
     } catch(err){
         console.error(err);
@@ -292,9 +330,6 @@ export const getInviteToken = async (req, res) => {
 
     if (!workspace) return res.status(404).json({ message: "Workspace not found" });
  
-    // if (workspace.createdBy.toString() !== req.user._id.toString()) {
-    //   return res.status(403).json({ message: "Only owners can generate invite links" });
-    // }
 
     if (!workspace.inviteToken) {
       workspace.inviteToken = new mongoose.Types.ObjectId().toString();
