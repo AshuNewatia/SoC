@@ -7,8 +7,9 @@ import WorkspaceNav from "../components/workspace/WorkspaceNav";
 import WorkspaceHero from "../components/workspace/WorkspaceHero";
 import WorkspaceSettingsModal from "../components/workspace/WorkspaceSettingModal";
 import api from "../services/api";
+
 import { updateWorkspace, deleteWorkspace, transferOwnership } from "../services/workspaceServices";
-import { getTasks } from "../services/taskServices"
+import { getTasks } from "../services/taskServices";
 import Skeleton from "../components/common/Skeleton";
 
 const socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", {
@@ -39,14 +40,10 @@ export default function Workspace() {
   const handleUpdateWorkspace = async (data) => {
     try {
       const res = await updateWorkspace(id, data);
-
       setWorkspace(res.data);
-
       setSettingsOpen(false);
       handleSuccess("Workspace updated successfully");
-      window.dispatchEvent(
-        new CustomEvent("workspaceListChanged")
-      );
+      window.dispatchEvent(new CustomEvent("workspaceListChanged"));
     } catch (err) {
       console.error(err);
       handleApiError(err);
@@ -57,9 +54,7 @@ export default function Workspace() {
     try {
       await deleteWorkspace(id);
       handleSuccess("Workspace deleted successfully");
-      window.dispatchEvent(
-        new CustomEvent("workspaceListChanged")
-      );
+      window.dispatchEvent(new CustomEvent("workspaceListChanged"));
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
@@ -70,18 +65,11 @@ export default function Workspace() {
   const handleTransferOwnership = async (newOwnerId) => {
     try {
       await transferOwnership(id, newOwnerId);
-
       handleSuccess("Ownership transferred successfully");
-
-      // Refresh workspace
       const res = await api.get(`/api/workspaces/${id}`);
       setWorkspace(res.data);
-
       setSettingsOpen(false);
-
-      window.dispatchEvent(
-        new CustomEvent("workspaceListChanged")
-      );
+      window.dispatchEvent(new CustomEvent("workspaceListChanged"));
     } catch (err) {
       console.error(err);
       handleApiError(err);
@@ -95,7 +83,6 @@ export default function Workspace() {
       try {
         const res = await api.get(`/api/workspaces/${id}`);
         setWorkspace(res.data);
-
       } catch (err) {
         console.error("Failed to fetch workspace:", err);
         setError(err.response?.data?.message || err.message);
@@ -120,9 +107,10 @@ export default function Workspace() {
     };
   }, [id]);
 
+  // ----- Loading state (from HEAD with Skeleton) -----
   if (loading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="p-6 space-y-4 animate-pulse">
         {/* Workspace Hero */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
           <div className="flex justify-between">
@@ -183,6 +171,18 @@ export default function Workspace() {
       </div>
     );
   }
+
+  // ----- Error state (from origin/main) -----
+  if (error || !workspace) {
+    return (
+      <div className="p-10 text-center text-red-500 bg-surface rounded-xl border border-red-200 max-w-2xl mx-auto mt-10 shadow-sm">
+        <p className="font-semibold">Failed to load workspace</p>
+        <p className="text-sm text-slate-600 mt-2">{error || "Workspace not found"}</p>
+      </div>
+    );
+  }
+
+  // ----- Main render -----
   const currentUserId = localStorage.getItem("userId");
 
   const isCreator =
@@ -191,11 +191,11 @@ export default function Workspace() {
 
   return (
     <div className="p-6 space-y-4 font-sans bg-bg-light min-h-screen text-text-primary">
-      {workspace ? (
-        <WorkspaceHero workspace={workspace} tasks={totalTasks} onSettingsClick={() => setSettingsOpen(true)} />
-      ) : (
-        <div className="h-32 rounded-2xl bg-slate-100 animate-pulse" />
-      )}
+      <WorkspaceHero
+        workspace={workspace}
+        tasks={totalTasks}
+        onSettingsClick={() => setSettingsOpen(true)}
+      />
       <WorkspaceNav workspace={workspace} />
       <Outlet context={{ workspace, socket }} />
       <WorkspaceSettingsModal

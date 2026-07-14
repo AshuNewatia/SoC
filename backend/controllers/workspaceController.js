@@ -7,11 +7,11 @@ import { createAndSendNotification } from "../utils/notificationHelper.js";
 import crypto from "crypto"
 import Comment from "../models/Comment.js";
 
+
 export const createWorkspace = async (req, res) => {
   try {
     const { name, description, githubRepo, githubToken } = req.body;
     const owner = req.user._id;
-
     if (!name || !name.trim()) {
       return res.status(400).json({ message: "Workspace name is required" });
     }
@@ -22,6 +22,7 @@ export const createWorkspace = async (req, res) => {
       owner,
       admins: [],
       members: [owner],
+
       githubRepo: githubRepo ? githubRepo.trim() : "",
       githubToken: githubToken ? githubToken.trim() : "",
     });
@@ -216,6 +217,7 @@ export const leaveWorkspace = async (req, res) => {
     const { workspaceId } = req.params;
     const userId = req.user._id;
 
+
     const workspace = await Workspace.findById(workspaceId);
 
     if (!workspace) {
@@ -226,6 +228,7 @@ export const leaveWorkspace = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "As the creator, you cannot leave. Delete the workspace or transfer ownership first."
+
       });
     }
 
@@ -239,10 +242,10 @@ export const leaveWorkspace = async (req, res) => {
     );
 
     await workspace.save();
-
     return res.status(200).json({
       success: true,
       message: "Successfully left the workspace."
+
     });
 
   } catch (error) {
@@ -301,6 +304,7 @@ export const transferOwnership = async (req, res) => {
       message: "Internal server error"
     });
   }
+
 };
 
 export const getInviteToken = async (req, res) => {
@@ -309,7 +313,6 @@ export const getInviteToken = async (req, res) => {
     const workspace = await Workspace.findById(workspaceId);
 
     if (!workspace) return res.status(404).json({ message: "Workspace not found" });
-
     // if (workspace.createdBy.toString() !== req.user._id.toString()) {
     //   return res.status(403).json({ message: "Only owners can generate invite links" });
     // }
@@ -354,6 +357,7 @@ export const joinWorkspaceWithToken = async (req, res) => {
         success: true,
         workspaceId: workspace._id.toString(),
         message: "You are already associated with this workspace."
+
       });
     }
 
@@ -369,6 +373,7 @@ export const joinWorkspaceWithToken = async (req, res) => {
       success: true,
       workspaceId: workspace._id.toString(),
       message: "Successfully joined the workspace!"
+
     });
 
   } catch (error) {
@@ -376,6 +381,7 @@ export const joinWorkspaceWithToken = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error while processing token entry."
+
     });
   }
 };

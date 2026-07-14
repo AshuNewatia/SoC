@@ -32,6 +32,7 @@ export default function WorkspaceMembers() {
 
   const [openMenu, setOpenMenu] = useState(null);
 
+<<<<<<< HEAD
   const fetchMembers = async () => {
     try {
       const res = await api.get(`/api/workspaces/${id}/members`);
@@ -43,6 +44,8 @@ export default function WorkspaceMembers() {
     }
   };
 
+=======
+>>>>>>> origin/main
   useEffect(() => {
 
     fetchMembers();
@@ -359,15 +362,25 @@ export default function WorkspaceMembers() {
                   />
                   <button
                     onClick={copyToClipboard}
+<<<<<<< HEAD
                     className={`p-2 rounded-lg border transition shrink-0 ${copied ? 'bg-green-50 text-green-600 border-green-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                       }`}
+=======
+                    className={`p-2 rounded-lg border transition shrink-0 ${
+                      copied ? 'bg-green-50 text-green-600 border-green-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    }`}
+>>>>>>> origin/main
                   >
                     {copied ? <Check size={14} /> : <Copy size={14} />}
                   </button>
                 </div>
               )}
             </div>
+<<<<<<< HEAD
 
+=======
+            
+>>>>>>> origin/main
           </div>
         </div>
       )}
