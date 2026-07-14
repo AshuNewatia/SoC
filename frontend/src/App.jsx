@@ -13,6 +13,7 @@ import MyBoard from "./pages/MyBoard";
 import OAuthCallback from "./pages/OAuthCallback";
 import CreateProfile from "./pages/CreateProfile";
 import ViewProfile from "./pages/ViewProfile";
+import JoinWorkspace from "./pages/JoinWorkspace";
 
 import WorkspaceOverview from "./components/workspace/overview/WorkspaceOverview"
 import WorkspaceAnalytics from "./components/workspace/WorkspaceAnalytics";
@@ -24,17 +25,17 @@ import Sidebar from "./components/sidebar/Sidebar";
 import Header from "./components/header/Header";
 import { useAuth } from "./context/authContext";
 import socket from "./services/socket"; 
-function ProtectedRoute() {
-  const { user, loading } = useAuth();
+// function ProtectedRoute() {
+//   const { user, loading } = useAuth();
   
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
-  }
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-  return <Outlet />;
-}
+//   if (loading) {
+//     return <div className="flex items-center justify-center h-screen">Loading...</div>;
+//   }
+//   if (!user) {
+//     return <Navigate to="/login" replace />;
+//   }
+//   return <Outlet />;
+// }
 
 function AuthenticatedLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -90,6 +91,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
+        <Route path="/join/workspace/:token" element={<JoinWorkspace />} />
         
         <Route path="/create-profile" element={<CreateProfile />} />
 

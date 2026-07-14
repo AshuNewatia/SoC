@@ -82,14 +82,15 @@ export const createTask = async (req, res) => {
             existingWorkspace._id,
             req.user._id,
             "TASK_CREATED",
-            `created task "${title}"`
+            `created task "${title}"`,
+            req.app.get("io")
         );
 
         if (assignedTo && assignedTo.length > 0) {
             const assignedUsers = await User.find({
                 _id: { $in: assignedTo }
             });
-            
+
             if (assignedUsers.length > 0) {
                 await logActivity(
                     existingWorkspace._id,
@@ -97,11 +98,15 @@ export const createTask = async (req, res) => {
                     "TASK_ASSIGNED",
                     `assigned "${title}" to ${assignedUsers
                         .map(user => user.name)
-                        .join(", ")}`
+                        .join(", ")}`,
+                    req.app.get("io")
                 );
             }
         }
-
+        const io = req.app.get("io");
+        if (io) {
+            io.to(existingWorkspace._id.toString()).emit("activity_updated");
+        }
         res.status(201).json(task);
 
     } catch (error) {
@@ -258,8 +263,13 @@ export const updateTaskStatus = async (req, res) => {
                 workspace._id,
                 req.user._id,
                 "TASK_COMPLETED",
-                `completed task "${updatedTask.title}"`
+                `completed task "${updatedTask.title}"`,
+                req.app.get("io")
             );
+            const io = req.app.get("io");
+            if (io) {
+                io.to(workspace._id.toString()).emit("activity_updated");
+            }
         }
         res.status(200).json({
             message: "Task status updated",
@@ -301,16 +311,20 @@ export const deleteTask = async (req, res) => {
         if (!isOwner && !isAdmin) {
             return res.status(403).json({ message: "Member can not delete task" });
         }
-
+        await Comment.deleteMany({ task: taskId });
         await Task.findByIdAndDelete(taskId);
 
         await logActivity(
             workspace._id,
             req.user._id,
             "TASK_DELETED",
-            `deleted task "${taskToDelete.title}"`
+            `deleted task "${taskToDelete.title}"`,
+            req.app.get("io")
         );
-
+        const io = req.app.get("io");
+        if (io) {
+            io.to(workspace._id.toString()).emit("activity_updated");
+        }
         res.status(200).json({ message: "Task deleted" });
     } catch (error) {
         res.status(500).json({ message: "Server Error" });
@@ -405,7 +419,8 @@ export const updateTask = async (req, res) => {
                 "TASK_ASSIGNED",
                 `assigned "${updatedTask.title}" to ${assignedUsers
                     .map(user => user.name)
-                    .join(", ")}`
+                    .join(", ")}`,
+                req.app.get("io")
             );
         }
 
@@ -421,42 +436,57 @@ export const updateTask = async (req, res) => {
                 workspace._id,
                 req.user._id,
                 "TASK_DUE_DATE_CHANGED",
-                `changed due date of "${updatedTask.title}" to ${newDate}`
+                `changed due date of "${updatedTask.title}" to ${newDate}`,
+                req.app.get("io")
             );
+        }
+        const io = req.app.get("io");
+        if (io) {
+            io.to(workspace._id.toString()).emit("activity_updated");
         }
 
         res.status(200).json(updatedTask);
 
     } catch (error) {
-        console.error("Error inside updateTask controller:", error); 
+        console.error("Error inside updateTask controller:", error);
         res.status(500).json({ message: "Server Error", details: error.message });
     }
 };
 
 export const uploadAttachment = async (req, res) => {
-  try {
-    const { taskId } = req.params; 
-    
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded or invalid file type." });
+    try {
+        const { taskId } = req.params;
+
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded or invalid file type." });
+        }
+
+        const task = await Task.findById(taskId);
+        if (!task) return res.status(404).json({ message: "Task not found" });
+
+        const newAttachment = {
+            fileName: req.file.originalname,
+            fileUrl: req.file.path,
+        };
+
+        task.attachments.push(newAttachment);
+        await task.save();
+
+        await logActivity(
+            task.workspace,
+            req.user._id,
+            "FILE_UPLOADED",
+            `uploaded file "${newAttachment.fileName}" to task "${task.title}"`,
+            req.app.get("io")
+        );
+
+        const io = req.app.get("io");
+        if (io){
+             io.to(task.workspace).emit("taskUpdated", task);
+             io.to(task.workspace).emit("activity_updated");
+        }
+        res.status(200).json({ message: "File uploaded successfully", task });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
-
-    const task = await Task.findById(taskId);
-    if (!task) return res.status(404).json({ message: "Task not found" });
-
-    const newAttachment = {
-      fileName: req.file.originalname,
-      fileUrl: req.file.path, 
-    };
-
-    task.attachments.push(newAttachment);
-    await task.save();
-
-    const io = req.app.get("io");
-    if (io) io.emit("taskUpdated", task);
-
-    res.status(200).json({ message: "File uploaded successfully", task });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+}; 

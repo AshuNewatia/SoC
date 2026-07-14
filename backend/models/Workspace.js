@@ -32,6 +32,15 @@ const workspaceSchema = new mongoose.Schema(
       type: String, 
       default: "" 
 },
+    inviteToken: { 
+      type: String, 
+      unique: true, 
+      sparse: true
+},
+    lastActivityAt:{
+      type: Date,
+      default: Date.now
+    }
   },
   
   { timestamps: true }

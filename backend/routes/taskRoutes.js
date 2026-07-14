@@ -31,6 +31,6 @@ router.delete(
  deleteTask
 );
 
-router.post('/:taskId/attachments',  upload.single('file'), uploadAttachment);
+router.post('/:taskId/attachments',protect,  upload.single('file'), uploadAttachment);
 
 export default router;

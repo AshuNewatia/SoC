@@ -1,7 +1,7 @@
 // src/pages/Dashboard.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FolderKanban, CheckSquare, CalendarClock, BadgeCheck } from "lucide-react";
+import { FolderKanban, CheckSquare, CalendarClock, BadgeCheck, AlertTriangle } from "lucide-react";
 import api from "../services/api";
 import { getTasks } from "../services/taskServices";
 import { useAuth } from "../context/authContext";
@@ -10,7 +10,7 @@ import Hero from "../components/dashboard/Hero";
 import CreateWorkspaceModal from "../components/workspace/CreateWorkspaceModal";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import UpcomingDeadlines from "../components/dashboard/UpcomingDeadlines";
-import { handleSuccess,handleApiError } from "../utils/handleApiError";
+import { handleSuccess, handleApiError } from "../utils/handleApiError";
 
 export default function Dashboard() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -89,9 +89,27 @@ export default function Dashboard() {
 
   const assignedTasks = tasks.filter(task =>
     task.assignedTo?.some(assigned => assigned._id === user?.id)
-  ).length;
+  );
 
   const completedTasks = tasks.filter(task => task.status === "completed").length;
+
+  const overdueTasks = tasks.filter((task) => {
+    if (!task.dueDate) return false;
+
+    return (
+      task.status !== "completed" &&
+      new Date(task.dueDate) < new Date()
+    );
+  }).length;
+
+  const overdueTasksStudent = assignedTasks.filter((task) => {
+    if (!task.dueDate) return false;
+
+    return (
+      task.status !== "completed" &&
+      new Date(task.dueDate) < new Date()
+    );
+  }).length;
 
   const dueThisWeek = tasks.filter(task => {
     if (!task.dueDate) return false;
@@ -104,8 +122,14 @@ export default function Dashboard() {
 
   const studentStats = [
     {
+      title: "Active Workspaces",
+      value: activeWorkspaces,
+      subtitle: "Currently active",
+      icon: FolderKanban,
+    },
+    {
       title: "Assigned Tasks",
-      value: assignedTasks,
+      value: assignedTasks.length,
       subtitle: "Currently assigned",
       icon: CheckSquare,
     },
@@ -116,17 +140,12 @@ export default function Dashboard() {
       icon: CalendarClock,
     },
     {
-      title: "Completed Tasks",
-      value: completedTasks,
-      subtitle: "Finished",
-      icon: BadgeCheck,
+      title: "Overdue Tasks",
+      value: overdueTasksStudent,
+      subtitle: "Require attention",
+      icon: AlertTriangle,
     },
-    {
-      title: "Active Workspaces",
-      value: activeWorkspaces,
-      subtitle: "Currently active",
-      icon: FolderKanban,
-    },
+    
   ];
 
   const professorStats = [
@@ -137,22 +156,22 @@ export default function Dashboard() {
       icon: FolderKanban,
     },
     {
-      title: "Pending Reviews",
-      value: 0, // placeholder
+      title: "Total Tasks",
+      value: tasks.length,
       subtitle: "Awaiting approval",
       icon: CheckSquare,
     },
     {
-      title: "Projects At Risk",
-      value: 0, // placeholder
-      subtitle: "Need attention",
-      icon: CalendarClock,
+      title: "Completed Tasks",
+      value: completedTasks,
+      subtitle: "Finished",
+      icon: BadgeCheck,
     },
     {
-      title: "Upcoming Deadlines",
-      value: dueThisWeek,
-      subtitle: "Next 7 days",
-      icon: BadgeCheck,
+      title: "Overdue Tasks",
+      value: overdueTasks,
+      subtitle: "Require attention",
+      icon: AlertTriangle,
     },
   ];
 
@@ -183,7 +202,7 @@ export default function Dashboard() {
       handleSuccess("Workspace created successfully")
       setCreateOpen(false);
     } catch (err) {
-      handleApiError(err);``
+      handleApiError(err); ``
     }
   };
 
