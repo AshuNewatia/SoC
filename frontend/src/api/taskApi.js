@@ -1,4 +1,5 @@
 import api from "../services/api";
+import axios from "axios";
 
 // ─── GET ALL TASKS FOR A WORKSPACE ─────────────────────────────
 export const getTasks = (workspaceId) => 
@@ -16,6 +17,21 @@ export const updateTask = (taskId, task) =>
 export const deleteTask = (taskId) => 
   api.delete(`/tasks/${taskId}`);
 
-// ─── UPDATE ONLY TASK STATUS (For Drag & Drop) ─────────────────
-export const updateTaskStatus = (taskId, data) => 
-  api.put(`/tasks/${taskId}/status`, data);
+// // ─── UPDATE ONLY TASK STATUS (For Drag & Drop) ─────────────────
+// export const updateTaskStatus = (taskId, data) => 
+//   api.patch(`/tasks/${taskId}/status`, data);
+
+export const updateTaskStatus = async (taskId, data) => {
+  const token = localStorage.getItem("token");
+
+  return axios.patch(
+    `http://localhost:5000/api/tasks/${taskId}/status`,
+    data,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+};

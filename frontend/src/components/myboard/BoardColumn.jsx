@@ -20,7 +20,7 @@ export default function BoardColumn({
   const Icon = columnIcons[columnId] || Circle;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm h-[70vh] flex flex-col overflow-hidden">
+    <div className="bg-slate-50 rounded-2xl border border-slate-200 shadow-sm h-[70vh] flex flex-col overflow-hidden">
 
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">

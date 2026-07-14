@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Bell, Search, ChevronDown, Menu } from "lucide-react";
+import { Search, ChevronDown, Menu } from "lucide-react";
 import { useAuth } from '../../context/authContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import NotificationBell from "./notificationBell";
+import ProfilePopover from "../../pages/ViewProfile";
 
 export default function Header({
   title = "Overview",
@@ -11,10 +12,11 @@ export default function Header({
   setWorkspaceSearch,
 }) {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  
 
   let pageTitle = "Overview";
   if (location.pathname === "/dashboard") {
@@ -94,18 +96,30 @@ export default function Header({
   <NotificationBell />
 </div>
 
-          <button
-            onClick={() => navigate('/profile')}
-            className="flex items-center gap-2 md:gap-3 pl-2 pr-3 py-1.5 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all duration-200"
-          >
-            <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-linear-to-br from-primary to-primary-hover flex items-center justify-center text-white font-semibold text-sm">
-              {user?.name?.charAt(0) || 'U'}
-            </div>
-            <p className="text-sm font-semibold text-gray-800 hidden md:block">
-              {user?.name || "User"}
-            </p>
-            <ChevronDown size={16} className="text-gray-500 hidden md:block" />
-          </button>
+<div className="relative"> {/* 👈 Ensure this opening div is here */}
+  <button
+    type="button"
+    onClick={() => setIsProfileOpen(!isProfileOpen)}
+    className="flex items-center gap-2 md:gap-3 pl-2 pr-3 py-1.5 rounded-xl hover:bg-gray-100 hover:shadow-md transition-all duration-200 focus:outline-none"
+  >
+    {/* ... your inner button profile markup ... */}
+    <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-linear-to-br from-primary to-primary-hover flex items-center justify-center text-white font-semibold text-sm">
+      {user?.name?.charAt(0) || 'U'}
+    </div>
+    <p className="text-sm font-semibold text-gray-800 hidden md:block">
+      {user?.name || "User"}
+    </p>
+    <ChevronDown 
+      size={16} 
+      className={`text-gray-500 hidden md:block transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} 
+    />
+  </button>
+
+  <ProfilePopover 
+    isOpen={isProfileOpen} 
+    onClose={() => setIsProfileOpen(false)} 
+  />
+</div>
         </div>
       </header>
       {showSearch && showMobileSearch && (

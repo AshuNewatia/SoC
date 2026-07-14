@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Bell } from "lucide-react";
 import api from "../../services/api";
 import socket from "../../services/socket";
@@ -6,6 +6,7 @@ import socket from "../../services/socket";
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -27,6 +28,19 @@ export default function NotificationBell() {
     return () => socket.off("newNotification");
   }, []);
 
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (isOpen && dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const handleClearNotifications = async () => {
@@ -39,7 +53,7 @@ export default function NotificationBell() {
   };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => { setIsOpen(!isOpen); if(!isOpen) handleClearNotifications(); }}
         className="relative p-2 rounded-full hover:bg-slate-100 transition"

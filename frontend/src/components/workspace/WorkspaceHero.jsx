@@ -41,9 +41,17 @@ export default function WorkspaceHero({
               <span>{tasks} {tasks === 1 ? "Task" : "Tasks"}</span>
             </div>
             {workspace.githubRepo ? (
-              <div className="px-2 md:px-3 py-1 md:py-1.5 bg-green-50 text-green-700 rounded-lg border border-green-200 flex items-center gap-1 md:gap-1.5 text-[10px] md:text-xs font-semibold">
+              <div className="flex items-center gap-1.5 px-2 md:px-3 py-1 md:py-1.5 bg-green-50 text-green-700 rounded-lg border border-green-200">
                 <GitBranch size={12} className="md:text-[14px]" />
-                {workspace.githubRepo.split('/')[1] || workspace.githubRepo} Linked
+  
+                <a 
+                  href={`https://github.com/${workspace.githubRepo}`}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:underline font-medium"
+                >
+                  {workspace.githubRepo?.split('/')[1] || workspace.githubRepo} Linked
+                </a>
               </div>
             ) : (
               <div className="px-2 md:px-3 py-1 md:py-1.5 bg-slate-50 text-slate-500 rounded-lg border border-slate-200 flex items-center gap-1 md:gap-1.5 text-[10px] md:text-xs">
@@ -69,7 +77,7 @@ export default function WorkspaceHero({
             onClick={onSettingsClick}
             className="px-2 md:px-3 py-1.5 md:py-2 bg-primary text-white rounded-lg text-[10px] md:text-sm hover:bg-primary-hover transition whitespace-nowrap flex items-center gap-1"
           >
-            <Settings size={12} className="md:size-[14px]" />
+            <Settings size={12} className="md:size-[3.5]" />
             <span>Settings</span>
           </button>
         </div>
