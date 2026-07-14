@@ -93,7 +93,7 @@ export default function WorkspaceAnalytics() {
                     <div ref={exportRef} className="relative">
                         <button
                             onClick={() => setExportOpen((prev) => !prev)}
-                            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-medium shadow-sm hover:opacity-90 transition min-w-[155px]"
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-medium shadow-sm hover:opacity-90 transition min-w-38.75"
                         >
                             <Download size={17} />
                             Export Report

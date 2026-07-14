@@ -293,7 +293,7 @@ export default function KanbanBoard() {
         {/* Search + Filters */}
         <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-5">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-            <Skeleton className="h-11 w-full lg:w-[480px] rounded-xl" />
+            <Skeleton className="h-11 w-full lg:w-120 rounded-xl" />
             <div className="flex gap-2 flex-wrap">
               <Skeleton className="h-10 w-24 rounded-xl" />
               <Skeleton className="h-10 w-24 rounded-xl" />

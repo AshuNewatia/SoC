@@ -69,7 +69,7 @@ export default function WorkspaceHero({
             onClick={onSettingsClick}
             className="px-2 md:px-3 py-1.5 md:py-2 bg-primary text-white rounded-lg text-[10px] md:text-sm hover:bg-primary-hover transition whitespace-nowrap flex items-center gap-1"
           >
-            <Settings size={12} className="md:size-[14px]" />
+            <Settings size={12} className="md:size-3.5" />
             <span>Settings</span>
           </button>
         </div>
