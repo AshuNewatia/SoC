@@ -254,102 +254,97 @@ export const leaveWorkspace = async (req, res) => {
     return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
-
 export const transferOwnership = async (req, res) => {
-    try {
-        const { workspaceId } = req.params;
-        const { newOwnerId } = req.body;
-        const currentOwnerId = req.user._id;
+  try {
+    const { workspaceId } = req.params;
+    const { newOwnerId } = req.body;
 
-        const workspace = await Workspace.findById(workspaceId);
-
-        if (!workspace)
-            return res.status(404).json({
-                success:false,
-                message:"Workspace not found"
-            });
-        if (String(workspace.owner) !== String(req.user._id)) {
-            return res.status(403).json({
-                success:false,
-                message:"Only the owner can transfer ownership."
-            });
-        }
-
-        const isMember = workspace.members.some(
-            m => String(m) === String(newOwnerId)
-        );
+    const currentOwnerId = req.user._id;
 
     const workspace = await Workspace.findById(workspaceId);
 
-        let newOwnerName = "a member";
-        try {
-            if (newOwnerId) {
-                const newOwnerUser = await User.findById(newOwnerId).select("name");
-                if (newOwnerUser?.name) {
-                    newOwnerName = newOwnerUser.name;
-                }
-            }
-        } catch (userErr) {
-               console.error("Non-blocking error fetching new owner name:", userErr.message);
-          }
+    if (!workspace) {
+      return res.status(404).json({
+        success: false,
+        message: "Workspace not found",
+      });
+    }
 
-        workspace.owner = newOwnerId;
+    if (workspace.owner.toString() !== currentOwnerId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Only the owner can transfer ownership.",
+      });
+    }
+
+    const newOwner = await User.findById(newOwnerId);
+
+    if (!newOwner) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
     const isMember = workspace.members.some(
-      m => String(m) === String(newOwnerId)
+      (member) => member.toString() === newOwnerId.toString()
     );
 
-        await workspace.save();
-        const logEntry = await ActivityLog.create({
-            workspaceId: workspaceId,
-            userId: currentOwnerId,
-            actionType: "OWNERSHIP_TRANSFERRED",
-            description: `transferred ownership of this workspace`,
-        });
+    if (!isMember) {
+      return res.status(400).json({
+        success: false,
+        message: "New owner must be a workspace member.",
+      });
+    }
 
-        const populatedLog = await logEntry.populate("userId", "name email");
-
-        const io = req.app.get("io");
-        if (io) {
-            io.to(`workspace_${workspaceId}`).emit("newActivityLogEntry", populatedLog);
-            console.log(`⚡ Ownership transfer broadcasted to room: workspace_${workspaceId}`);
-        }
-
-        await createAndSendNotification(req, {
-            recipient: newOwnerId, 
-            sender: currentOwnerId,
-            type: "OWNERSHIP_TRANSFERRED",
-            message: `You have been promoted to Owner of the workspace: "${workspace.name}"`,
-            workspace: workspaceId,
-            relatedId: workspace._id
-        });
-
+    // Transfer ownership
     workspace.owner = newOwnerId;
 
-
-    } catch(err){
-        console.error(err);
-        return res.status(500).json({
-            success:false,
-            message:"Internal server error"
-        });
-    }
+    // Remove from admins if present
+    workspace.admins = workspace.admins.filter(
+      (admin) => admin.toString() !== newOwnerId.toString()
+    );
 
     await workspace.save();
 
-    return res.json({
-      success: true,
-      message: "Ownership transferred successfully."
+    // Notification
+    await createAndSendNotification(req, {
+      recipient: newOwnerId,
+      sender: currentOwnerId,
+      type: "OWNERSHIP_TRANSFERRED",
+      message: `You are now the owner of workspace "${workspace.name}"`,
+      workspace: workspace._id,
+      relatedId: workspace._id,
     });
 
+    // Activity Log
+    await logActivity(
+      workspace._id,
+      currentOwnerId,
+      "OWNERSHIP_TRANSFERRED",
+      `Transferred ownership to ${newOwner.name}`
+    );
+
+    // Real-time sync
+    const io = req.app.get("io");
+
+    if (io) {
+      io.to(workspaceId.toString()).emit("members_updated");
+      io.to(workspaceId.toString()).emit("activity_updated");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Ownership transferred successfully.",
+    });
   } catch (err) {
-    console.error(err);
+    console.error("Transfer ownership error:", err);
+
     return res.status(500).json({
       success: false,
-      message: "Internal server error"
+      message: "Internal server error",
     });
   }
-
 };
 
 export const getInviteToken = async (req, res) => {

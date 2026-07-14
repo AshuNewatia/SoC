@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import { handleApiError, handleSuccess } from '../../utils/handleApiError';
+import Skeleton from '../common/Skeleton';
 import {
   MoreVertical,
   Shield,
@@ -195,9 +196,58 @@ export default function WorkspaceMembers() {
       {/* Member list */}
       <div className="divide-y divide-slate-100">
         {loading ? (
-          <div className="p-8 text-center text-slate-500">Loading members...</div>
+          <div className="divide-y divide-slate-100">
+
+            {[1, 2, 3, 4, 5].map((item) => (
+              <div
+                key={item}
+                className="flex items-center justify-between p-5"
+              >
+                <div className="flex items-center gap-4">
+
+                  {/* Avatar */}
+                  <Skeleton className="w-11 h-11 rounded-full" />
+
+                  <div className="space-y-2">
+
+                    <Skeleton className="h-5 w-40" />
+
+                    <Skeleton className="h-5 w-20 rounded-full" />
+
+                  </div>
+
+                </div>
+
+                {/* Menu Button */}
+                <Skeleton className="w-9 h-9 rounded-lg" />
+
+              </div>
+            ))}
+
+          </div>
         ) : filteredMembers.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">No members found.</div>
+          <div className="flex flex-col items-center justify-center h-[360px] px-6 text-center">
+
+            <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-6">
+
+              <Users
+                size={34}
+                className="text-primary"
+              />
+
+            </div>
+
+            <h3 className="text-2xl font-semibold text-text-primary">
+              No Members Found
+            </h3>
+
+            <p className="text-text-secondary mt-3 max-w-md leading-relaxed">
+              {searchQuery
+                ? "No workspace members match your search."
+                : "Invite teammates to collaborate on tasks, manage projects and work together in this workspace."}
+            </p>
+
+          </div>
         ) : (
           filteredMembers.map((member) => (
             <div
@@ -356,9 +406,8 @@ export default function WorkspaceMembers() {
                   />
                   <button
                     onClick={copyToClipboard}
-                    className={`p-2 rounded-lg border transition shrink-0 ${
-                      copied ? 'bg-green-50 text-green-600 border-green-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                    }`}
+                    className={`p-2 rounded-lg border transition shrink-0 ${copied ? 'bg-green-50 text-green-600 border-green-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      }`}
                   >
                     {copied ? <Check size={14} /> : <Copy size={14} />}
                   </button>

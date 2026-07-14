@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 
 import InsightCard from "./InsightCard";
+import Skeleton from "../../common/Skeleton";
 
 import {
     getWorkspaceInsights,
@@ -45,12 +46,32 @@ export default function InsightsSection({
     if (loading) {
         return (
             <div className="grid gap-5 grid-rows-3">
+
                 {[1, 2, 3].map((item) => (
                     <div
                         key={item}
-                        className="h-32 rounded-2xl border border-slate-200 bg-white animate-pulse"
-                    />
+                        className="rounded-2xl border border-border-light bg-surface p-5 shadow-sm"
+                    >
+
+                        <div className="flex justify-between">
+
+                            <div className="space-y-4">
+
+                                <Skeleton className="h-4 w-28" />
+
+                                <Skeleton className="h-8 w-40" />
+
+                                <Skeleton className="h-3 w-52" />
+
+                            </div>
+
+                            <Skeleton className="w-11 h-11 rounded-xl" />
+
+                        </div>
+
+                    </div>
                 ))}
+
             </div>
         );
     }
@@ -58,10 +79,23 @@ export default function InsightsSection({
 
     if (!insights) {
         return (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-center min-h-[300px]">
-                <p className="text-text-secondary">
-                    No insights available
-                </p>
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-center min-h-75">
+                <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+
+                    <Trophy
+                        size={38}
+                        className="mx-auto text-slate-400"
+                    />
+
+                    <h3 className="mt-5 text-lg font-semibold">
+                        No Insights Available
+                    </h3>
+
+                    <p className="mt-2 text-sm text-slate-500">
+                        Insights will appear automatically as your team starts working.
+                    </p>
+
+                </div>
             </div>
         );
     }

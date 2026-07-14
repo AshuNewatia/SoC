@@ -10,6 +10,7 @@ import {
 } from "recharts";
 
 import { getWorkspaceWorkload } from "../../../services/workspaceAnalyticsService";
+import Skeleton from "../../common/Skeleton";
 
 export default function WorkloadChart({ workspaceId }) {
   const [data, setData] = useState([]);
@@ -39,12 +40,14 @@ export default function WorkloadChart({ workspaceId }) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <div className="animate-pulse">
-          <div className="h-6 w-44 bg-slate-200 rounded" />
-          <div className="h-4 w-64 bg-slate-100 rounded mt-3" />
-          <div className="h-[300px] bg-slate-100 rounded-xl mt-6" />
-        </div>
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+
+        <Skeleton className="h-7 w-44" />
+
+        <Skeleton className="h-4 w-64 mt-3" />
+
+        <Skeleton className="h-80 rounded-xl mt-8" />
+
       </div>
     );
   }
@@ -62,11 +65,28 @@ export default function WorkloadChart({ workspaceId }) {
       </div>
 
       {data.length === 0 ? (
-        <div className="h-[300px] flex items-center justify-center text-text-secondary">
-          No workload data available
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10">
+
+          <div className="flex flex-col items-center justify-center h-80 text-center">
+
+            <BarChart
+              size={42}
+              className="text-slate-400"
+            />
+
+            <h3 className="mt-5 text-lg font-semibold text-text-primary">
+              No Workload Data
+            </h3>
+
+            <p className="mt-2 text-sm text-text-secondary max-w-sm">
+              Assign tasks to workspace members to view workload distribution.
+            </p>
+
+          </div>
+
         </div>
       ) : (
-        <div className="h-[320px]">
+        <div className="h-80">
           <ResponsiveContainer
             width="100%"
             height="100%"

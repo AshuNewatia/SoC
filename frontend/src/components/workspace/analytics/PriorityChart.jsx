@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getWorkspacePriorityStats } from "../../../services/workspaceAnalyticsService";
+import Skeleton from "../../common/Skeleton";
 
 const COLORS = {
   Critical: "bg-purple-500",
@@ -17,6 +18,7 @@ const DOTS = {
 
 export default function PriorityChart({workspaceId}) {
   const [data, setData] = useState([]);
+  const [loading,setLoading]=useState(true);
 
  useEffect(() => {
   if (!workspaceId) return;
@@ -45,7 +47,9 @@ export default function PriorityChart({workspaceId}) {
         "Failed to fetch workspace priority analytics",
         error
       );
-    }
+    }finally{
+   setLoading(false);
+}
   };
 
   fetchPriorityData();
@@ -59,9 +63,72 @@ export default function PriorityChart({workspaceId}) {
 if (!data.length) {
   return (
     <div className="bg-surface rounded-2xl border p-6">
-      <div className="h-[300px] flex items-center justify-center">
-        No priority data available
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10">
+
+    <div className="flex flex-col items-center justify-center h-80 text-center">
+
+        <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center">
+
+            <span className="w-4 h-4 rounded-full bg-slate-400"/>
+
+        </div>
+
+        <h3 className="mt-5 text-lg font-semibold text-text-primary">
+            No Priority Data
+        </h3>
+
+        <p className="mt-2 text-sm text-text-secondary max-w-sm">
+            Create tasks with different priorities to view the distribution.
+        </p>
+
+    </div>
+
+</div>
+    </div>
+  );
+}
+if (loading) {
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+
+      <Skeleton className="h-7 w-52"/>
+
+      <Skeleton className="h-4 w-64 mt-3"/>
+
+      <div className="mt-8 space-y-7">
+
+        {[1,2,3,4].map((item)=>(
+          <div key={item}>
+
+            <div className="flex justify-between mb-3">
+
+              <Skeleton className="h-4 w-24"/>
+
+              <Skeleton className="h-4 w-10"/>
+
+            </div>
+
+            <Skeleton className="h-3 rounded-full"/>
+
+          </div>
+        ))}
+
       </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
+
+        {[1,2,3,4].map((item)=>(
+          <div
+            key={item}
+            className="border rounded-xl p-4"
+          >
+            <Skeleton className="h-4 w-16 mx-auto"/>
+            <Skeleton className="h-7 w-10 mx-auto mt-3"/>
+          </div>
+        ))}
+
+      </div>
+
     </div>
   );
 }
@@ -121,7 +188,7 @@ if (!data.length) {
                     {percentage}%
                   </span>
 
-                  <span className="font-semibold text-text-primary min-w-[24px] text-right">
+                  <span className="font-semibold text-text-primary min-w-6 text-right">
                     {item.count}
                   </span>
                 </div>

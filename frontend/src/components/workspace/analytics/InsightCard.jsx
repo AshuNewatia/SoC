@@ -17,7 +17,7 @@ export default function InsightCard({
           </p>
 
           <h3 className="text-3xl font-bold text-text-primary mt-2">
-            {value}
+            {value || "--"}
           </h3>
         </div>
 
@@ -31,14 +31,18 @@ export default function InsightCard({
 
       {description && (
         <p className="text-sm text-text-secondary mt-4 leading-relaxed">
-          {description}
+          {description || "No insights available yet."}
         </p>
       )}
 
-      {trend && (
+      {trend ? (
         <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-medium">
           <TrendingUp size={14} />
           {trend}
+        </div>
+      ) : (
+        <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs">
+          Waiting for more data
         </div>
       )}
     </div>

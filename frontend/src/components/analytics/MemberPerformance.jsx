@@ -32,12 +32,13 @@ export default function MemberPerformance() {
 if (!members.length) {
   return (
     <div className="bg-surface rounded-2xl border p-6">
-      <div className="h-[300px] flex items-center justify-center">
+      <div className="h-75 flex items-center justify-center">
         No performance data available
       </div>
     </div>
   );
 }
+
 
   return (
     <div className="bg-surface rounded-2xl border border-border-light shadow-sm">

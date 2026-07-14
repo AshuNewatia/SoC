@@ -8,6 +8,7 @@ import {
 
 import KPIStatCard from "./KPIStatCard";
 import { getWorkspaceOverview } from "../../../services/workspaceAnalyticsService";
+import Skeleton from "../../common/Skeleton";
 
 export default function KPISection({ workspaceId }) {
     const [stats, setStats] = useState({
@@ -42,8 +43,21 @@ export default function KPISection({ workspaceId }) {
                 {[1, 2, 3, 4].map((item) => (
                     <div
                         key={item}
-                        className="h-32 rounded-2xl border border-border-light animate-pulse"
-                    />
+                        className="rounded-2xl border border-border-light bg-surface p-5 shadow-sm"
+                    >
+                        <Skeleton className="h-1 w-12 rounded-full mb-5" />
+
+                        <div className="flex justify-between">
+
+                            <div className="space-y-4">
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-8 w-16" />
+                                <Skeleton className="h-3 w-28" />
+                            </div>
+
+                            <Skeleton className="w-11 h-11 rounded-xl" />
+                        </div>
+                    </div>
                 ))}
             </div>
         );

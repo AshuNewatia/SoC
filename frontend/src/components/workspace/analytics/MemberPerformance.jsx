@@ -4,7 +4,7 @@ import {
   Clock3,
   AlertTriangle,
 } from "lucide-react";
-
+import Skeleton from "../../common/Skeleton";
 import { getWorkspaceMemberPerformance } from "../../../services/workspaceAnalyticsService";
 
 export default function MemberPerformance({ workspaceId }) {
@@ -32,11 +32,41 @@ export default function MemberPerformance({ workspaceId }) {
 
     fetchPerformance();
   }, [workspaceId]);
-
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-6">
-        <div className="h-[300px] rounded-xl bg-slate-100 animate-pulse" />
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+
+        <Skeleton className="h-7 w-52 mb-2" />
+
+        <Skeleton className="h-4 w-72 mb-8" />
+
+        {[1, 2, 3, 4].map((row) => (
+          <div
+            key={row}
+            className="flex items-center justify-between py-5 border-t border-slate-100"
+          >
+
+            <div className="flex items-center gap-4">
+
+              <Skeleton className="w-11 h-11 rounded-full" />
+
+              <div>
+                <Skeleton className="h-4 w-32" />
+              </div>
+
+            </div>
+
+            <Skeleton className="h-4 w-8" />
+
+            <Skeleton className="h-4 w-8" />
+
+            <Skeleton className="h-2 w-40 rounded-full" />
+
+            <Skeleton className="h-7 w-16 rounded-full" />
+
+          </div>
+        ))}
+
       </div>
     );
   }
@@ -44,8 +74,25 @@ export default function MemberPerformance({ workspaceId }) {
   if (!members.length) {
     return (
       <div className="bg-white rounded-2xl border border-slate-200 p-6">
-        <div className="h-[250px] flex items-center justify-center text-text-secondary">
-          No member performance data available
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10">
+
+          <div className="flex flex-col items-center justify-center h-65 text-center">
+
+            <CheckCircle2
+              size={42}
+              className="text-slate-400"
+            />
+
+            <h3 className="mt-5 text-lg font-semibold text-text-primary">
+              No Team Performance Yet
+            </h3>
+
+            <p className="mt-2 text-sm text-text-secondary max-w-sm">
+              Member statistics will appear once tasks are assigned and completed.
+            </p>
+
+          </div>
+
         </div>
       </div>
     );

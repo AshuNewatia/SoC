@@ -309,7 +309,7 @@ export default function CommentSection({ taskId, members = [] }) {
       </div>
 
       {/* ===== SCROLLABLE COMMENTS LIST ===== */}
-      <div className="max-h-[310px] overflow-y-auto pr-2 space-y-5">
+      <div className="max-h-77.5 overflow-y-auto pr-2 space-y-5">
         {loading ? (
           <div className="space-y-4">
             {[1, 2].map((item) => (
@@ -416,7 +416,7 @@ export default function CommentSection({ taskId, members = [] }) {
                     </div>
                   </div>
                 ) : (
-                  <p className="mt-1 text-sm text-slate-600 whitespace-pre-wrap break-words leading-6">
+                  <p className="mt-1 text-sm text-slate-600 whitespace-pre-wrap wrap-break-word leading-6">
                     {renderCommentText(item)}
                   </p>
                 )}
