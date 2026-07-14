@@ -1,6 +1,7 @@
 import Comment from "../models/Comment.js";
 import Task from "../models/Task.js";
 import Workspace from "../models/Workspace.js";
+import Notification from "../models/Notification.js";
 
 export const createComment = async (req, res) => {
   try {
@@ -68,12 +69,35 @@ export const createComment = async (req, res) => {
 
     const io = req.app.get("io");
 
+    // 1. Send global room workspace update (your existing logic)
     io.to(existingTask.workspace.toString()).emit(
       "commentCreated",
       {
         taskId: existingTask._id.toString(),
       }
     );
+
+    // 2. ⚡ NEW: Generate and push notifications for tagged users
+    if (mentions && mentions.length > 0) {
+      // Don't issue a notification if you accidentally mention yourself
+      const targetUserIds = mentions;
+
+      for (const recipientId of targetUserIds) {
+        // Create a new record in the Notification collection
+        const notification = new Notification({
+          recipient: recipientId,
+          sender: createdBy,
+          type: "mention",
+          message: `${newComment.createdBy.name} mentioned you in a comment: "${comment.trim().substring(0, 35)}..."`,
+          link: `/workspaces/${existingTask.workspace}/tasks/${taskId}`,
+          isRead: false
+        });
+        await notification.save();
+
+        // Emit targeted live updates directly to the user's private socket room
+        io.to(recipientId.toString()).emit("newNotification", notification);
+      }
+    }
 
     return res.status(201).json({
       message: "Comment created successfully",

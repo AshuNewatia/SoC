@@ -6,6 +6,7 @@ import Task from '../models/Task.js';
 import { createAndSendNotification } from "../utils/notificationHelper.js";
 import crypto from "crypto"
 import Comment from "../models/Comment.js";
+import ActivityLog from "../models/ActivityLog.js";
 
 
 export const createWorkspace = async (req, res) => {
@@ -255,39 +256,83 @@ export const leaveWorkspace = async (req, res) => {
 };
 
 export const transferOwnership = async (req, res) => {
-  try {
-    const { workspaceId } = req.params;
-    const { newOwnerId } = req.body;
+    try {
+        const { workspaceId } = req.params;
+        const { newOwnerId } = req.body;
+        const currentOwnerId = req.user._id;
+
+        const workspace = await Workspace.findById(workspaceId);
+
+        if (!workspace)
+            return res.status(404).json({
+                success:false,
+                message:"Workspace not found"
+            });
+        if (String(workspace.owner) !== String(req.user._id)) {
+            return res.status(403).json({
+                success:false,
+                message:"Only the owner can transfer ownership."
+            });
+        }
+
+        const isMember = workspace.members.some(
+            m => String(m) === String(newOwnerId)
+        );
 
     const workspace = await Workspace.findById(workspaceId);
 
-    if (!workspace)
-      return res.status(404).json({
-        success: false,
-        message: "Workspace not found"
-      });
-    if (String(workspace.owner) !== String(req.user._id)) {
-      return res.status(403).json({
-        success: false,
-        message: "Only the owner can transfer ownership."
-      });
-    }
+        let newOwnerName = "a member";
+        try {
+            if (newOwnerId) {
+                const newOwnerUser = await User.findById(newOwnerId).select("name");
+                if (newOwnerUser?.name) {
+                    newOwnerName = newOwnerUser.name;
+                }
+            }
+        } catch (userErr) {
+               console.error("Non-blocking error fetching new owner name:", userErr.message);
+          }
+
+        workspace.owner = newOwnerId;
 
     const isMember = workspace.members.some(
       m => String(m) === String(newOwnerId)
     );
 
-    if (!isMember) {
-      return res.status(400).json({
-        success: false,
-        message: "New owner must already be a workspace member."
-      });
-    }
+        await workspace.save();
+        const logEntry = await ActivityLog.create({
+            workspaceId: workspaceId,
+            userId: currentOwnerId,
+            actionType: "OWNERSHIP_TRANSFERRED",
+            description: `transferred ownership of this workspace`,
+        });
+
+        const populatedLog = await logEntry.populate("userId", "name email");
+
+        const io = req.app.get("io");
+        if (io) {
+            io.to(`workspace_${workspaceId}`).emit("newActivityLogEntry", populatedLog);
+            console.log(`⚡ Ownership transfer broadcasted to room: workspace_${workspaceId}`);
+        }
+
+        await createAndSendNotification(req, {
+            recipient: newOwnerId, 
+            sender: currentOwnerId,
+            type: "OWNERSHIP_TRANSFERRED",
+            message: `You have been promoted to Owner of the workspace: "${workspace.name}"`,
+            workspace: workspaceId,
+            relatedId: workspace._id
+        });
 
     workspace.owner = newOwnerId;
 
-    if (!workspace.admins.some(a => String(a) === String(newOwnerId))) {
-      workspace.admins.push(newOwnerId);
+
+    } catch(err){
+        console.error(err);
+        return res.status(500).json({
+            success:false,
+            message:"Internal server error"
+        });
     }
 
     await workspace.save();
@@ -313,9 +358,7 @@ export const getInviteToken = async (req, res) => {
     const workspace = await Workspace.findById(workspaceId);
 
     if (!workspace) return res.status(404).json({ message: "Workspace not found" });
-    // if (workspace.createdBy.toString() !== req.user._id.toString()) {
-    //   return res.status(403).json({ message: "Only owners can generate invite links" });
-    // }
+ 
 
     if (!workspace.inviteToken) {
       workspace.inviteToken = new mongoose.Types.ObjectId().toString();
