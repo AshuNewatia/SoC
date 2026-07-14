@@ -275,11 +275,7 @@ export default function KanbanBoard() {
     setCreateOpen(true);
   };
 
-<<<<<<< HEAD
-  import { Skeleton } from "@/components/ui/skeleton"; // adjust the import path to match your project
-
-  // ... inside your component
-
+  // Loading state – using Skeleton component
   if (loading) {
     return (
       <div className="space-y-6">
@@ -319,30 +315,6 @@ export default function KanbanBoard() {
                 <div className="flex items-center gap-3">
                   <Skeleton className="h-3 w-3 rounded-full" />
                   <Skeleton className="h-5 w-28 rounded" />
-=======
-  if (loading) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <div className="h-8 w-56 bg-slate-200 rounded-lg"></div>
-          <div className="h-4 w-80 bg-slate-100 rounded mt-3"></div>
-        </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 flex gap-3">
-          <div className="h-10 w-24 bg-slate-200 rounded-xl"></div>
-          <div className="h-10 w-24 bg-slate-200 rounded-xl"></div>
-          <div className="h-10 w-32 bg-slate-200 rounded-xl"></div>
-          <div className="h-10 w-28 bg-slate-200 rounded-xl"></div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((col) => (
-            <div key={col} className="bg-white rounded-2xl border border-slate-200 p-4">
-              <div className="h-6 w-32 bg-slate-200 rounded mb-5"></div>
-              {[1, 2, 3].map((card) => (
-                <div key={card} className="bg-slate-50 rounded-xl p-4 mb-4">
-                  <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-slate-100 rounded w-1/2 mt-3"></div>
-                  <div className="h-3 bg-slate-100 rounded w-1/3 mt-2"></div>
->>>>>>> origin/main
                 </div>
                 <Skeleton className="h-8 w-8 rounded-full" />
               </div>
@@ -446,53 +418,33 @@ export default function KanbanBoard() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setTaskFilter("all")}
-<<<<<<< HEAD
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${taskFilter === "all" ? "bg-primary text-white" : "bg-white border border-border-light hover:bg-slate-50"
-                }`}
-=======
               className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
                 taskFilter === "all" ? "bg-primary text-white" : "bg-white border border-border-light hover:bg-slate-50"
               }`}
->>>>>>> origin/main
             >
               All Tasks
             </button>
             <button
               onClick={() => setTaskFilter("my")}
-<<<<<<< HEAD
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${taskFilter === "my" ? "bg-primary text-white" : "bg-white border border-border-light hover:bg-slate-50"
-                }`}
-=======
               className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
                 taskFilter === "my" ? "bg-primary text-white" : "bg-white border border-border-light hover:bg-slate-50"
               }`}
->>>>>>> origin/main
             >
               My Tasks
             </button>
             <button
               onClick={() => setTaskFilter("created")}
-<<<<<<< HEAD
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${taskFilter === "created" ? "bg-primary text-white" : "bg-white border border-border-light hover:bg-slate-50"
-                }`}
-=======
               className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
                 taskFilter === "created" ? "bg-primary text-white" : "bg-white border border-border-light hover:bg-slate-50"
               }`}
->>>>>>> origin/main
             >
               Created By Me
             </button>
             <button
               onClick={() => setTaskFilter("unassigned")}
-<<<<<<< HEAD
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition ${taskFilter === "unassigned" ? "bg-primary text-white" : "bg-white border border-border-light hover:bg-slate-50"
-                }`}
-=======
               className={`px-4 py-2 rounded-xl text-sm font-medium transition ${
                 taskFilter === "unassigned" ? "bg-primary text-white" : "bg-white border border-border-light hover:bg-slate-50"
               }`}
->>>>>>> origin/main
             >
               Unassigned
             </button>

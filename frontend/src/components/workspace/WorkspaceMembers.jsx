@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import { handleApiError, handleSuccess } from '../../utils/handleApiError';
 import {
@@ -32,8 +32,8 @@ export default function WorkspaceMembers() {
 
   const [openMenu, setOpenMenu] = useState(null);
 
-<<<<<<< HEAD
-  const fetchMembers = async () => {
+  // ✅ Fetch members function (kept from HEAD)
+  const fetchMembers = useCallback(async () => {
     try {
       const res = await api.get(`/api/workspaces/${id}/members`);
       setMembers(Array.isArray(res.data) ? res.data : []);
@@ -42,12 +42,9 @@ export default function WorkspaceMembers() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-=======
->>>>>>> origin/main
   useEffect(() => {
-
     fetchMembers();
 
     if (socket) {
@@ -56,10 +53,10 @@ export default function WorkspaceMembers() {
 
     return () => {
       if (socket) {
-        socket.off('members_updated',fetchMembers);
+        socket.off('members_updated', fetchMembers);
       }
     };
-  }, [id, socket]);
+  }, [id, socket, fetchMembers]);
 
   useEffect(() => {
     const closeMenu = () => setOpenMenu(null);
@@ -73,6 +70,7 @@ export default function WorkspaceMembers() {
       setInviteEmail('');
       handleSuccess("Member added successfully");
       setInviteOpen(false);
+      fetchMembers();
     } catch (err) {
       console.error(err);
       handleApiError(err);
@@ -104,8 +102,7 @@ export default function WorkspaceMembers() {
   const handlePromote = async (memberId) => {
     try {
       await api.post(`/api/workspaces/${id}/admins/${memberId}`);
-      const res = await api.get(`/api/workspaces/${id}/members`);
-      setMembers(res.data);
+      await fetchMembers();
       handleSuccess("Promoted to admin successfully");
       setOpenMenu(null);
     } catch (err) {
@@ -117,8 +114,7 @@ export default function WorkspaceMembers() {
   const handleDemote = async (memberId) => {
     try {
       await api.delete(`/api/workspaces/${id}/admins/${memberId}`);
-      const res = await api.get(`/api/workspaces/${id}/members`);
-      setMembers(res.data);
+      await fetchMembers();
       handleSuccess("Demoted to member successfully");
       setOpenMenu(null);
     } catch (err) {
@@ -131,8 +127,7 @@ export default function WorkspaceMembers() {
     if (!window.confirm('Are you sure you want to remove this member?')) return;
     try {
       await api.delete(`/api/workspaces/${id}/members/${memberId}`);
-      const res = await api.get(`/api/workspaces/${id}/members`);
-      setMembers(res.data);
+      await fetchMembers();
       handleSuccess("Member removed successfully");
       setOpenMenu(null);
     } catch (err) {
@@ -229,12 +224,11 @@ export default function WorkspaceMembers() {
 
               {/* Action buttons */}
               <div className="flex items-center gap-2">
-                {/* Three‑dot menu – only for non‑owners */}
                 {member.role !== 'Owner' && (
                   <div className="relative">
                     <button
                       onClick={(e) => {
-                        e.stopPropagation(); // prevent immediate closing
+                        e.stopPropagation();
                         setOpenMenu(openMenu === member._id ? null : member._id);
                       }}
                       className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition"
@@ -287,13 +281,11 @@ export default function WorkspaceMembers() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-slate-800">
-                Invite Member
-              </h3>
+              <h3 className="text-lg font-bold text-slate-800">Invite Member</h3>
               <button
                 onClick={() => {
                   setInviteOpen(false);
-                  setInviteUrl(''); // Reset link view
+                  setInviteUrl('');
                 }}
                 className="p-1 rounded hover:bg-slate-100"
               >
@@ -302,7 +294,9 @@ export default function WorkspaceMembers() {
             </div>
 
             {/* Email Option */}
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Invite via Email Address</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+              Invite via Email Address
+            </label>
             <input
               type="email"
               placeholder="Enter email address"
@@ -329,7 +323,7 @@ export default function WorkspaceMembers() {
               </button>
             </div>
 
-            {/* 🔽 NEW SECTION: OR Divider & URL Link Generation Option */}
+            {/* OR Divider & URL Link Generation */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-slate-200" /></div>
               <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-slate-400 font-semibold">Or</span></div>
@@ -362,25 +356,15 @@ export default function WorkspaceMembers() {
                   />
                   <button
                     onClick={copyToClipboard}
-<<<<<<< HEAD
-                    className={`p-2 rounded-lg border transition shrink-0 ${copied ? 'bg-green-50 text-green-600 border-green-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                      }`}
-=======
                     className={`p-2 rounded-lg border transition shrink-0 ${
                       copied ? 'bg-green-50 text-green-600 border-green-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                     }`}
->>>>>>> origin/main
                   >
                     {copied ? <Check size={14} /> : <Copy size={14} />}
                   </button>
                 </div>
               )}
             </div>
-<<<<<<< HEAD
-
-=======
-            
->>>>>>> origin/main
           </div>
         </div>
       )}
