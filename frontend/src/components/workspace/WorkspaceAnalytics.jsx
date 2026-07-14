@@ -10,6 +10,7 @@ import MemberPerformance from "../workspace/analytics/MemberPerformance";
 import InsightsSection from "../workspace/analytics/InsightsSection";
 import WorkloadChart from "../workspace/analytics/WorkloadChart";
 import DeadlineSection from "./analytics/DeadlineSection";
+import GithubAnalytics from "./analytics/GithubAnalytics";
 
 import { getCSVReport } from "../../services/workspaceAnalyticsService";
 
@@ -136,8 +137,10 @@ export default function WorkspaceAnalytics() {
                 </div>
             </div>
 
-            {/* Analytics Content */}
             <KPISection workspaceId={workspaceId} />
+            {workspace?.githubRepo && (
+                 <GithubAnalytics workspaceId={workspaceId} githubRepo={workspace.githubRepo} />
+)}
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                 <TaskTrendChart workspaceId={workspaceId} />

@@ -6,6 +6,7 @@ import Task from '../models/Task.js';
 import { createAndSendNotification } from "../utils/notificationHelper.js";
 import crypto from "crypto"
 import Comment from "../models/Comment.js";
+import ActivityLog from "../models/ActivityLog.js";
 
 
 export const createWorkspace = async (req, res) => {
