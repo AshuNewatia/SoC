@@ -65,7 +65,9 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
   };
 
   const sortedWorkspaces = [...workspaces].sort(
-    (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+    (a, b) =>
+      new Date(b.lastActivityAt) -
+      new Date(a.lastActivityAt)
   );
 
   const filteredWorkspaces = sortedWorkspaces.filter((workspace) =>

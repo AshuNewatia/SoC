@@ -44,7 +44,6 @@ export default function CommentSection({ taskId, members = [] }) {
 
   const fetchComments = async () => {
     try {
-      setLoading(true);
       const response = await getTaskComments(taskId);
       setComments(response.data.comments || []);
     } catch (error) {

@@ -37,6 +37,11 @@ const workspaceSchema = new mongoose.Schema(
       unique: true, 
       sparse: true
 },
+    lastActivityAt:{
+      type: Date,
+      default: Date.now
+    }
+
   },
   
   { timestamps: true }

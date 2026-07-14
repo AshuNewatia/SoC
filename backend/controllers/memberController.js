@@ -22,7 +22,7 @@ export const getWorkspaceMembers = async (req, res) => {
       email: workspace.owner.email,
       avatar: workspace.owner.avatar,
       role: "Owner",
-      tasksCompleted: 0 
+      tasksCompleted: 0
     };
 
     const membersData = workspace.members
@@ -114,12 +114,13 @@ export const addMemberToWorkspace = async (req, res) => {
       });
     }
 
+
     workspace.members.push(userToAdd._id);
     await workspace.save();
 
     await createAndSendNotification(req, {
-      recipient: userToAdd._id, 
-      sender: req.user._id, 
+      recipient: userToAdd._id,
+      sender: req.user._id,
       type: "MEMBER_ADDED",
       message: `You have been added to the workspace: "${workspace.name}"`,
       workspace: workspace._id,
@@ -132,6 +133,12 @@ export const addMemberToWorkspace = async (req, res) => {
       "MEMBER_ADDED",
       `Added ${userToAdd.name} to the workspace`
     );
+    const io = req.app.get("io");
+    if (io){
+       io.to(workspaceId).emit('members_updated');
+       io.to(workspaceId).emit('activity_updated');
+    }
+
 
     res.status(200).json({
       message: "Member added successfully",
@@ -194,28 +201,23 @@ export const removeMember = async (req, res) => {
       });
     }
 
-    workspace.members =
-      workspace.members.filter(
-        member =>
-          member.toString() !== userId
-      );
-
-    const targetIsAdmin =
-      workspace.admins.some(
-        admin =>
-          admin.toString() === userId
-      );
+    const targetIsAdmin = workspace.admins.some(
+      admin => admin.toString() === userId
+    );
 
     if (targetIsAdmin && !isOwner) {
-      return res.status(401).json({ message: "Only owner can remove admin" })
+      return res.status(403).json({
+        message: "Only owner can remove admin"
+      });
     }
 
-    workspace.admins =
-      workspace.admins.filter(
-        admin =>
-          admin.toString() !== userId
-      );
+    workspace.members = workspace.members.filter(
+      member => member.toString() !== userId
+    );
 
+    workspace.admins = workspace.admins.filter(
+      admin => admin.toString() !== userId
+    );
     await workspace.save();
 
     await logActivity(
@@ -224,6 +226,11 @@ export const removeMember = async (req, res) => {
       "MEMBER_REMOVED",
       `removed ${userToRemove.name} from the workspace`
     );
+    const io = req.app.get("io");
+    if (io){
+       io.to(workspaceId).emit('members_updated');
+       io.to(workspaceId).emit('activity_updated');
+    }
 
     res.status(200).json({
       message: "Member removed"
@@ -287,20 +294,27 @@ export const promoteToAdmin = async (req, res) => {
     workspace.admins.push(userId);
     await workspace.save();
 
-        await createAndSendNotification(req, {
-            recipient: userId,
-            sender: req.user._id,
-            type: "ROLE_CHANGED",
-            message: `You have been promoted to Admin in workspace "${workspace.name}"`,
-            workspace: workspaceId,
-            relatedId: workspaceId
-        });
+    await createAndSendNotification(req, {
+      recipient: userId,
+      sender: req.user._id,
+      type: "ROLE_CHANGED",
+      message: `You have been promoted to Admin in workspace "${workspace.name}"`,
+      workspace: workspaceId,
+      relatedId: workspaceId
+    });
     await logActivity(
-        workspace._id,
-        req.user._id,
-        "ROLE_CHANGED",
-        `promoted ${targetUser.name} to Admin`
+      workspace._id,
+      req.user._id,
+      "ROLE_CHANGED",
+      `promoted ${targetUser.name} to Admin`
     );
+
+    const io = req.app.get("io");
+    if (io){
+       io.to(workspaceId).emit('members_updated');
+       io.to(workspaceId).emit('activity_updated');
+    }
+
 
     res.status(200).json({
       message: "Admin added successfully",
@@ -344,6 +358,9 @@ export const removeAdmin = async (req, res) => {
       );
 
     await workspace.save();
+
+    const io = req.app.get("io");
+    if (io) io.to(workspaceId).emit('members_updated');
 
     res.status(200).json({
       message: "Admin removed"

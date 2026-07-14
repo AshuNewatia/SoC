@@ -14,6 +14,7 @@ import {
   Link2,
   Unlink,
   CalendarClock,
+  FileUp
 } from "lucide-react";
 import api from '../../services/api';
 
@@ -28,8 +29,8 @@ export default function WorkspaceActivity() {
   // ------------------------------------------------
   // 1. Fetch & live updates
   // ------------------------------------------------
-  useEffect(() => {
-    const fetchActivities = async () => {
+
+  const fetchActivities = async () => {
       try {
         const res = await api.get(`/api/workspaces/${id}/activity`);
         setActivities(Array.isArray(res.data) ? res.data : []);
@@ -40,16 +41,15 @@ export default function WorkspaceActivity() {
       }
     };
 
+  useEffect(() => {
     fetchActivities();
 
     if (socket) {
-      socket.on('new_activity', (newActivity) => {
-        setActivities((prev) => [newActivity, ...prev]);
-      });
+      socket.on('activity_updated', fetchActivities);
     }
 
     return () => {
-      if (socket) socket.off('new_activity');
+      if (socket) socket.off('activity_updated',fetchActivities);
     };
   }, [id, socket]);
 
@@ -157,6 +157,8 @@ export default function WorkspaceActivity() {
         return { icon: UserPlus, color: 'text-cyan-500', bg: 'bg-cyan-50' };
       case 'TASK_DUE_DATE_CHANGED':
         return { icon: CalendarClock, color: 'text-orange-500', bg: 'bg-orange-50' };
+      case 'FILE_UPLOADED':
+        return { icon: FileUp, colour: 'text-sky-500', bg: 'bg-sky-50' };
 
       default:
         return { icon: Clock, color: "text-gray-500", bg: "bg-gray-50" };

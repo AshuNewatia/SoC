@@ -11,6 +11,7 @@ import TaskDrawer from "../kanban/TaskDrawer";
 import CreateTaskModal from "../kanban/CreateTaskModal";
 import EditTaskModal from "../kanban/EditTaskModal";
 import { handleApiError, handleSuccess } from "../../utils/handleApiError";
+import Skeleton from "../common/Skeleton";
 
 import {
   getTasks,
@@ -274,30 +275,74 @@ export default function KanbanBoard() {
     setCreateOpen(true);
   };
 
+  // Loading state – using Skeleton component
   if (loading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
-          <div className="h-8 w-56 bg-slate-200 rounded-lg"></div>
-          <div className="h-4 w-80 bg-slate-100 rounded mt-3"></div>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-5">
+          <div className="flex items-center justify-between">
+            <div className="space-y-3">
+              <Skeleton className="h-8 w-64 rounded-lg" />
+              <Skeleton className="h-4 w-80 rounded" />
+            </div>
+            <Skeleton className="h-11 w-32 rounded-xl" />
+          </div>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-4 flex gap-3">
-          <div className="h-10 w-24 bg-slate-200 rounded-xl"></div>
-          <div className="h-10 w-24 bg-slate-200 rounded-xl"></div>
-          <div className="h-10 w-32 bg-slate-200 rounded-xl"></div>
-          <div className="h-10 w-28 bg-slate-200 rounded-xl"></div>
+
+        {/* Search + Filters */}
+        <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-5">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+            <Skeleton className="h-11 w-full lg:w-[480px] rounded-xl" />
+            <div className="flex gap-2 flex-wrap">
+              <Skeleton className="h-10 w-24 rounded-xl" />
+              <Skeleton className="h-10 w-24 rounded-xl" />
+              <Skeleton className="h-10 w-32 rounded-xl" />
+              <Skeleton className="h-10 w-28 rounded-xl" />
+            </div>
+          </div>
         </div>
+
+        {/* Columns */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((col) => (
-            <div key={col} className="bg-white rounded-2xl border border-slate-200 p-4">
-              <div className="h-6 w-32 bg-slate-200 rounded mb-5"></div>
-              {[1, 2, 3].map((card) => (
-                <div key={card} className="bg-slate-50 rounded-xl p-4 mb-4">
-                  <div className="h-4 bg-slate-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-slate-100 rounded w-1/2 mt-3"></div>
-                  <div className="h-3 bg-slate-100 rounded w-1/3 mt-2"></div>
+          {[1, 2, 3].map((column) => (
+            <div
+              key={column}
+              className="bg-surface rounded-2xl border border-border-light shadow-sm overflow-hidden"
+            >
+              {/* Column Header */}
+              <div className="flex items-center justify-between p-5 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-3 w-3 rounded-full" />
+                  <Skeleton className="h-5 w-28 rounded" />
                 </div>
-              ))}
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </div>
+
+              {/* Cards */}
+              <div className="p-4 space-y-4">
+                {[1, 2, 3].map((card) => (
+                  <div
+                    key={card}
+                    className="bg-white rounded-2xl border border-slate-200 p-4"
+                  >
+                    <Skeleton className="h-5 w-3/4 rounded" />
+                    <Skeleton className="mt-3 h-4 w-full rounded" />
+                    <Skeleton className="mt-2 h-4 w-2/3 rounded" />
+                    <div className="flex justify-between items-center mt-5">
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                      <Skeleton className="h-4 w-20 rounded" />
+                    </div>
+                    <div className="flex justify-between items-center mt-5">
+                      <Skeleton className="h-4 w-24 rounded" />
+                      <div className="flex gap-2">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
