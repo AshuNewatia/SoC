@@ -17,21 +17,6 @@ export const updateTask = (taskId, task) =>
 export const deleteTask = (taskId) => 
   api.delete(`/tasks/${taskId}`);
 
-// // ─── UPDATE ONLY TASK STATUS (For Drag & Drop) ─────────────────
-// export const updateTaskStatus = (taskId, data) => 
-//   api.patch(`/tasks/${taskId}/status`, data);
-
-export const updateTaskStatus = async (taskId, data) => {
-  const token = localStorage.getItem("token");
-
-  return axios.patch(
-    `http://localhost:5000/api/tasks/${taskId}/status`,
-    data,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
-};
+// ─── UPDATE ONLY TASK STATUS (For Drag & Drop) ─────────────────
+export const updateTaskStatus = (taskId, data) => 
+  api.put(`/tasks/${taskId}/status`, data);
