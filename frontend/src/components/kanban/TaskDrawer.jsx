@@ -143,10 +143,10 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, me
                       <CalendarDays size={16} />
                       {task.dueDate
                         ? new Date(task.dueDate).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
                         : "Not set"}
                     </span>
                   </div>
@@ -156,10 +156,10 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, me
                     <span className="text-sm text-slate-700">
                       {task.createdAt
                         ? new Date(task.createdAt).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
                         : "Unknown"}
                     </span>
                   </div>
@@ -202,11 +202,15 @@ export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, me
                     )}
                   </div>
 
-                  
+
                 </div>
 
                 {/* CommentSection */}
-                <CommentSection taskId={task._id} members={members} />
+                <CommentSection
+                  taskId={task._id}
+                  members={members}
+                  fetchTasks={fetchTasks}
+                />
               </div>
             </motion.div>
           </>

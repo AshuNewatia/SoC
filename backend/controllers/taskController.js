@@ -165,9 +165,18 @@ export const getTasks = async (req, res) => {
                     task: task._id,
                 });
 
+                const unreadComments = await Comment.countDocuments({
+                    task: task._id,
+                    readBy: {
+                        $nin: [req.user._id],
+                    },
+                });
+
                 return {
                     ...task.toObject(),
                     commentCount,
+                    unreadCommentCount: unreadComments,
+                    hasUnreadComments: unreadComments > 0,
                 };
             })
         );
@@ -481,9 +490,9 @@ export const uploadAttachment = async (req, res) => {
         );
 
         const io = req.app.get("io");
-        if (io){
-             io.to(task.workspace).emit("taskUpdated", task);
-             io.to(task.workspace).emit("activity_updated");
+        if (io) {
+            io.to(task.workspace).emit("taskUpdated", task);
+            io.to(task.workspace).emit("activity_updated");
         }
         res.status(200).json({ message: "File uploaded successfully", task });
     } catch (error) {

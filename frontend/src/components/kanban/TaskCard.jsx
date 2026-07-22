@@ -39,10 +39,10 @@ export default function TaskCard({ task, onClick }) {
           <p>
             {task.dueDate
               ? new Date(task.dueDate).toLocaleDateString("en-IN", {
-                  weekday: "short",
-                  day: "numeric",
-                  month: "short",
-                })
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+              })
               : "No Due Date"}
           </p>
         </div>
@@ -57,11 +57,14 @@ export default function TaskCard({ task, onClick }) {
 
         <div className="flex items-center gap-3">
           {/* Comment Count */}
-          <div className="flex items-center gap-1.5 text-slate-500">
+          <div className="relative flex items-center gap-1.5 text-slate-500">
             <MessageCircle size={15} />
-            <span className="text-xs font-medium">
-              {task.commentCount || 0}
-            </span>
+
+            {task.hasUnreadComments && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500"></span>
+            )}
+
+            <span>{task.commentCount || 0}</span>
           </div>
 
           {/* Member Avatars */}
