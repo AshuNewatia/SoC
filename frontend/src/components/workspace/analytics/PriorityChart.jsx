@@ -16,122 +16,124 @@ const DOTS = {
   Low: "bg-green-500",
 };
 
-export default function PriorityChart({workspaceId}) {
+export default function PriorityChart({ workspaceId }) {
   const [data, setData] = useState([]);
-  const [loading,setLoading]=useState(true);
+  const [loading, setLoading] = useState(true);
 
- useEffect(() => {
-  if (!workspaceId) return;
+  useEffect(() => {
+    if (!workspaceId) return;
 
-  const fetchPriorityData = async () => {
-    try {
-      const { data } =
-        await getWorkspacePriorityStats(
-          workspaceId
+    const fetchPriorityData = async () => {
+      try {
+        const { data } =
+          await getWorkspacePriorityStats(
+            workspaceId
+          );
+
+        const sorted = [...data].sort((a, b) => {
+          const order = {
+            Critical: 1,
+            High: 2,
+            Medium: 3,
+            Low: 4,
+          };
+
+          return order[a._id] - order[b._id];
+        });
+
+        setData(sorted);
+      } catch (error) {
+        console.error(
+          "Failed to fetch workspace priority analytics",
+          error
         );
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      const sorted = [...data].sort((a, b) => {
-        const order = {
-          Critical: 1,
-          High: 2,
-          Medium: 3,
-          Low: 4,
-        };
-
-        return order[a._id] - order[b._id];
-      });
-
-      setData(sorted);
-    } catch (error) {
-      console.error(
-        "Failed to fetch workspace priority analytics",
-        error
-      );
-    }finally{
-   setLoading(false);
-}
-  };
-
-  fetchPriorityData();
-}, [workspaceId]);
+    fetchPriorityData();
+  }, [workspaceId]);
 
   const totalTasks = data.reduce(
     (sum, item) => sum + item.count,
     0
   );
 
-if (!data.length) {
-  return (
-    <div className="bg-surface rounded-2xl border p-6">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10">
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
 
-    <div className="flex flex-col items-center justify-center h-80 text-center">
+        <Skeleton className="h-7 w-52" />
 
-        <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center">
+        <Skeleton className="h-4 w-64 mt-3" />
 
-            <span className="w-4 h-4 rounded-full bg-slate-400"/>
+        <div className="mt-8 space-y-7">
+
+          {[1, 2, 3, 4].map((item) => (
+            <div key={item}>
+
+              <div className="flex justify-between mb-3">
+
+                <Skeleton className="h-4 w-24" />
+
+                <Skeleton className="h-4 w-10" />
+
+              </div>
+
+              <Skeleton className="h-3 rounded-full" />
+
+            </div>
+          ))}
 
         </div>
 
-        <h3 className="mt-5 text-lg font-semibold text-text-primary">
-            No Priority Data
-        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
 
-        <p className="mt-2 text-sm text-text-secondary max-w-sm">
-            Create tasks with different priorities to view the distribution.
-        </p>
+          {[1, 2, 3, 4].map((item) => (
+            <div
+              key={item}
+              className="border rounded-xl p-4"
+            >
+              <Skeleton className="h-4 w-16 mx-auto" />
+              <Skeleton className="h-7 w-10 mx-auto mt-3" />
+            </div>
+          ))}
 
-    </div>
+        </div>
 
-</div>
-    </div>
-  );
-}
-if (loading) {
-  return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+      </div>
+    );
+  }
 
-      <Skeleton className="h-7 w-52"/>
+  if (!data.length) {
+    return (
+      <div className="bg-surface rounded-2xl border p-6">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10">
 
-      <Skeleton className="h-4 w-64 mt-3"/>
+          <div className="flex flex-col items-center justify-center h-80 text-center">
 
-      <div className="mt-8 space-y-7">
+            <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center">
 
-        {[1,2,3,4].map((item)=>(
-          <div key={item}>
-
-            <div className="flex justify-between mb-3">
-
-              <Skeleton className="h-4 w-24"/>
-
-              <Skeleton className="h-4 w-10"/>
+              <span className="w-4 h-4 rounded-full bg-slate-400" />
 
             </div>
 
-            <Skeleton className="h-3 rounded-full"/>
+            <h3 className="mt-5 text-lg font-semibold text-text-primary">
+              No Priority Data
+            </h3>
+
+            <p className="mt-2 text-sm text-text-secondary max-w-sm">
+              Create tasks with different priorities to view the distribution.
+            </p>
 
           </div>
-        ))}
 
+        </div>
       </div>
+    );
+  }
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
-
-        {[1,2,3,4].map((item)=>(
-          <div
-            key={item}
-            className="border rounded-xl p-4"
-          >
-            <Skeleton className="h-4 w-16 mx-auto"/>
-            <Skeleton className="h-7 w-10 mx-auto mt-3"/>
-          </div>
-        ))}
-
-      </div>
-
-    </div>
-  );
-}
 
   return (
     <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-6">
@@ -164,8 +166,8 @@ if (loading) {
           const percentage =
             totalTasks > 0
               ? Math.round(
-                  (item.count / totalTasks) * 100
-                )
+                (item.count / totalTasks) * 100
+              )
               : 0;
 
           return (
@@ -173,9 +175,8 @@ if (loading) {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                   <span
-                    className={`w-3 h-3 rounded-full ${
-                      DOTS[item._id]
-                    }`}
+                    className={`w-3 h-3 rounded-full ${DOTS[item._id]
+                      }`}
                   />
 
                   <span className="font-medium text-text-primary">
@@ -196,9 +197,8 @@ if (loading) {
 
               <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all duration-700 ${
-                    COLORS[item._id]
-                  }`}
+                  className={`h-full rounded-full transition-all duration-700 ${COLORS[item._id]
+                    }`}
                   style={{
                     width: `${percentage}%`,
                   }}

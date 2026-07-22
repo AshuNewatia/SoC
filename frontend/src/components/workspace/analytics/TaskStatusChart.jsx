@@ -60,33 +60,6 @@ export default function TaskStatusChart({workspaceId}) {
     (sum, item) => sum + item.value,
     0
   );
-
-  if (!data.length) {
-    return (
-      <div className="bg-surface rounded-2xl border p-6">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10">
-
-    <div className="flex flex-col items-center justify-center h-80 text-center">
-
-        <PieChart
-            size={42}
-            className="text-slate-400"
-        />
-
-        <h3 className="mt-5 text-lg font-semibold text-text-primary">
-            No Task Status Data
-        </h3>
-
-        <p className="mt-2 text-sm text-text-secondary max-w-sm">
-            Task distribution will appear once tasks are created.
-        </p>
-
-    </div>
-
-</div>
-      </div>
-    );
-  }
   if (loading) {
     return (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
@@ -122,6 +95,34 @@ export default function TaskStatusChart({workspaceId}) {
     );
 }
 
+
+  if (!data.length) {
+    return (
+      <div className="bg-surface rounded-2xl border p-6">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10">
+
+    <div className="flex flex-col items-center justify-center h-80 text-center">
+
+        <PieChart
+            size={42}
+            className="text-slate-400"
+        />
+
+        <h3 className="mt-5 text-lg font-semibold text-text-primary">
+            No Task Status Data
+        </h3>
+
+        <p className="mt-2 text-sm text-text-secondary max-w-sm">
+            Task distribution will appear once tasks are created.
+        </p>
+
+    </div>
+
+</div>
+      </div>
+    );
+  }
+  
   return (
     <div className="bg-surface rounded-2xl border border-border-light shadow-sm p-6">
       <div className="mb-6">
