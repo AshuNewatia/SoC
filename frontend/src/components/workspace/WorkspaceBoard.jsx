@@ -353,16 +353,17 @@ export default function KanbanBoard() {
   return (
     <>
       <TaskDrawer
-        task={selectedTask}
-        members={members}
-        isOpen={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        onDelete={deleteTask}
-        onEdit={() => {
-          setEditOpen(true);
-          setDrawerOpen(false);
-        }}
-      />
+  task={selectedTask}
+  members={members}
+  fetchTasks={fetchTasks}
+  isOpen={drawerOpen}
+  onClose={() => setDrawerOpen(false)}
+  onDelete={deleteTask}
+  onEdit={() => {
+    setEditOpen(true);
+    setDrawerOpen(false);
+  }}
+/>
       <CreateTaskModal
         isOpen={createOpen}
         onClose={() => setCreateOpen(false)}
