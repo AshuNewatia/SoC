@@ -19,6 +19,9 @@ export default function TaskCard({ task, onClick }) {
       transition={{ duration: 0.15 }}
       className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition cursor-pointer"
     >
+      {task.hasUnreadComments && (
+        <span className="absolute top-3 right-3 w-3 h-3 rounded-full bg-red-500 ring-2 ring-white"></span>
+      )}
       {/* Title */}
       <div className="mb-3">
         <h3 className="font-semibold text-slate-800 leading-snug">
@@ -57,14 +60,11 @@ export default function TaskCard({ task, onClick }) {
 
         <div className="flex items-center gap-3">
           {/* Comment Count */}
-          <div className="relative flex items-center gap-1.5 text-slate-500">
+          <div className="flex items-center gap-1.5 text-slate-500">
             <MessageCircle size={15} />
-
-            {task.hasUnreadComments && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500"></span>
-            )}
-
-            <span>{task.commentCount || 0}</span>
+            <span className="text-xs font-medium">
+              {task.commentCount || 0}
+            </span>
           </div>
 
           {/* Member Avatars */}
