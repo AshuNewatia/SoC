@@ -24,24 +24,25 @@ import WorkspaceBoard from "./components/workspace/WorkspaceBoard";
 import Sidebar from "./components/sidebar/Sidebar";
 import Header from "./components/header/Header";
 import { useAuth } from "./context/authContext";
-import socket from "./services/socket"; 
-// function ProtectedRoute() {
-//   const { user, loading } = useAuth();
-  
-//   if (loading) {
-//     return <div className="flex items-center justify-center h-screen">Loading...</div>;
-//   }
-//   if (!user) {
-//     return <Navigate to="/login" replace />;
-//   }
-//   return <Outlet />;
-// }
+import socket from "./services/socket";
+
+function ProtectedRoute() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return <Outlet />;
+}
 
 function AuthenticatedLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [workspaceSearch, setWorkspaceSearch] = useState("");
-  
-  const { user } = useAuth(); 
+
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!user) return;
@@ -53,7 +54,7 @@ function AuthenticatedLayout() {
 
     console.log(`🚀 Attempting to emit joinRoom for ID: ${userId}`);
 
-    socket.connect(); 
+    socket.connect();
     socket.emit("joinRoom", userId);
 
     socket.on("connect", () => {
@@ -67,19 +68,19 @@ function AuthenticatedLayout() {
   }, [user]);
 
   return (
-   <WorkspaceProvider>
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-50">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)}  workspaceSearch={workspaceSearch} />
-      
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        <Header onMenuClick={() => setSidebarOpen(true)} setWorkspaceSearch={setWorkspaceSearch} workspaceSearch={workspaceSearch}/>
-        
-        <main className="flex-1 overflow-y-auto focus:outline-none">
-          <Outlet /> 
-        </main>
+    <WorkspaceProvider>
+      <div className="flex h-screen w-screen overflow-hidden bg-slate-50">
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} workspaceSearch={workspaceSearch} />
+
+        <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+          <Header onMenuClick={() => setSidebarOpen(true)} setWorkspaceSearch={setWorkspaceSearch} workspaceSearch={workspaceSearch} />
+
+          <main className="flex-1 overflow-y-auto focus:outline-none">
+            <Outlet />
+          </main>
+        </div>
       </div>
-    </div>
-   </WorkspaceProvider>  
+    </WorkspaceProvider>
   );
 }
 
@@ -92,10 +93,12 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
         <Route path="/join/workspace/:token" element={<JoinWorkspace />} />
-        
+
         <Route path="/create-profile" element={<CreateProfile />} />
 
+        <Route element={<ProtectedRoute />}>
           <Route element={<AuthenticatedLayout />}>
+
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/settings" element={<Settings />} />
@@ -104,13 +107,15 @@ function App() {
 
             <Route path="/workspace/:id" element={<WorkSpace />}>
               <Route index element={<Navigate to="overview" replace />} />
-              <Route path="overview" element={<WorkspaceOverview />}/>
+              <Route path="overview" element={<WorkspaceOverview />} />
               <Route path="board" element={<WorkspaceBoard />} />
               <Route path="analytics" element={<WorkspaceAnalytics />} />
               <Route path="activity" element={<WorkspaceActivity />} />
               <Route path="members" element={<WorkspaceMembers />} />
             </Route>
+
           </Route>
+        </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

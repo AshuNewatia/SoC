@@ -3,6 +3,17 @@ import Workspace from "../models/Workspace.js";
 import User from "../models/User.js";
 import mongoose from "mongoose";
 import axios from 'axios'
+
+import { generateWorkspaceReportPDF } from "../services/pdf/workspaceReportPdf.js";
+import { getWorkspaceReportData } from "../services/workspaceReportservice.js";
+import PDFDocument from "pdfkit";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // ======================================================
 // HELPER 1: FIND WORKSPACE AND USER ROLE
 // ======================================================
@@ -533,71 +544,6 @@ const escapeCSV = (value) => {
   return `"${escapedValue}"`;
 };
 
-export const getCSVReport = async (req, res) => {
-  try {
-    const { workspaceId } = req.params;
-    const userId = req.user._id || req.user.id;
-    const workspaceName = Workspace.find({ _id: workspaceId}).name;
-
-    const tasks = await Task.find({ workspace: workspaceId })
-      .populate("assignedTo", "name")
-      .populate("createdBy", "name")
-      .sort({ createdAt: -1 });
-
-    const headers = [
-      "Task title",
-      "Description",
-      "Status",
-      "Priority",
-      "Assignee names",
-      "Created by",
-      "Created date",
-      "Due date",
-      "Overdue",
-      "GitHub issue number",
-    ];
-
-    const header = headers.map(escapeCSV).join(",");
-
-    const rows = tasks.map((task) => {
-      const title = task.title;
-      const description = task.description || "";
-      const status = task.status;
-      const priority = task.priority;
-      const assignedTo = task.assignedTo.map((user) => user.name).join(", ") || "Unassigned";
-      const createdBy = task.createdBy?.name || "User";
-      const createdAt = task.createdAt.toLocaleDateString("en-IN");
-      const dueDate = task.dueDate ? task.dueDate.toLocaleDateString("en-IN") : "No due date";
-      const overdue =
-        task.dueDate && task.status !== "completed" && task.dueDate < new Date() ? "Yes" : "No";
-      const githubIssueNumber = task.githubIssueNumber ? `#${task.githubIssueNumber}` : "Not linked";
-
-      return [
-        title,
-        description,
-        status,
-        priority,
-        assignedTo,
-        createdBy,
-        createdAt,
-        dueDate,
-        overdue,
-        githubIssueNumber,
-      ]
-        .map(escapeCSV)
-        .join(",");
-    });
-
-    const csvContent = [header, ...rows].join("\n");
-
-    res.setHeader("Content-Type", "text/csv; charset=utf-8");
-    res.setHeader("Content-Disposition", `attachment; filename="${workspaceName}-tasks.csv`);
-    return res.send("\uFEFF" + csvContent);
-  } catch (error) {
-    console.error("CSV export error:", error);
-    return res.status(500).json({ message: "Failed to generate CSV report" });
-  }
-};
 
 export const getWorkspaceGithubAnalytics = async (req, res) => {
   try {
@@ -664,4 +610,130 @@ export const getWorkspaceGithubAnalytics = async (req, res) => {
     console.error("GitHub Analytics error:", error);
     return res.status(500).json({ message: "Failed to load repo statistics." });
   }
+};
+
+export const getCSVReport = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    const userId = req.user._id || req.user.id;
+    const workspaceName = Workspace.find({ _id: workspaceId}).name;
+
+    const tasks = await Task.find({ workspace: workspaceId })
+      .populate("assignedTo", "name")
+      .populate("createdBy", "name")
+      .sort({ createdAt: -1 });
+
+    const headers = [
+      "Task title",
+      "Description",
+      "Status",
+      "Priority",
+      "Assignee names",
+      "Created by",
+      "Created date",
+      "Due date",
+      "Overdue",
+      "GitHub issue number",
+    ];
+
+    const header = headers.map(escapeCSV).join(",");
+
+    const rows = tasks.map((task) => {
+      const title = task.title;
+      const description = task.description || "";
+      const status = task.status;
+      const priority = task.priority;
+      const assignedTo = task.assignedTo.map((user) => user.name).join(", ") || "Unassigned";
+      const createdBy = task.createdBy?.name || "User";
+      const createdAt = task.createdAt.toLocaleDateString("en-IN");
+      const dueDate = task.dueDate ? task.dueDate.toLocaleDateString("en-IN") : "No due date";
+      const overdue =
+        task.dueDate && task.status !== "completed" && task.dueDate < new Date() ? "Yes" : "No";
+      const githubIssueNumber = task.githubIssueNumber ? `#${task.githubIssueNumber}` : "Not linked";
+
+      return [
+        title,
+        description,
+        status,
+        priority,
+        assignedTo,
+        createdBy,
+        createdAt,
+        dueDate,
+        overdue,
+        githubIssueNumber,
+      ]
+        .map(escapeCSV)
+        .join(",");
+    });
+
+    const csvContent = [header, ...rows].join("\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${workspaceName}-tasks.csv`);
+    return res.send("\uFEFF" + csvContent);
+  } catch (error) {
+    console.error("CSV export error:", error);
+    return res.status(500).json({ message: "Failed to generate CSV report" });
+  }
+};
+
+export const getWorkspaceAnalyticsReport = async (req, res) => {
+    try {
+        const { workspaceId } = req.params;
+        const userId = req.user._id || req.user.id;
+
+        console.log('📊 Generating analytics report for workspace:', workspaceId);
+        console.log('👤 User:', userId);
+
+        // Get report data
+        const report = await getWorkspaceReportData(workspaceId, userId);
+        console.log('✅ Report data fetched');
+
+        // Create PDF document
+        const doc = new PDFDocument({
+            size: "A4",
+            margin: 40,
+            bufferPages: true,
+        });
+
+        // Set response headers
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${report.workspace.name || 'workspace'}-report.pdf"`
+        );
+
+        // Pipe PDF to response
+        doc.pipe(res);
+
+        // Generate the PDF
+        console.log('🔄 Generating PDF...');
+        await generateWorkspaceReportPDF(doc, report);
+        console.log('✅ PDF generation complete');
+
+        // End the document
+        doc.end();
+
+        // Optional: Save PDF to disk for debugging
+        const chunks = [];
+        doc.on('data', chunk => chunks.push(chunk));
+        doc.on('end', () => {
+            const pdfBuffer = Buffer.concat(chunks);
+            console.log('📄 PDF size:', pdfBuffer.length, 'bytes');
+            
+            // Save a copy for debugging (optional)
+            const debugPath = path.join(__dirname, '../../debug-report.pdf');
+            fs.writeFileSync(debugPath, pdfBuffer);
+            console.log('💾 Debug PDF saved to:', debugPath);
+        });
+
+    } catch (error) {
+        console.error('❌ Error generating report:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to generate report',
+            error: error.message
+        });
+    }
 };

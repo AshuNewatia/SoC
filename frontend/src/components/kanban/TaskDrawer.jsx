@@ -23,7 +23,7 @@ const statusLabels = {
   completed: "Completed",
 };
 
-export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, members }) {
+export default function TaskDrawer({ task, isOpen, onClose, onDelete, onEdit, members, fetchTasks, }) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   if (!task) return null;
