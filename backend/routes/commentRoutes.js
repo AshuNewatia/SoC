@@ -4,6 +4,7 @@ import {
   getTaskComments,
   editComment,
   deleteComment,
+  markCommentsAsRead,
 } from "../controllers/commentController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -17,5 +18,7 @@ router.get("/task/:taskId", protect, getTaskComments);
 router.patch("/:commentId", protect, editComment);
 
 router.delete("/:commentId", protect, deleteComment);
+
+router.put("/task/:taskId/read", protect, markCommentsAsRead);
 
 export default router;

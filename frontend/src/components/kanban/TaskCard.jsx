@@ -19,6 +19,9 @@ export default function TaskCard({ task, onClick }) {
       transition={{ duration: 0.15 }}
       className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition cursor-pointer"
     >
+      {task.hasUnreadComments && (
+        <span className="absolute top-3 right-3 w-3 h-3 rounded-full bg-red-500 ring-2 ring-white"></span>
+      )}
       {/* Title */}
       <div className="mb-3">
         <h3 className="font-semibold text-slate-800 leading-snug">
@@ -39,10 +42,10 @@ export default function TaskCard({ task, onClick }) {
           <p>
             {task.dueDate
               ? new Date(task.dueDate).toLocaleDateString("en-IN", {
-                  weekday: "short",
-                  day: "numeric",
-                  month: "short",
-                })
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+              })
               : "No Due Date"}
           </p>
         </div>

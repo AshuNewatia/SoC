@@ -15,42 +15,53 @@ import {
   createComment,
   updateComment,
   deleteComment,
+  markCommentsAsRead,
 } from "../../services/commentServices";
 
-import {handleApiError} from "../../utils/handleApiError"
+import { handleApiError } from "../../utils/handleApiError";
 import socket from "../../hooks/useSocket";
 
-
-export default function CommentSection({ taskId, members = [] }) {
+export default function CommentSection({ taskId, members = [],fetchTasks}) {
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
-
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-
   const [activeMenu, setActiveMenu] = useState(null);
-
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
-
-  // ===== MENTION STATES =====
   const [selectedMentions, setSelectedMentions] = useState([]);
   const [mentionQuery, setMentionQuery] = useState("");
   const [showMentionDropdown, setShowMentionDropdown] = useState(false);
-  const [mentionMode, setMentionMode] = useState(null); // "create" | "edit" | null
+  const [mentionMode, setMentionMode] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
-  // ===== AUTO-SCROLL REF =====
   const commentsEndRef = useRef(null);
 
   const fetchComments = async () => {
     try {
       const response = await getTaskComments(taskId);
-      setComments(response.data.comments || []);
+      const data = response.data;
+      setComments(data.comments || []);
+      setCurrentUserId(data.currentUserId);
+
+      // Wait 500ms so user sees unread comments first
+      setTimeout(async () => {
+        try {
+          await markCommentsAsRead(taskId);
+          await fetchTasks();
+
+          setComments((prev) =>
+            prev.map((comment) => ({
+              ...comment,
+              readBy: [...comment.readBy, data.currentUserId],
+            }))
+          );
+        } catch (err) {
+          console.error("Failed to mark comments as read:", err);
+        }
+      }, 500);
     } catch (error) {
-      console.error(
-        "Failed to fetch comments:",
-        error.response?.data || error.message
-      );
+      console.error("Failed to fetch comments:", error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
@@ -58,21 +69,18 @@ export default function CommentSection({ taskId, members = [] }) {
 
   useEffect(() => {
     if (taskId) {
-      fetchComments(true);
+      fetchComments();
     }
   }, [taskId]);
 
   useEffect(() => {
-    commentsEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-    });
+    commentsEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [comments.length]);
 
   useEffect(() => {
     const syncComments = (data) => {
       if (data.taskId !== taskId) return;
-      fetchComments(false);
+      fetchComments();
     };
 
     socket.on("commentCreated", syncComments);
@@ -86,10 +94,7 @@ export default function CommentSection({ taskId, members = [] }) {
     };
   }, [taskId]);
 
-  // =========================
-  // MENTION DETECTION
-  // =========================
-
+  // Mention detection
   const detectMention = (value, cursorPosition, mode) => {
     const textBeforeCursor = value.slice(0, cursorPosition);
     const mentionMatch = textBeforeCursor.match(/@([^@\s]*)$/);
@@ -130,7 +135,6 @@ export default function CommentSection({ taskId, members = [] }) {
       setCommentText((prev) => prev.replace(/@([^@\s]*)$/, replacement));
     }
 
-    // Add the member ID to mentions if not already selected
     setSelectedMentions((prev) => {
       if (prev.includes(member._id)) return prev;
       return [...prev, member._id];
@@ -141,10 +145,7 @@ export default function CommentSection({ taskId, members = [] }) {
     setMentionMode(null);
   };
 
-  // =========================
-  // RENDER COMMENT WITH MENTION HIGHLIGHTS
-  // =========================
-
+  // Render comment with mention highlights
   const renderCommentText = (item) => {
     let parts = [item.comment];
 
@@ -163,10 +164,7 @@ export default function CommentSection({ taskId, members = [] }) {
         const splitParts = part.split(mentionText);
 
         splitParts.forEach((text, index) => {
-          if (text) {
-            nextParts.push(text);
-          }
-
+          if (text) nextParts.push(text);
           if (index < splitParts.length - 1) {
             nextParts.push(
               <span
@@ -186,57 +184,37 @@ export default function CommentSection({ taskId, members = [] }) {
     return parts;
   };
 
-  // =========================
-  // CREATE COMMENT
-  // =========================
-
+  // Create comment
   const handleCreateComment = async () => {
     if (!commentText.trim() || sending) return;
 
     try {
       setSending(true);
-
       const response = await createComment(taskId, {
         comment: commentText.trim(),
         mentions: selectedMentions,
       });
 
       setComments((prev) => [...prev, response.data.comment]);
-
-      // Reset
       setCommentText("");
       setSelectedMentions([]);
       setShowMentionDropdown(false);
     } catch (error) {
-      console.error(
-        "Failed to create comment:",
-        error.response?.data || error.message
-      );
+      console.error("Failed to create comment:", error.response?.data || error.message);
     } finally {
       setSending(false);
     }
   };
 
-  // =========================
-  // START EDIT
-  // =========================
-
+  // Edit
   const startEditing = (comment) => {
     setEditingId(comment._id);
     setEditText(comment.comment);
 
-    // Extract mention IDs from the comment (handle both populated and plain arrays)
-    const mentionIds = comment.mentions?.map((m) =>
-      typeof m === "string" ? m : m._id
-    ) || [];
+    const mentionIds = comment.mentions?.map((m) => (typeof m === "string" ? m : m._id)) || [];
     setSelectedMentions(mentionIds);
-
     setActiveMenu(null);
   };
-
-  // =========================
-  // SAVE EDIT
-  // =========================
 
   const handleUpdateComment = async (commentId) => {
     if (!editText.trim()) return;
@@ -248,27 +226,18 @@ export default function CommentSection({ taskId, members = [] }) {
       });
 
       setComments((prev) =>
-        prev.map((item) =>
-          item._id === commentId ? response.data.comment : item
-        )
+        prev.map((item) => (item._id === commentId ? response.data.comment : item))
       );
 
-      // Reset edit state
       setEditingId(null);
       setEditText("");
       setSelectedMentions([]);
     } catch (error) {
-      console.error(
-        "Failed to update comment:",
-        error.response?.data || error.message
-      );
+      console.error("Failed to update comment:", error.response?.data || error.message);
     }
   };
 
-  // =========================
-  // DELETE COMMENT
-  // =========================
-
+  // Delete
   const handleDeleteComment = async (commentId) => {
     try {
       await deleteComment(commentId);
@@ -279,10 +248,7 @@ export default function CommentSection({ taskId, members = [] }) {
     }
   };
 
-  // =========================
-  // DATE FORMAT
-  // =========================
-
+  // Date format
   const formatCommentTime = (date) => {
     if (!date) return "";
     return new Date(date).toLocaleString("en-IN", {
@@ -293,13 +259,15 @@ export default function CommentSection({ taskId, members = [] }) {
     });
   };
 
-  // =========================
-  // RENDER
-  // =========================
+  // Check if comment is unread
+  const isCommentUnread = (comment) => {
+    if (!currentUserId) return false;
+    return !comment.readBy?.some((user) => user.toString() === currentUserId.toString());
+  };
 
   return (
     <div className="mt-8 border-t border-slate-200 pt-6">
-      {/* ===== FIXED HEADER ===== */}
+      {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <MessageCircle size={20} className="text-slate-600" />
         <h3 className="font-semibold text-slate-800">Comments</h3>
@@ -308,7 +276,7 @@ export default function CommentSection({ taskId, members = [] }) {
         </span>
       </div>
 
-      {/* ===== SCROLLABLE COMMENTS LIST ===== */}
+      {/* Comments list */}
       <div className="max-h-77.5 overflow-y-auto pr-2 space-y-5">
         {loading ? (
           <div className="space-y-4">
@@ -329,107 +297,119 @@ export default function CommentSection({ taskId, members = [] }) {
             <p className="text-xs text-slate-400 mt-1">Start the discussion</p>
           </div>
         ) : (
-          comments.map((item) => (
-            <div key={item._id} className="flex gap-3">
-              {/* AVATAR */}
-              <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-xs font-semibold shrink-0">
-                {item.createdBy?.name
-                  ?.split(" ")
-                  .map((word) => word[0])
-                  .join("")
-                  .slice(0, 2)
-                  .toUpperCase() || "U"}
-              </div>
+          comments.map((item) => {
+            const isUnread = isCommentUnread(item);
 
-              <div className="flex-1 min-w-0">
-                {/* AUTHOR + MENU */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-slate-800">
-                      {item.createdBy?.name || "Unknown User"}
-                    </span>
-                    <span className="text-xs text-slate-400">
-                      {formatCommentTime(item.createdAt)}
-                    </span>
-                    {item.isEdited && (
-                      <span className="text-xs text-slate-400">edited</span>
-                    )}
-                  </div>
-
-                  <div className="relative">
-                    <button
-                      onClick={() =>
-                        setActiveMenu(activeMenu === item._id ? null : item._id)
-                      }
-                      className="p-1 rounded-lg hover:bg-slate-100 text-slate-400"
-                    >
-                      <MoreVertical size={16} />
-                    </button>
-
-                    {activeMenu === item._id && (
-                      <div className="absolute right-0 top-7 w-32 bg-white border border-slate-200 rounded-xl shadow-lg z-20 overflow-hidden">
-                        <button
-                          onClick={() => startEditing(item)}
-                          className="w-full px-3 py-2 flex items-center gap-2 text-sm text-slate-700 hover:bg-slate-50"
-                        >
-                          <Pencil size={14} />
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteComment(item._id)}
-                          className="w-full px-3 py-2 flex items-center gap-2 text-sm text-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 size={14} />
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
+            return (
+              <div key={item._id} className="flex gap-3">
+                {/* Avatar */}
+                <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-xs font-semibold shrink-0">
+                  {item.createdBy?.name
+                    ?.split(" ")
+                    .map((word) => word[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase() || "U"}
                 </div>
 
-                {/* EDIT MODE */}
-                {editingId === item._id ? (
-                  <div className="mt-2">
-                    <textarea
-                      value={editText}
-                      onChange={handleEditChange}
-                      className="w-full resize-none border border-slate-300 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                      rows={3}
-                    />
-                    <div className="flex justify-end gap-2 mt-2">
+                <div className="flex-1 min-w-0">
+                  {/* Author + Menu */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-slate-800">
+                        {item.createdBy?.name || "Unknown User"}
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        {formatCommentTime(item.createdAt)}
+                      </span>
+                      {item.isEdited && (
+                        <span className="text-xs text-slate-400">edited</span>
+                      )}
+                      {isUnread && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-semibold">
+                          New
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="relative">
                       <button
-                        onClick={() => {
-                          setEditingId(null);
-                          setEditText("");
-                          setSelectedMentions([]);
-                        }}
-                        className="p-2 rounded-lg bg-slate-100 text-slate-600"
+                        onClick={() =>
+                          setActiveMenu(activeMenu === item._id ? null : item._id)
+                        }
+                        className="p-1 rounded-lg hover:bg-slate-100 text-slate-400"
                       >
-                        <X size={15} />
+                        <MoreVertical size={16} />
                       </button>
-                      <button
-                        onClick={() => handleUpdateComment(item._id)}
-                        className="p-2 rounded-lg bg-primary text-white"
-                      >
-                        <Check size={15} />
-                      </button>
+
+                      {activeMenu === item._id && (
+                        <div className="absolute right-0 top-7 w-32 bg-white border border-slate-200 rounded-xl shadow-lg z-20 overflow-hidden">
+                          <button
+                            onClick={() => startEditing(item)}
+                            className="w-full px-3 py-2 flex items-center gap-2 text-sm text-slate-700 hover:bg-slate-50"
+                          >
+                            <Pencil size={14} />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteComment(item._id)}
+                            className="w-full px-3 py-2 flex items-center gap-2 text-sm text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 size={14} />
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
-                ) : (
-                  <p className="mt-1 text-sm text-slate-600 whitespace-pre-wrap wrap-break-word leading-6">
-                    {renderCommentText(item)}
-                  </p>
-                )}
+
+                  {/* Comment text */}
+                  {editingId === item._id ? (
+                    <div className="mt-2">
+                      <textarea
+                        value={editText}
+                        onChange={handleEditChange}
+                        className="w-full resize-none border border-slate-300 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        rows={3}
+                      />
+                      <div className="flex justify-end gap-2 mt-2">
+                        <button
+                          onClick={() => {
+                            setEditingId(null);
+                            setEditText("");
+                            setSelectedMentions([]);
+                          }}
+                          className="p-2 rounded-lg bg-slate-100 text-slate-600"
+                        >
+                          <X size={15} />
+                        </button>
+                        <button
+                          onClick={() => handleUpdateComment(item._id)}
+                          className="p-2 rounded-lg bg-primary text-white"
+                        >
+                          <Check size={15} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p
+                      className={`mt-1 text-sm whitespace-pre-wrap break-words leading-6 transition-all duration-300 ${
+                        isUnread ? "font-semibold text-slate-900" : "font-normal text-slate-600"
+                      }`}
+                    >
+                      {renderCommentText(item)}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
 
-        {/* Auto-scroll anchor */}
         <div ref={commentsEndRef} />
       </div>
 
-      {/* ===== FIXED INPUT ===== */}
+      {/* Input */}
       <div className="pt-4 mt-4 border-t border-slate-100">
         <div className="relative">
           <textarea
@@ -440,7 +420,6 @@ export default function CommentSection({ taskId, members = [] }) {
             className="w-full resize-none rounded-xl border border-slate-300 p-3 pr-12 text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
 
-          {/* MENTION DROPDOWN */}
           {showMentionDropdown && filteredMentionMembers.length > 0 && (
             <div className="absolute left-0 bottom-full mb-2 w-full bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden z-30 max-h-52 overflow-y-auto">
               {filteredMentionMembers.map((member) => (
@@ -459,12 +438,8 @@ export default function CommentSection({ taskId, members = [] }) {
                       .toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-800">
-                      {member.name}
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      {member.role || "Member"}
-                    </p>
+                    <p className="text-sm font-medium text-slate-800">{member.name}</p>
+                    <p className="text-xs text-slate-400">{member.role || "Member"}</p>
                   </div>
                 </button>
               ))}

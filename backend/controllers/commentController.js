@@ -52,6 +52,7 @@ export const createComment = async (req, res) => {
       createdBy,
       comment: comment.trim(),
       mentions,
+      readBy: [createdBy]
     });
 
     await newComment.save();
@@ -162,6 +163,7 @@ export const getTaskComments = async (req, res) => {
 
     return res.status(200).json({
       comments,
+      currentUserId: req.user._id,
     });
   } catch (error) {
     console.error("Get task comments error:", error);
@@ -318,3 +320,33 @@ export const deleteComment = async (req, res) => {
     });
   }
 };
+
+export const markCommentsAsRead = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const userId = req.user._id || req.user.id;
+
+    await Comment.updateMany(
+      {
+        task: taskId,
+        readBy: {
+          $nin: [userId]
+        }
+      },
+      {
+        $addToSet: {
+          readBy: userId
+        }
+      }
+    );
+    return res.status(200).json({
+      message: "Comments marked as read"
+    });
+  } catch (err) {
+    console.error("Delete comment error:", error);
+
+    return res.status(500).json({
+      message: "Failed to update comment",
+    });
+  }
+}

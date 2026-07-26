@@ -58,8 +58,13 @@ export const updateGithubIssueState = async (token, repoString, issueNumber, sta
   const [owner, repo] = repoString.split("/");
 
   const normalizedState = String(state).toLowerCase();
-  const githubState = (normalizedState === "done" || normalizedState === "completed") ? "closed" : "open";
-
+  
+  // 🐙 Included "closed" check here
+  const githubState = (
+    normalizedState === "done" || 
+    normalizedState === "completed" || 
+    normalizedState === "closed"
+  ) ? "closed" : "open";
 
   try {
     const octokit = getOctokit(token);

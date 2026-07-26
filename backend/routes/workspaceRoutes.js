@@ -8,7 +8,8 @@ import {
   leaveWorkspace,
   transferOwnership,
   getInviteToken,
-  joinWorkspaceWithToken
+  joinWorkspaceWithToken,
+  togglePinWorkspace
 } from "../controllers/workspaceController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { handleGithubWebhook } from "../controllers/webhookController.js";
@@ -26,5 +27,6 @@ router.post('/:workspaceId/leave', protect, leaveWorkspace);
 router.patch("/:workspaceId/transfer-owner", protect, transferOwnership);
 router.get('/:workspaceId/invite-token', protect, getInviteToken);
 router.post('/join-by-token', protect, joinWorkspaceWithToken);
+router.patch("/:workspaceId/pin", protect, togglePinWorkspace);
 
 export default router;

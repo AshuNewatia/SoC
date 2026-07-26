@@ -26,3 +26,6 @@ export const getWorkspaceDeadlines = (workspaceId) =>
 
 export const getCSVReport = (workspaceId) =>
   api.get(`/api/workspace-analytics/${workspaceId}/CSV`, { responseType: "blob" });
+
+export const getAnalyticsReport = (workspaceId) => 
+  api.get(`/api/workspace-analytics/${workspaceId}/report`, {responseType: "blob"});

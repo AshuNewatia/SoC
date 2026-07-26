@@ -1,15 +1,15 @@
 import Task from "../models/Task.js";
 import Workspace from "../models/Workspace.js";
 import User from "../models/User.js";
-import { createGithubIssue, updateGithubIssueState } from "../services/githubService.js";
+import { createGithubIssue as sendGithubIssue, updateGithubIssueState } from "../services/githubService.js";
 import { logActivity } from "./activityController.js";
 import Comment from "../models/Comment.js";
 import { createAndSendNotification } from "../utils/notificationHelper.js";
-
+import { checkAndLogDeadlineNotifications } from "../utils/deadlineHelper.js";
 
 export const createTask = async (req, res) => {
     try {
-        const { title, description, priority, dueDate, assignedTo, status } = req.body;
+        const { title, description, priority, dueDate, assignedTo, status, createGithubIssue } = req.body;
         const createdBy = req.body.createdBy || req.user._id;
         const { workspaceId } = req.params;
 
@@ -39,9 +39,9 @@ export const createTask = async (req, res) => {
         }
 
         let issueNumber = null;
-        if (existingWorkspace.githubToken && existingWorkspace.githubRepo) {
+        if (createGithubIssue && existingWorkspace.githubToken && existingWorkspace.githubRepo) {
             try {
-                issueNumber = await createGithubIssue(
+                issueNumber = await sendGithubIssue(
                     existingWorkspace.githubToken,
                     existingWorkspace.githubRepo,
                     title,
@@ -65,9 +65,9 @@ export const createTask = async (req, res) => {
         });
 
         await task.save();
+
         if (assignedTo && assignedTo.length > 0) {
             for (const memberId of assignedTo) {
-
                 await createAndSendNotification(req, {
                     recipient: memberId,
                     sender: req.user._id,
@@ -78,6 +78,7 @@ export const createTask = async (req, res) => {
                 });
             }
         }
+
         await logActivity(
             existingWorkspace._id,
             req.user._id,
@@ -103,10 +104,12 @@ export const createTask = async (req, res) => {
                 );
             }
         }
+
         const io = req.app.get("io");
         if (io) {
             io.to(existingWorkspace._id.toString()).emit("activity_updated");
         }
+
         res.status(201).json(task);
 
     } catch (error) {
@@ -117,10 +120,10 @@ export const createTask = async (req, res) => {
     }
 };
 
-
 export const getTasks = async (req, res) => {
     try {
         const { workspaceId } = req.params;
+        checkAndLogDeadlineNotifications(workspaceId, req.app.get("io"));
 
         const existingWorkspace = await Workspace.findById(workspaceId);
 
@@ -165,9 +168,18 @@ export const getTasks = async (req, res) => {
                     task: task._id,
                 });
 
+                const unreadComments = await Comment.countDocuments({
+                    task: task._id,
+                    readBy: {
+                        $nin: [req.user._id],
+                    },
+                });
+
                 return {
                     ...task.toObject(),
                     commentCount,
+                    unreadCommentCount: unreadComments,
+                    hasUnreadComments: unreadComments > 0,
                 };
             })
         );
@@ -222,7 +234,6 @@ export const updateTaskStatus = async (req, res) => {
         const isUnassigned = task.assignedTo.length === 0;
 
         if (!isOwner && !isAdmin && !isUnassigned) {
-
             const isAssigned =
                 task.assignedTo?.some(
                     user =>
@@ -243,12 +254,12 @@ export const updateTaskStatus = async (req, res) => {
             { status },
             { new: true }
         );
+
         if (!updatedTask) {
             return res.status(404).json({ message: "Task not found" });
         }
 
         if (updatedTask.githubIssueNumber) {
-            const workspace = await Workspace.findById(updatedTask.workspace);
             if (workspace && workspace.githubToken && workspace.githubRepo) {
                 await updateGithubIssueState(
                     workspace.githubToken,
@@ -258,6 +269,7 @@ export const updateTaskStatus = async (req, res) => {
                 );
             }
         }
+
         if (updatedTask.status === "completed") {
             await logActivity(
                 workspace._id,
@@ -271,21 +283,19 @@ export const updateTaskStatus = async (req, res) => {
                 io.to(workspace._id.toString()).emit("activity_updated");
             }
         }
+
         res.status(200).json({
             message: "Task status updated",
             task: updatedTask,
         });
 
     } catch (error) {
-        console.error("UPDATE TASK STATUS ERROR:");
-        console.error(error);
+        console.error("UPDATE TASK STATUS ERROR:", error);
         res.status(500).json({
             message: "Server Error",
         });
     }
-
 };
-
 
 export const deleteTask = async (req, res) => {
     try {
@@ -296,6 +306,9 @@ export const deleteTask = async (req, res) => {
         }
 
         const workspace = await Workspace.findById(taskToDelete.workspace);
+        if (!workspace) {
+            return res.status(404).json({ message: "Workspace not found" });
+        }
 
         const isOwner =
             workspace.owner.toString() ===
@@ -311,6 +324,25 @@ export const deleteTask = async (req, res) => {
         if (!isOwner && !isAdmin) {
             return res.status(403).json({ message: "Member can not delete task" });
         }
+
+        // 🐙 Close linked GitHub Issue if present
+        if (
+            taskToDelete.githubIssueNumber &&
+            workspace.githubToken &&
+            workspace.githubRepo
+        ) {
+            try {
+                await updateGithubIssueState(
+                    workspace.githubToken,
+                    workspace.githubRepo,
+                    taskToDelete.githubIssueNumber,
+                    "closed"
+                );
+            } catch (githubError) {
+                console.error("⚠️ GitHub Issue Close Failed:", githubError.message);
+            }
+        }
+
         await Comment.deleteMany({ task: taskId });
         await Task.findByIdAndDelete(taskId);
 
@@ -321,15 +353,19 @@ export const deleteTask = async (req, res) => {
             `deleted task "${taskToDelete.title}"`,
             req.app.get("io")
         );
+
         const io = req.app.get("io");
         if (io) {
             io.to(workspace._id.toString()).emit("activity_updated");
         }
-        res.status(200).json({ message: "Task deleted" });
+
+        res.status(200).json({ message: "Task deleted and GitHub issue closed" });
     } catch (error) {
+        console.error("DELETE TASK ERROR:", error);
         res.status(500).json({ message: "Server Error" });
     }
 };
+
 export const updateTask = async (req, res) => {
     try {
         const { taskId } = req.params;
@@ -367,12 +403,6 @@ export const updateTask = async (req, res) => {
             { new: true }
         );
 
-        console.log("Sync Check:", {
-            issueNum: updatedTask.githubIssueNumber,
-            hasToken: !!workspace.githubToken,
-            repo: workspace.githubRepo
-        });
-
         if (updatedTask.assignedTo && updatedTask.assignedTo.length > 0) {
             for (const memberId of updatedTask.assignedTo) {
                 await createAndSendNotification(req, {
@@ -385,6 +415,7 @@ export const updateTask = async (req, res) => {
                 });
             }
         }
+
         if (updatedTask.githubIssueNumber && workspace.githubToken && workspace.githubRepo) {
             const status = req.body.status || updatedTask.status;
             try {
@@ -398,9 +429,11 @@ export const updateTask = async (req, res) => {
                 console.error("⚠️ GitHub Update Failed:", githubError.message);
             }
         }
+
         if (req.app.get('io')) {
             req.app.get('io').emit('taskUpdated', updatedTask);
         }
+
         const newAssignedUsers = updatedTask.assignedTo.map(
             id => id.toString()
         );
@@ -440,6 +473,7 @@ export const updateTask = async (req, res) => {
                 req.app.get("io")
             );
         }
+
         const io = req.app.get("io");
         if (io) {
             io.to(workspace._id.toString()).emit("activity_updated");
@@ -481,12 +515,12 @@ export const uploadAttachment = async (req, res) => {
         );
 
         const io = req.app.get("io");
-        if (io){
-             io.to(task.workspace).emit("taskUpdated", task);
-             io.to(task.workspace).emit("activity_updated");
+        if (io) {
+            io.to(task.workspace).emit("taskUpdated", task);
+            io.to(task.workspace).emit("activity_updated");
         }
         res.status(200).json({ message: "File uploaded successfully", task });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-}; 
+};

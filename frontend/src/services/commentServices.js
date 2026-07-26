@@ -15,3 +15,6 @@ export const updateComment = (commentId, data) =>
 
 export const deleteComment = (commentId) =>
   api.delete(`/api/comments/${commentId}`);
+
+export const markCommentsAsRead = (taskId) =>
+  api.put(`/api/comments/task/${taskId}/read`);

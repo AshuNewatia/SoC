@@ -69,7 +69,7 @@ export default function WorkspaceMembers() {
     try {
       await api.post(`/api/workspaces/${id}/members`, { email: inviteEmail });
       setInviteEmail('');
-      handleSuccess("Member added successfully");
+      handleSuccess("Member invited successfully");
       setInviteOpen(false);
       fetchMembers();
     } catch (err) {
@@ -226,7 +226,7 @@ export default function WorkspaceMembers() {
 
           </div>
         ) : filteredMembers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[360px] px-6 text-center">
+          <div className="flex flex-col items-center justify-center h-90 px-6 text-center">
 
             <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-6">
 

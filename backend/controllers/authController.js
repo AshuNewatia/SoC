@@ -1,4 +1,6 @@
 import User from '../models/User.js';
+import OTP from "../models/OTP.js";
+import { sendEmail } from "../utils/sendEmail.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
@@ -84,10 +86,19 @@ export const login = async (req, res) => {
       });
     }
 
-    if (!user.hasPassword || !user.password) {
+    // 🚨 FIXED: Check if the user is ACTUALLY an OAuth-only user (has googleId/githubId and NO password)
+    const isOAuthUser = (user.googleId || user.githubId) && !user.password;
+
+    if (isOAuthUser) {
       return res.status(401).json({
-        message:
-          "This account was created using Google/GitHub login.",
+        message: "This account was created using Google/GitHub login. Please sign in with Google or GitHub.",
+      });
+    }
+
+    // Check if password exists in the document
+    if (!user.password) {
+      return res.status(401).json({
+        message: "No password found for this user. Please complete verification or reset your password.",
       });
     }
 
@@ -389,10 +400,20 @@ export const updateProfile = async (req, res) => {
 
 export const forgotPassword = async (req, res) => {
   try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-    });
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, 
+  requireTLS: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
 
     const { email } = req.body;
     const user = await User.findOne({ email });
@@ -435,5 +456,93 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     console.error("Reset Password Error:", error);
     res.status(500).json({ message: "Server error during password reset" });
+  }
+};
+
+export const sendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "Email is already registered." });
+    }
+
+    const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await OTP.deleteMany({ email });
+
+    await OTP.create({ email, otp: generatedOTP });
+
+    await sendEmail({
+      to: email,
+      subject: "Verification Code for Signup",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2>Email Verification</h2>
+          <p>Your verification code is:</p>
+          <h1 style="color: #2563eb; letter-spacing: 4px;">${generatedOTP}</h1>
+          <p>This code will expire in 5 minutes.</p>
+        </div>
+      `,
+    });
+
+    return res.status(200).json({ success: true, message: "OTP sent to your email." });
+  } catch (error) {
+    console.error("Error in sendOTP:", error);
+    return res.status(500).json({ success: false, message: "Failed to send verification code." });
+  }
+};
+
+export const verifyOTPAndSignup = async (req, res) => {
+  try {
+    const { name, email, password, otp } = req.body;
+
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanOtp = String(otp).trim();
+
+    const otpRecord = await OTP.findOne({ email: cleanEmail, otp: cleanOtp });
+
+    if (!otpRecord) {
+      console.log(`❌ OTP mismatch for ${cleanEmail}. Recv: "${cleanOtp}"`);
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid or expired OTP." 
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      email: cleanEmail,
+      password: hashedPassword,
+      hasPassword: true, 
+    });
+
+    console.log(`✅ User successfully saved in MongoDB with ID: ${user._id}`);
+
+    await OTP.deleteMany({ email: cleanEmail });
+
+    const token = generateToken(user._id);
+
+    return res.status(201).json({
+      success: true,
+      message: "Account created successfully!",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+
+  } catch (error) {
+    console.error("❌ Failed to create user in MongoDB:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: error.message || "Signup failed." 
+    });
   }
 };

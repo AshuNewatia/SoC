@@ -2,6 +2,8 @@ import Workspace from "../models/Workspace.js";
 import User from "../models/User.js";
 import { logActivity } from "./activityController.js";
 import { createAndSendNotification } from "../utils/notificationHelper.js";
+import Invitation from "../models/Invitation.js";
+import nodemailer from "nodemailer";
 
 export const getWorkspaceMembers = async (req, res) => {
   try {
@@ -68,94 +70,146 @@ export const addMemberToWorkspace = async (req, res) => {
     }
 
     const isOwner =
-      workspace.owner.toString() ===
-      req.user._id.toString();
+      workspace.owner.toString() === req.user._id.toString();
 
-    const isAdmin =
-      workspace.admins.some(
-        (admin) =>
-          admin.toString() ===
-          req.user._id.toString()
-      );
+    const isAdmin = workspace.admins.some(
+      (admin) => admin.toString() === req.user._id.toString()
+    );
 
     if (!isOwner && !isAdmin) {
       return res.status(403).json({
-        message: "You can not invite member",
+        message: "You cannot invite members.",
       });
     }
 
-    const userToAdd = await User.findOne({ email });
-
-    if (!userToAdd) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
+    const existingUser = await User.findOne({ email });
 
     if (
-      workspace.owner.toString() ===
-      userToAdd._id.toString()
+      existingUser &&
+      workspace.owner.toString() === existingUser._id.toString()
     ) {
       return res.status(400).json({
-        message: "User is already the owner",
+        message: "User is already the owner.",
       });
     }
 
-    const alreadyMember =
+
+    if (
+      existingUser &&
       workspace.members.some(
-        (member) =>
-          member.toString() ===
-          userToAdd._id.toString()
-      );
-
-    if (alreadyMember) {
+        (member) => member.toString() === existingUser._id.toString()
+      )
+    ) {
       return res.status(400).json({
-        message: "User is already a member",
+        message: "User is already a member.",
       });
     }
 
-
-    workspace.members.push(userToAdd._id);
-    await workspace.save();
-
-    await createAndSendNotification(req, {
-      recipient: userToAdd._id,
-      sender: req.user._id,
-      type: "MEMBER_ADDED",
-      message: `You have been added to the workspace: "${workspace.name}"`,
+    const existingInvitation = await Invitation.findOne({
       workspace: workspace._id,
-      relatedId: workspace._id
+      invitedEmail: email,
+      status: "PENDING",
     });
 
-    await logActivity(
-      workspace._id,
-      req.user._id,
-      "MEMBER_ADDED",
-      `Added ${userToAdd.name} to the workspace`
-    );
-    const io = req.app.get("io");
-    if (io){
-       io.to(workspaceId).emit('members_updated');
-       io.to(workspaceId).emit('activity_updated');
+    if (existingInvitation) {
+      return res.status(400).json({
+        message: "User already has a pending invitation.",
+      });
     }
 
+    const invitation = await Invitation.create({
+      workspace: workspace._id,
+      invitedEmail: email,
+      invitedUser: existingUser ? existingUser._id : null,
+      invitedBy: req.user._id,
+      status: "PENDING",
+    });
 
-    res.status(200).json({
-      message: "Member added successfully",
-      member: {
-        _id: userToAdd._id,
-        name: userToAdd.name,
-        email: userToAdd.email,
-        avatar: userToAdd.avatar,
-        role: "Member",
-      },
+    if (existingUser) {
+      await createAndSendNotification(req, {
+        recipient: existingUser._id,
+        sender: req.user._id,
+        type: "WORKSPACE_INVITATION",
+        message: `${req.user.name} invited you to join "${workspace.name}".`,
+        workspace: workspace._id,
+        relatedId: invitation._id,
+        relatedModel: "WorkspaceInvitation",
+      });
+    }
+
+    try {
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, 
+  requireTLS: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false, 
+  },
+});
+
+      const invitationLink =
+        `${process.env.CLIENT_URL}/invitations/${invitation._id}`;
+
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: `Invitation to join ${workspace.name} on CampusFlow`,
+        html: `
+          <h2>CampusFlow</h2>
+
+          <p>Hello${existingUser ? ` ${existingUser.name}` : " there"},</p>
+
+          <p>
+            <strong>${req.user.name}</strong> invited you to join the workspace
+            <strong>${workspace.name}</strong>.
+          </p>
+
+          <p>
+            Click the button below to review and respond to the invitation.
+          </p>
+
+          <a
+            href="${invitationLink}"
+            style="
+              display:inline-block;
+              padding:12px 24px;
+              background:#2563eb;
+              color:#ffffff;
+              text-decoration:none;
+              border-radius:8px;
+              font-weight:bold;
+            "
+          >
+            View Invitation
+          </a>
+
+          <p style="margin-top:24px;">
+            If the button doesn't work, copy and paste this link into your browser:
+          </p>
+
+          <p>${invitationLink}</p>
+        `,
+      });
+    } catch (emailError) {
+      console.error("Invitation email failed:", emailError);
+    }
+
+    return res.status(200).json({
+      message: "Invitation sent successfully.",
     });
 
   } catch (error) {
     console.error("ADD MEMBER ERROR:", error);
-    res.status(500).json({
+
+    return res.status(500).json({
       message: "Server Error",
-      details: error.message
+      details: error.message,
     });
   }
 };
@@ -227,9 +281,9 @@ export const removeMember = async (req, res) => {
       `removed ${userToRemove.name} from the workspace`
     );
     const io = req.app.get("io");
-    if (io){
-       io.to(workspaceId).emit('members_updated');
-       io.to(workspaceId).emit('activity_updated');
+    if (io) {
+      io.to(workspaceId).emit('members_updated');
+      io.to(workspaceId).emit('activity_updated');
     }
 
     res.status(200).json({
@@ -310,9 +364,9 @@ export const promoteToAdmin = async (req, res) => {
     );
 
     const io = req.app.get("io");
-    if (io){
-       io.to(workspaceId).emit('members_updated');
-       io.to(workspaceId).emit('activity_updated');
+    if (io) {
+      io.to(workspaceId).emit('members_updated');
+      io.to(workspaceId).emit('activity_updated');
     }
 
 
@@ -371,6 +425,191 @@ export const removeAdmin = async (req, res) => {
 
     res.status(500).json({
       message: "Server Error"
+    });
+  }
+};
+
+export const acceptWorkspaceInvitation = async (req, res) => {
+  try {
+    const { invitationId } = req.params;
+    const invitation = await Invitation.findById(invitationId);
+
+    if (!invitation) {
+      return res.status(404).json({
+        message: "Invitation not found"
+      });
+    }
+
+    if (invitation.status !== "PENDING") {
+      return res.status(400).json({
+        message: "This invitation has already been processed"
+      });
+    }
+
+    if (!invitation.invitedUser.equals(req.user._id)) {
+      return res.status(403).json({
+        message: "This invitation is not for you"
+      });
+    }
+
+    const workspace = await Workspace.findById(invitation.workspace);
+
+    if (!workspace) {
+      return res.status(404).json({
+        message: "Workspace not found"
+      });
+    }
+
+    const alreadyMember = workspace.members.some(
+      (member) => member.toString() === req.user._id.toString()
+    );
+
+    if (!alreadyMember) {
+      workspace.members.push(req.user._id);
+      await workspace.save();
+    }
+
+    invitation.status = "ACCEPTED";
+    invitation.respondedAt = new Date();
+    await invitation.save();
+
+
+    await logActivity(
+      workspace._id,
+      req.user._id,
+      "MEMBER_ADDED",
+      `${req.user.name} joined the Workspace`
+    );
+
+    await createAndSendNotification(req, {
+      recipient: invitation.invitedBy,
+      sender: req.user._id,
+      type: "WORKSPACE_INVITE_ACCEPTED",
+      message: `${req.user.name} accepted your workspace invitation.`,
+      workspace: workspace._id,
+      relatedId: invitation._id,
+      relatedModel: "WorkspaceInvitation",
+    });
+
+    const io = req.app.get("io");
+    if (io) {
+      io.to(workspace._id.toString()).emit("members_updated");
+      io.to(workspace._id.toString()).emit("activity_updated");
+    }
+
+    return res.status(200).json({
+      message: "Invitation accepted successfully.",
+      workspace: {
+        id: workspace._id,
+        name: workspace.name,
+      }
+    });
+
+  } catch (error) {
+    console.error("Accept invitation error:", error);
+    return res.status(500).json({
+      message: "Server Error",
+    });
+  }
+};
+
+export const declineWorkspaceInvitation = async (req, res) => {
+  try {
+    const { invitationId } = req.params;
+    const invitation = await Invitation.findById(invitationId);
+
+    if (!invitation) {
+      return res.status(404).json({
+        message: "Invitation not found"
+      });
+    }
+
+    const workspace = await Workspace.findById(invitation.workspace);
+
+    if (!workspace) {
+      return res.status(404).json({
+        message: "Workspace not found"
+      });
+    }
+
+    if (invitation.status !== "PENDING") {
+      return res.status(400).json({
+        message: "This invitation has already been processed"
+      });
+    }
+
+    if (!invitation.invitedUser.equals(req.user._id)) {
+      return res.status(403).json({
+        message: "This invitation is not for you"
+      });
+    }
+
+    invitation.status = "DECLINED";
+    invitation.respondedAt = new Date();
+    await invitation.save();
+
+    await createAndSendNotification(req, {
+      recipient: invitation.invitedBy,
+      sender: req.user._id,
+      type: "WORKSPACE_INVITE_DECLINED",
+      message: `${req.user.name} declined your workspace invitation.`,
+      workspace: workspace._id,
+      relatedId: invitation._id,
+      relatedModel: "WorkspaceInvitation",
+    });
+
+    return res.status(200).json({
+      message: "Invitation declined successfully.",
+    });
+
+  } catch (error) {
+    console.error("Decline invitation error:", error);
+    return res.status(500).json({
+      message: "Server Error",
+    });
+  }
+};
+
+export const getWorkspaceInvitation = async (req, res) => {
+  try {
+    const { invitationId } = req.params;
+
+    const invitation = await Invitation.findById(invitationId)
+      .populate("workspace", "name")
+      .populate("invitedBy", "name email");
+
+    if (!invitation) {
+      return res.status(404).json({
+        message: "Invitation not found.",
+      });
+    }
+
+    // Only the invited user can view this invitation
+    if (
+      invitation.invitedUser.toString() !==
+      req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        message: "You are not authorized to view this invitation.",
+      });
+    }
+
+    return res.status(200).json({
+      invitationId: invitation._id,
+      workspaceId: invitation.workspace._id,
+      workspaceName: invitation.workspace.name,
+      inviter: {
+        name: invitation.invitedBy.name,
+        email: invitation.invitedBy.email,
+      },
+      status: invitation.status,
+    });
+  } catch (error) {
+    console.error("GET WORKSPACE INVITATION ERROR:", error);
+
+    return res.status(500).json({
+      message: "Server Error",
+      details: error.message,
     });
   }
 };
