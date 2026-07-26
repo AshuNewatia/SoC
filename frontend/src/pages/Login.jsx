@@ -36,7 +36,7 @@ function Login() {
         await login(email, password);
         navigate('/dashboard');
       } else if (view === 'forgot') {
-        await api.post('/auth/forgot-password', { email });
+        await api.post('api/auth/forgot-password', { email });
         setView('otp');
       } else if (view === 'otp') {
         await api.post('/auth/reset-password', { email, otp, newPassword });
