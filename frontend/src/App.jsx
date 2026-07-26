@@ -14,6 +14,7 @@ import OAuthCallback from "./pages/OAuthCallback";
 import CreateProfile from "./pages/CreateProfile";
 import ViewProfile from "./pages/ViewProfile";
 import JoinWorkspace from "./pages/JoinWorkspace";
+import Invitation from "./pages/Invitation";
 
 import WorkspaceOverview from "./components/workspace/overview/WorkspaceOverview"
 import WorkspaceAnalytics from "./components/workspace/WorkspaceAnalytics";
@@ -104,6 +105,7 @@ function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/myboard" element={<MyBoard />} />
             <Route path="/profile" element={<ViewProfile />} />
+            <Route path="/invitations/:invitationId" element={<Invitation/>}/>
 
             <Route path="/workspace/:id" element={<WorkSpace />}>
               <Route index element={<Navigate to="overview" replace />} />

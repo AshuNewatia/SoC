@@ -56,6 +56,25 @@ export default function NotificationBell() {
     setNotifications([]);
   };
 
+  const handleAcceptInvitation = async (notification) => {
+    try {
+      console.log(notification.relatedId);
+      await api.post(`/api/workspaces/workspace-invitations/${notification.relatedId}/accept`);
+      setNotifications((prev) => prev.filter((n) => n._id !== notification._id));
+    } catch (err) {
+      console.error("Failed to accept invitation:", err);
+    }
+  };
+
+  const handleDeclineInvitation = async (notification) => {
+    try {
+      await api.post(`/api/workspaces/workspace-invitations/${notification.relatedId}/decline`);
+      setNotifications((prev) => prev.filter((n) => n._id !== notification._id));
+    } catch (err) {
+      console.error("Failed to decline invitation:", err);
+    }
+  };
+
   return (
     <div className="relative font-sans" ref={dropdownRef}>
       <button
@@ -76,7 +95,7 @@ export default function NotificationBell() {
           <div className="px-5 py-4 bg-slate-50/50 border-b border-slate-200 flex items-center justify-between">
             <div>
               <h3 className="font-display text-base font-bold text-slate-900 italic tracking-wide">
-                Updates Feed
+                Notifications
               </h3>
               <p className="text-[11px] text-slate-400 font-medium mt-0.5">
                 {unreadCount} unread alert{unreadCount !== 1 && "s"}
@@ -108,31 +127,65 @@ export default function NotificationBell() {
               notifications.map((notif) => (
                 <div
                   key={notif._id || Math.random()}
-                  className={`p-4 flex gap-3 hover:bg-slate-50/60 transition relative group ${!notif.isRead ? "bg-blue-50/20" : ""
-                    }`}
+                  className={`p-4 flex gap-3 hover:bg-slate-50/60 transition relative group ${
+                    !notif.isRead ? "bg-blue-50/20" : ""
+                  }`}
                 >
                   <div className="shrink-0 mt-0.5">
-                    {notif.type === "OWNERSHIP_TRANSFERRED" ? (
+                    {notif.type === "WORKSPACE_INVITATION" ? (
+                      <div className="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shadow-xs text-lg">
+                        📩
+                      </div>
+                    ) : notif.type === "OWNERSHIP_TRANSFERRED" ? (
                       <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-base shadow-xs">
                         👑
                       </div>
                     ) : (
-                      <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shadow-xs">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-xs">
                         <MessageSquare size={16} />
                       </div>
                     )}
                   </div>
 
                   <div className="flex-1 space-y-1 pr-4 font-sans">
-                    <p className={`text-xs leading-relaxed wrap-break-word ${!notif.isRead ? "text-slate-900 font-medium" : "text-slate-600"
-                      }`}>
+                    <p
+                      className={`text-xs leading-relaxed wrap-break-word ${
+                        !notif.isRead ? "text-slate-900 font-medium" : "text-slate-600"
+                      }`}
+                    >
                       {notif.message}
                     </p>
 
+                    {notif.type === "WORKSPACE_INVITATION" && (
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={() => handleAcceptInvitation(notif)}
+                          className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-semibold hover:bg-green-700 transition cursor-pointer"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => handleDeclineInvitation(notif)}
+                          className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition cursor-pointer"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    )}
+
                     <span className="text-[10px] text-slate-400 block mt-1">
-                      {new Date(notif.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })} at {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(notif.createdAt).toLocaleDateString([], {
+                        month: "short",
+                        day: "numeric",
+                      })}{" "}
+                      at{" "}
+                      {new Date(notif.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </span>
                   </div>
+
                   {!notif.isRead && (
                     <div className="absolute right-4 top-5">
                       <Circle size={6} className="fill-blue-600 text-blue-600" />
@@ -153,7 +206,6 @@ export default function NotificationBell() {
               </button>
             </div>
           )}
-
         </div>
       )}
     </div>
