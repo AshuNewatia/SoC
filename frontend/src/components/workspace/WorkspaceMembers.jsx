@@ -69,7 +69,7 @@ export default function WorkspaceMembers() {
     try {
       await api.post(`/api/workspaces/${id}/members`, { email: inviteEmail });
       setInviteEmail('');
-      handleSuccess("Member added successfully");
+      handleSuccess("Member invited successfully");
       setInviteOpen(false);
       fetchMembers();
     } catch (err) {

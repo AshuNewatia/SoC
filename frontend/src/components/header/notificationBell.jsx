@@ -3,6 +3,7 @@ import { Clock, Bell, Check, Trash2, Circle, MessageSquare, AtSign, UserPlus, Ed
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import socket from "../../services/socket";
+import { handleApiError,handleSuccess } from "../../utils/handleApiError";
 
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
@@ -78,19 +79,23 @@ export default function NotificationBell() {
 
   const handleAcceptInvitation = async (notification) => {
     try {
-      await api.post(`/api/workspace-invitations/${notification.relatedId}/accept`);
+      await api.post(`/api/workspaces/workspace-invitations/${notification.relatedId}/accept`);
+      handleSuccess("Invitation accepted")
       setNotifications((prev) => prev.filter((n) => n._id !== notification._id));
     } catch (err) {
       console.error("Failed to accept invitation:", err);
+      handleApiError(err);
     }
   };
 
   const handleDeclineInvitation = async (notification) => {
     try {
-      await api.post(`/api/workspace-invitations/${notification.relatedId}/decline`);
+      await api.post(`/api/workspaces/workspace-invitations/${notification.relatedId}/decline`);
+      handleSuccess("Invitation declined")
       setNotifications((prev) => prev.filter((n) => n._id !== notification._id));
     } catch (err) {
       console.error("Failed to decline invitation:", err);
+      handleApiError(err);
     }
   };
 

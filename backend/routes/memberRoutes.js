@@ -33,6 +33,7 @@ router.delete(
   protect,
   removeAdmin
 );
+
 router.post(
     "/workspace-invitations/:invitationId/accept",
     protect,
