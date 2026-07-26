@@ -39,7 +39,7 @@ function Login() {
         await api.post('api/auth/forgot-password', { email });
         setView('otp');
       } else if (view === 'otp') {
-        await api.post('/auth/reset-password', { email, otp, newPassword });
+        await api.post('/api/auth/reset-password', { email, otp, newPassword });
         alert("Password reset successfully! Please log in.");
         setView('login');
         setPassword('');
