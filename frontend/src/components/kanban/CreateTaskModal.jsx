@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Type, FileText, CalendarDays, Flag, Users } from "lucide-react";
+import { X, Check, Type, FileText, CalendarDays, Flag, Users, GitPullRequest } from "lucide-react";
 import { useState, useEffect } from "react";
 import api from "../../services/api";
 import { useParams } from "react-router-dom";
@@ -11,13 +11,17 @@ const initialForm = {
   dueDate: "",
   assignedTo: [],
   status: "todo",
+  createGithubIssue: false,
 };
 
 export default function CreateTaskModal({ isOpen, onClose, onCreate, defaultStatus = "todo" }) {
   const [form, setForm] = useState(initialForm);
   const [members, setMembers] = useState([]);
+  const [workspace, setWorkspace] = useState(null);
   const [searchMember, setSearchMember] = useState("");
   const { id: workspaceId } = useParams();
+
+  const isGithubLinked = Boolean(workspace?.githubRepo && workspace?.githubToken);
 
   const filteredMembers = members.filter(member =>
     member.name.toLowerCase().includes(searchMember.toLowerCase())
@@ -33,17 +37,21 @@ export default function CreateTaskModal({ isOpen, onClose, onCreate, defaultStat
   };
 
   useEffect(() => {
-    const fetchMembers = async () => {
+    const fetchWorkspaceData = async () => {
       try {
-        const res = await api.get(`/api/workspaces/${workspaceId}/members`);
-        setMembers(res.data);
+        const [membersRes, workspaceRes] = await Promise.all([
+          api.get(`/api/workspaces/${workspaceId}/members`),
+          api.get(`/api/workspaces/${workspaceId}`),
+        ]);
+        setMembers(membersRes.data);
+        setWorkspace(workspaceRes.data);
       } catch (err) {
         console.error(err);
       }
     };
 
     if (isOpen) {
-      fetchMembers();
+      fetchWorkspaceData();
       setForm({
         ...initialForm,
         status: defaultStatus,
@@ -64,6 +72,7 @@ export default function CreateTaskModal({ isOpen, onClose, onCreate, defaultStat
       priority: form.priority,
       dueDate: form.dueDate,
       assignedTo: form.assignedTo,
+      createGithubIssue: isGithubLinked && form.createGithubIssue,
     });
     setForm(initialForm);
     onClose();
@@ -147,7 +156,7 @@ export default function CreateTaskModal({ isOpen, onClose, onCreate, defaultStat
                   />
                 </div>
 
-                {/* Priority – now with Critical and 4 columns */}
+                {/* Priority */}
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
                     <Flag size={16} className="text-slate-400" />
@@ -184,6 +193,42 @@ export default function CreateTaskModal({ isOpen, onClose, onCreate, defaultStat
                     onChange={(e) => handleChange("dueDate", e.target.value)}
                     className={inputClass}
                   />
+                </div>
+
+                {/* GitHub Issue Toggle */}
+                <div
+                  className={`flex items-center justify-between p-4 rounded-2xl border transition ${
+                    isGithubLinked
+                      ? "bg-slate-50 border-slate-200"
+                      : "bg-slate-100/60 border-slate-200 opacity-60"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center">
+                      <GitPullRequest size={18} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">
+                        Create GitHub Issue
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {isGithubLinked
+                          ? `Will create issue in ${workspace.githubRepo}`
+                          : "No GitHub repository linked to workspace"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      disabled={!isGithubLinked}
+                      checked={form.createGithubIssue}
+                      onChange={(e) => handleChange("createGithubIssue", e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-disabled:cursor-not-allowed"></div>
+                  </label>
                 </div>
 
                 {/* Assign Members */}
@@ -231,7 +276,7 @@ export default function CreateTaskModal({ isOpen, onClose, onCreate, defaultStat
                             <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
                               {member.name?.[0]}
                             </div>
-                            <div>
+                            <div className="text-left">
                               <p className="font-medium text-slate-800">{member.name}</p>
                               <p className="text-xs text-slate-500">Team Member</p>
                             </div>

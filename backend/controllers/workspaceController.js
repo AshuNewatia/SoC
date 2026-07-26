@@ -1,18 +1,19 @@
 import Workspace from "../models/Workspace.js";
+import User from "../models/User.js";
 import mongoose from "mongoose";
 import { logActivity } from "./activityController.js";
 import { fetchGithubIssues } from '../services/githubService.js';
 import Task from '../models/Task.js';
 import { createAndSendNotification } from "../utils/notificationHelper.js";
-import crypto from "crypto"
+import crypto from "crypto";
 import Comment from "../models/Comment.js";
 import ActivityLog from "../models/ActivityLog.js";
-
 
 export const createWorkspace = async (req, res) => {
   try {
     const { name, description, githubRepo, githubToken } = req.body;
     const owner = req.user._id;
+
     if (!name || !name.trim()) {
       return res.status(400).json({ message: "Workspace name is required" });
     }
@@ -23,7 +24,6 @@ export const createWorkspace = async (req, res) => {
       owner,
       admins: [],
       members: [owner],
-
       githubRepo: githubRepo ? githubRepo.trim() : "",
       githubToken: githubToken ? githubToken.trim() : "",
     });
@@ -37,10 +37,12 @@ export const createWorkspace = async (req, res) => {
       `created workspace "${name}"`,
       req.app.get("io")
     );
+
     const io = req.app.get("io");
     if (io) {
       io.to(workspace._id.toString()).emit("activity_updated");
     }
+
     res.status(201).json({
       message: "Workspace created successfully",
       workspace,
@@ -112,9 +114,7 @@ export const updateWorkspace = async (req, res) => {
       return res.status(404).json({ message: "Workspace not found" });
     }
 
-    const isOwner =
-      workspace.owner.toString() ===
-      req.user._id.toString();
+    const isOwner = workspace.owner.toString() === req.user._id.toString();
 
     if (!isOwner) {
       return res.status(403).json({
@@ -127,27 +127,20 @@ export const updateWorkspace = async (req, res) => {
     workspace.githubRepo = githubRepo !== undefined ? githubRepo : workspace.githubRepo;
     workspace.githubToken = githubToken !== undefined ? githubToken : workspace.githubToken;
 
-    if (githubRepo !== undefined) workspace.githubRepo = githubRepo;
-    if (githubToken !== undefined) workspace.githubToken = githubToken;
-
     await workspace.save();
 
     if (githubRepo && githubToken && workspace.isModified('githubRepo')) {
       try {
         const githubIssues = await fetchGithubIssues(githubToken, githubRepo);
 
-
         if (githubIssues.length > 0) {
-
           const tasksToImport = githubIssues.map(issue => ({
             ...issue,
             workspace: workspace._id,
             owner: req.user._id
           }));
 
-
           await Task.insertMany(tasksToImport);
-          console.log(`Successfully imported ${tasksToImport.length} issues.`);
         }
       } catch (err) {
         console.error("Auto-sync failed:", err.message);
@@ -161,17 +154,18 @@ export const updateWorkspace = async (req, res) => {
       `updated workspace settings`,
       req.app.get("io")
     );
+
     const io = req.app.get("io");
     if (io) {
       io.to(workspace._id.toString()).emit("activity_updated");
     }
+
     res.status(200).json(workspace);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server Error" });
   }
 };
-
 
 export const deleteWorkspace = async (req, res) => {
   try {
@@ -186,26 +180,22 @@ export const deleteWorkspace = async (req, res) => {
       return res.status(404).json({ message: "Workspace not found" });
     }
 
-    const isOwner =
-      workspace.owner.toString() ===
-      req.user._id.toString();
+    const isOwner = workspace.owner.toString() === req.user._id.toString();
 
     if (!isOwner) {
       return res.status(403).json({
         message: "Only owner can delete the workspace",
       });
     }
-    const tasks = await Task.find(
-      { workspace: workspaceId },
-      "_id"
-    );
 
+    const tasks = await Task.find({ workspace: workspaceId }, "_id");
     const taskIds = tasks.map(task => task._id);
 
-    await Comment.deleteMany({
-      task: { $in: taskIds }
-    });
+    await Comment.deleteMany({ task: { $in: taskIds } });
+    await Task.deleteMany({ workspace: workspaceId });
+    await ActivityLog.deleteMany({ workspace: workspaceId });
     await Workspace.findByIdAndDelete(workspaceId);
+
     res.status(200).json({ message: "Workspace deleted successfully" });
   } catch (error) {
     console.error(error);
@@ -218,7 +208,6 @@ export const leaveWorkspace = async (req, res) => {
     const { workspaceId } = req.params;
     const userId = req.user._id;
 
-
     const workspace = await Workspace.findById(workspaceId);
 
     if (!workspace) {
@@ -229,7 +218,6 @@ export const leaveWorkspace = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "As the creator, you cannot leave. Delete the workspace or transfer ownership first."
-
       });
     }
 
@@ -243,23 +231,26 @@ export const leaveWorkspace = async (req, res) => {
     );
 
     await workspace.save();
+
     return res.status(200).json({
       success: true,
       message: "Successfully left the workspace."
-
     });
-
   } catch (error) {
     console.error("Error leaving workspace:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
 export const transferOwnership = async (req, res) => {
   try {
     const { workspaceId } = req.params;
     const { newOwnerId } = req.body;
-
     const currentOwnerId = req.user._id;
+
+    if (!mongoose.Types.ObjectId.isValid(workspaceId) || !mongoose.Types.ObjectId.isValid(newOwnerId)) {
+      return res.status(400).json({ success: false, message: "Invalid ID parameters." });
+    }
 
     const workspace = await Workspace.findById(workspaceId);
 
@@ -287,7 +278,7 @@ export const transferOwnership = async (req, res) => {
     }
 
     const isMember = workspace.members.some(
-      (member) => member.toString() === newOwnerId.toString()
+      (memberId) => memberId.toString() === newOwnerId.toString()
     );
 
     if (!isMember) {
@@ -297,17 +288,13 @@ export const transferOwnership = async (req, res) => {
       });
     }
 
-    // Transfer ownership
     workspace.owner = newOwnerId;
-
-    // Remove from admins if present
     workspace.admins = workspace.admins.filter(
       (admin) => admin.toString() !== newOwnerId.toString()
     );
 
     await workspace.save();
 
-    // Notification
     await createAndSendNotification(req, {
       recipient: newOwnerId,
       sender: currentOwnerId,
@@ -317,43 +304,28 @@ export const transferOwnership = async (req, res) => {
       relatedId: workspace._id,
     });
 
-    // Activity Log
-    await logActivity(
-      workspace._id,
-      currentOwnerId,
-      "OWNERSHIP_TRANSFERRED",
-      `Transferred ownership to ${newOwner.name}`
-    );
-
-    // Real-time sync
-    const io = req.app.get("io");
-
-    if (io) {
-      io.to(workspaceId.toString()).emit("members_updated");
-      io.to(workspaceId.toString()).emit("activity_updated");
-    }
-
     return res.status(200).json({
       success: true,
       message: "Ownership transferred successfully.",
+      workspace,
     });
-  } catch (err) {
-    console.error("Transfer ownership error:", err);
-
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+  } catch (error) {
+    console.error("Error transferring ownership:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
 export const getInviteToken = async (req, res) => {
   try {
     const { workspaceId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
+      return res.status(400).json({ message: "Invalid workspace id" });
+    }
+
     const workspace = await Workspace.findById(workspaceId);
 
     if (!workspace) return res.status(404).json({ message: "Workspace not found" });
- 
 
     if (!workspace.inviteToken) {
       workspace.inviteToken = new mongoose.Types.ObjectId().toString();
@@ -366,13 +338,10 @@ export const getInviteToken = async (req, res) => {
   }
 };
 
-
 export const joinWorkspaceWithToken = async (req, res) => {
   try {
     const { inviteToken } = req.body;
     const userId = req.user._id;
-
-    console.log(`[JOIN ATTEMPT] User ${userId} is joining via token: ${inviteToken}`);
 
     const workspace = await Workspace.findOne({ inviteToken });
     if (!workspace) {
@@ -382,8 +351,8 @@ export const joinWorkspaceWithToken = async (req, res) => {
       });
     }
 
-    const isOwner = workspace.createdBy
-      ? workspace.createdBy.toString() === userId.toString()
+    const isOwner = workspace.owner
+      ? workspace.owner.toString() === userId.toString()
       : false;
 
     const isAlreadyMember = workspace.members
@@ -395,11 +364,9 @@ export const joinWorkspaceWithToken = async (req, res) => {
         success: true,
         workspaceId: workspace._id.toString(),
         message: "You are already associated with this workspace."
-
       });
     }
 
-    // Initialize the members array if it somehow doesn't exist in the document
     if (!workspace.members) {
       workspace.members = [];
     }
@@ -411,15 +378,45 @@ export const joinWorkspaceWithToken = async (req, res) => {
       success: true,
       workspaceId: workspace._id.toString(),
       message: "Successfully joined the workspace!"
-
     });
-
   } catch (error) {
     console.error("[JOIN CRITICAL ERROR] Exception thrown:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error while processing token entry."
-
     });
+  }
+};
+
+export const togglePinWorkspace = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    const userId = req.user._id;
+
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      return res.status(404).json({ success: false, message: "Workspace not found" });
+    }
+
+    const isPinned = workspace.pinnedBy.includes(userId);
+
+    if (isPinned) {
+      workspace.pinnedBy = workspace.pinnedBy.filter(
+        (id) => id.toString() !== userId.toString()
+      );
+    } else {
+      workspace.pinnedBy.push(userId);
+    }
+
+    await workspace.save();
+
+    return res.status(200).json({
+      success: true,
+      isPinned: !isPinned,
+      workspace,
+    });
+  } catch (error) {
+    console.error("Error toggling pin status:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
