@@ -5,6 +5,7 @@ import { createGithubIssue as sendGithubIssue, updateGithubIssueState } from "..
 import { logActivity } from "./activityController.js";
 import Comment from "../models/Comment.js";
 import { createAndSendNotification } from "../utils/notificationHelper.js";
+import { checkAndLogDeadlineNotifications } from "../utils/deadlineHelper.js";
 
 export const createTask = async (req, res) => {
     try {
@@ -122,6 +123,7 @@ export const createTask = async (req, res) => {
 export const getTasks = async (req, res) => {
     try {
         const { workspaceId } = req.params;
+        checkAndLogDeadlineNotifications(workspaceId, req.app.get("io"));
 
         const existingWorkspace = await Workspace.findById(workspaceId);
 
@@ -304,6 +306,9 @@ export const deleteTask = async (req, res) => {
         }
 
         const workspace = await Workspace.findById(taskToDelete.workspace);
+        if (!workspace) {
+            return res.status(404).json({ message: "Workspace not found" });
+        }
 
         const isOwner =
             workspace.owner.toString() ===
@@ -318,6 +323,24 @@ export const deleteTask = async (req, res) => {
 
         if (!isOwner && !isAdmin) {
             return res.status(403).json({ message: "Member can not delete task" });
+        }
+
+        // 🐙 Close linked GitHub Issue if present
+        if (
+            taskToDelete.githubIssueNumber &&
+            workspace.githubToken &&
+            workspace.githubRepo
+        ) {
+            try {
+                await updateGithubIssueState(
+                    workspace.githubToken,
+                    workspace.githubRepo,
+                    taskToDelete.githubIssueNumber,
+                    "closed"
+                );
+            } catch (githubError) {
+                console.error("⚠️ GitHub Issue Close Failed:", githubError.message);
+            }
         }
 
         await Comment.deleteMany({ task: taskId });
@@ -336,8 +359,9 @@ export const deleteTask = async (req, res) => {
             io.to(workspace._id.toString()).emit("activity_updated");
         }
 
-        res.status(200).json({ message: "Task deleted" });
+        res.status(200).json({ message: "Task deleted and GitHub issue closed" });
     } catch (error) {
+        console.error("DELETE TASK ERROR:", error);
         res.status(500).json({ message: "Server Error" });
     }
 };
