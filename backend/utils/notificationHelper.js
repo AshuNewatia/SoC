@@ -1,6 +1,6 @@
 import Notification from "../models/Notification.js";
 
-export const createAndSendNotification = async (req, { recipient, sender, type, message, workspace, relatedId }) => {
+export const createAndSendNotification = async (req, { recipient, sender, type, message, workspace, relatedId, relatedModel }) => {
   try {
     const notification = await Notification.create({
       recipient,
@@ -9,6 +9,7 @@ export const createAndSendNotification = async (req, { recipient, sender, type, 
       message,
       workspace,
       relatedId,
+      relatedModel: relatedModel || null,
     });
 
     const populatedNotification = await notification.populate("sender", "name email");
@@ -17,6 +18,8 @@ export const createAndSendNotification = async (req, { recipient, sender, type, 
     if (io) {
       io.to(recipient.toString()).emit("newNotification", populatedNotification);
     }
+
+    return notification;
   } catch (error) {
     console.error("Error creating notification:", error);
   }

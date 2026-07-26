@@ -154,25 +154,25 @@ function renderPRHealth(doc, x, y, width, height, github) {
        });
 
     const statY = circleY + 80;
-    const statGap = 40;
+    const statGap = 50;
 
     doc.fillColor(COLORS.amber)
+       .fontSize(10)
+       .font('Helvetica-Bold')
+       .text('Open:', x + 20, statY);
+    doc.fillColor(COLORS.text)
        .fontSize(12)
        .font('Helvetica-Bold')
-       .text('🟡', x + 20, statY);
-    doc.fillColor(COLORS.text)
-       .fontSize(10)
-       .font('Helvetica')
-       .text(`${openPRs} Open`, x + 40, statY + 1);
+       .text(`${openPRs}`, x + 60, statY);
 
     doc.fillColor(COLORS.green)
+       .fontSize(10)
+       .font('Helvetica-Bold')
+       .text('Closed:', x + 20 + statGap, statY);
+    doc.fillColor(COLORS.text)
        .fontSize(12)
        .font('Helvetica-Bold')
-       .text('🟢', x + 20 + statGap, statY);
-    doc.fillColor(COLORS.text)
-       .fontSize(10)
-       .font('Helvetica')
-       .text(`${closedPRs} Closed`, x + 40 + statGap, statY + 1);
+       .text(`${closedPRs}`, x + 60 + statGap, statY);
 }
 
 function renderRepositoryActivity(doc, x, y, width, height, github) {
@@ -180,10 +180,10 @@ function renderRepositoryActivity(doc, x, y, width, height, github) {
     const totalPRs = github.totalPRs || 0;
 
     const activities = [
-        { icon: '📝', label: 'Total Commits', value: totalCommits },
-        { icon: '🔀', label: 'Total Pull Requests', value: totalPRs },
-        { icon: '📊', label: 'PR to Commit Ratio', value: totalPRs > 0 ? (totalCommits / totalPRs).toFixed(1) : '0' },
-        { icon: '⭐', label: 'Repository Status', value: github.repository ? 'Active' : 'Inactive' },
+        { label: 'Total Commits', value: totalCommits },
+        { label: 'Total Pull Requests', value: totalPRs },
+        { label: 'PR to Commit Ratio', value: totalPRs > 0 ? (totalCommits / totalPRs).toFixed(1) : '0' },
+        { label: 'Repository Status', value: github.repository ? 'Active' : 'Inactive' },
     ];
 
     const itemHeight = 40;
@@ -192,18 +192,15 @@ function renderRepositoryActivity(doc, x, y, width, height, github) {
     activities.forEach((activity, index) => {
         const itemY = startY + index * itemHeight;
 
-        doc.fontSize(18)
-           .text(activity.icon, x + 10, itemY);
-
         doc.fillColor(COLORS.secondary)
            .fontSize(9)
            .font('Helvetica')
-           .text(activity.label, x + 45, itemY + 2);
+           .text(activity.label, x + 10, itemY + 2);
 
         doc.fillColor(COLORS.text)
-           .fontSize(14)
+           .fontSize(16)
            .font('Helvetica-Bold')
-           .text(activity.value.toString(), x + 45, itemY + 18);
+           .text(activity.value.toString(), x + 10, itemY + 18);
 
         if (index < activities.length - 1) {
             doc.strokeColor(COLORS.border)
@@ -216,8 +213,8 @@ function renderRepositoryActivity(doc, x, y, width, height, github) {
 
     if (totalCommits === 0 && totalPRs === 0) {
         doc.fillColor(COLORS.secondary)
-           .fontSize(11)
-           .text('No activity detected', x + 10, startY + 20, {
+           .fontSize(12)
+           .text('No activity detected', x + 10, y + 40, {
                width: width - 20,
                align: 'center',
            });

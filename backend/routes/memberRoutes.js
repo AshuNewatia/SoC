@@ -1,5 +1,5 @@
 import express from "express";
-import { getWorkspaceMembers, addMemberToWorkspace,promoteToAdmin,removeAdmin,removeMember} from "../controllers/memberController.js";
+import { getWorkspaceMembers, addMemberToWorkspace,promoteToAdmin,removeAdmin,removeMember,acceptWorkspaceInvitation,declineWorkspaceInvitation,getWorkspaceInvitation} from "../controllers/memberController.js";
 import { protect } from "../middleware/authMiddleware.js"; 
 
 const router = express.Router();
@@ -33,5 +33,23 @@ router.delete(
   protect,
   removeAdmin
 );
+router.post(
+    "/workspace-invitations/:invitationId/accept",
+    protect,
+    acceptWorkspaceInvitation
+);
+
+router.post(
+    "/workspace-invitations/:invitationId/decline",
+    protect,
+    declineWorkspaceInvitation
+);
+
+router.get(
+  "/workspace-invitations/:invitationId",
+  protect,
+  getWorkspaceInvitation
+);
+
 
 export default router;

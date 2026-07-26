@@ -584,7 +584,7 @@ export default function MyBoard() {
                 return (
                   <div
                     key={task._id}
-                    className="group relative overflow-hidden rounded-2xl border border-border-light bg-gradient-to-br from-white to-slate-50 p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
+                    className="group relative overflow-hidden rounded-2xl border border-border-light bg-linear-to-br from-white to-slate-50 p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
                   >
                     {/* Priority Accent */}
                     <div
@@ -668,7 +668,7 @@ export default function MyBoard() {
                 {notes.map((note) => (
                   <div
                     key={note._id}
-                    className="group relative overflow-hidden rounded-2xl border border-border-light bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
+                    className="group relative overflow-hidden rounded-2xl border border-border-light bg-linear-to-br from-white to-slate-50 p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-primary/30"
                   >
                     {/* Accent */}
                     <div className="absolute left-0 top-0 h-full w-1 bg-primary rounded-l-2xl" />
