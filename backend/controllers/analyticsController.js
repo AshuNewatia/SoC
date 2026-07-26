@@ -148,84 +148,6 @@ export const getMemberPerformance = async (req, res) => {
   }
 };
 
-// export const getMemberPerformance = async (req, res) => {
-//   try {
-//     // Students should not access team analytics
-//     if (req.user.role === "student") {
-//       return res.status(403).json({
-//         message: "Students are not allowed to view member performance.",
-//       });
-//     }
-
-//     // Find workspaces where the professor is owner/admin/member
-//     const workspaces = await Workspace.find({
-//       $or: [
-//         { owner: req.user._id },
-//         { admins: req.user._id },
-//         { members: req.user._id },
-//       ],
-//     }).populate("members", "name email");
-
-//     // Collect unique members
-//     const memberMap = new Map();
-
-//     workspaces.forEach((workspace) => {
-//       workspace.members.forEach((member) => {
-//         memberMap.set(member._id.toString(), member);
-//       });
-//     });
-
-//     const members = Array.from(memberMap.values());
-
-//     const result = await Promise.all(
-//       members.map(async (member) => {
-//         const assigned = await Task.countDocuments({
-//           workspace: { $in: workspaces.map((w) => w._id) },
-//           assignedTo: member._id,
-//         });
-
-//         const completed = await Task.countDocuments({
-//           workspace: { $in: workspaces.map((w) => w._id) },
-//           assignedTo: member._id,
-//           status: "completed",
-//         });
-
-//         const overdue = await Task.countDocuments({
-//           workspace: { $in: workspaces.map((w) => w._id) },
-//           assignedTo: member._id,
-//           status: { $ne: "completed" },
-//           dueDate: { $lt: new Date() },
-//         });
-
-//         return {
-//           id: member._id,
-//           name: member.name,
-//           email: member.email,
-//           assigned,
-//           completed,
-//           overdue,
-//           completion:
-//             assigned > 0
-//               ? Math.round(
-//                 (completed / assigned) * 100
-//               )
-//               : 0,
-//         };
-//       })
-//     );
-
-//     result.sort((a, b) => b.completion - a.completion);
-
-//     res.json(result);
-//   } catch (error) {
-//     console.error("Member Performance Error:", error);
-
-//     res.status(500).json({
-//       message: error.message,
-//     });
-//   }
-// };
-
 export const getProductivity = async (req, res) => {
   try {
     const sevenDaysAgo = new Date();
@@ -460,6 +382,74 @@ export const getProductivityPercentage = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: error.message,
+    });
+  }
+};
+
+export const getDeadlinesRisk = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+
+    // Get all workspaces the user has access to
+    const workspaces = await Workspace.find({
+      $or: [
+        { owner: userId },
+        { admins: userId },
+        { members: userId },
+      ],
+    }).select("_id name");
+
+    const workspaceIds = workspaces.map((workspace) => workspace._id);
+
+    const now = new Date();
+
+    const baseFilter = {
+      workspace: { $in: workspaceIds },
+      status: { $ne: "completed" },
+      dueDate: { $ne: null },
+    };
+
+    // Overdue Tasks
+    const overdue = await Task.find({
+      ...baseFilter,
+      dueDate: {
+        $lt: now,
+      },
+    })
+      .select(
+        "title priority status dueDate assignedTo workspace"
+      )
+      .populate("assignedTo", "name avatar")
+      .populate("workspace", "name")
+      .sort({ dueDate: 1 })
+      .limit(5);
+
+    // Upcoming Deadlines
+    const upcoming = await Task.find({
+      ...baseFilter,
+      dueDate: {
+        $gte: now,
+      },
+    })
+      .select(
+        "title priority status dueDate assignedTo workspace"
+      )
+      .populate("assignedTo", "name avatar")
+      .populate("workspace", "name")
+      .sort({ dueDate: 1 })
+      .limit(5);
+
+    return res.status(200).json({
+      overdue,
+      upcoming,
+      overdueCount: overdue.length,
+      upcomingCount: upcoming.length,
+    });
+  } catch (error) {
+    console.error("Deadline analytics error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch deadline analytics",
     });
   }
 };

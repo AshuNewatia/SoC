@@ -24,6 +24,9 @@ export const getInsights = () =>
 export const getProductivityPercentage = () =>
   api.get("/api/analytics/productivity-percentage");
 
+export const getDeadlinesRisk = () =>
+  api.get("/api/analytics/deadlines-risk");
+
 export const exportReport = () =>
   api.get("/api/analytics/export", { responseType: "blob" });
 
