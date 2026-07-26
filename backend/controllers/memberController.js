@@ -474,7 +474,7 @@ export const acceptWorkspaceInvitation = async (req, res) => {
       `${req.user.name} joined the Workspace`
     );
 
-    await createAndSendNotification({
+    await createAndSendNotification(req, {
       recipient: invitation.invitedBy,
       sender: req.user._id,
       type: "WORKSPACE_INVITE_ACCEPTED",
@@ -541,7 +541,7 @@ export const declineWorkspaceInvitation = async (req, res) => {
     invitation.respondedAt = new Date();
     await invitation.save();
 
-    await createAndSendNotification({
+    await createAndSendNotification(req, {
       recipient: invitation.invitedBy,
       sender: req.user._id,
       type: "WORKSPACE_INVITE_DECLINED",
