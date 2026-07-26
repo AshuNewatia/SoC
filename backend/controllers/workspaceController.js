@@ -387,3 +387,36 @@ export const joinWorkspaceWithToken = async (req, res) => {
     });
   }
 };
+
+export const togglePinWorkspace = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+    const userId = req.user._id;
+
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      return res.status(404).json({ success: false, message: "Workspace not found" });
+    }
+
+    const isPinned = workspace.pinnedBy.includes(userId);
+
+    if (isPinned) {
+      workspace.pinnedBy = workspace.pinnedBy.filter(
+        (id) => id.toString() !== userId.toString()
+      );
+    } else {
+      workspace.pinnedBy.push(userId);
+    }
+
+    await workspace.save();
+
+    return res.status(200).json({
+      success: true,
+      isPinned: !isPinned,
+      workspace,
+    });
+  } catch (error) {
+    console.error("Error toggling pin status:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};

@@ -40,7 +40,11 @@ const workspaceSchema = new mongoose.Schema(
     lastActivityAt:{
       type: Date,
       default: Date.now
-    }
+    },
+    pinnedBy: [{
+         type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+}],
 
   },
   
