@@ -390,7 +390,7 @@ export const getDeadlinesRisk = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
 
-    // Get all workspaces the user has access to
+    // Find all workspaces where the user is a member/admin/owner
     const workspaces = await Workspace.find({
       $or: [
         { owner: userId },
@@ -403,10 +403,25 @@ export const getDeadlinesRisk = async (req, res) => {
 
     const now = new Date();
 
+    const nextWeek = new Date();
+    nextWeek.setDate(now.getDate() + 7);
+
+    // Tasks assigned to the logged-in user
     const baseFilter = {
       workspace: { $in: workspaceIds },
-      status: { $ne: "completed" },
-      dueDate: { $ne: null },
+
+      $or: [
+        { assignedTo: userId },   // Student sees their assigned tasks
+        { createdBy: userId },    // Professor sees tasks they created
+      ],
+
+      status: {
+        $ne: "completed",
+      },
+
+      dueDate: {
+        $ne: null,
+      },
     };
 
     // Overdue Tasks
@@ -416,25 +431,22 @@ export const getDeadlinesRisk = async (req, res) => {
         $lt: now,
       },
     })
-      .select(
-        "title priority status dueDate assignedTo workspace"
-      )
-      .populate("assignedTo", "name avatar")
+      .select("title priority status dueDate assignedTo workspace")
+      .populate("assignedTo", "name email avatar")
       .populate("workspace", "name")
       .sort({ dueDate: 1 })
       .limit(5);
 
-    // Upcoming Deadlines
+    // Upcoming Deadlines (Next 7 Days)
     const upcoming = await Task.find({
       ...baseFilter,
       dueDate: {
         $gte: now,
+        $lte: nextWeek,
       },
     })
-      .select(
-        "title priority status dueDate assignedTo workspace"
-      )
-      .populate("assignedTo", "name avatar")
+      .select("title priority status dueDate assignedTo workspace")
+      .populate("assignedTo", "name email avatar")
       .populate("workspace", "name")
       .sort({ dueDate: 1 })
       .limit(5);
@@ -450,6 +462,7 @@ export const getDeadlinesRisk = async (req, res) => {
 
     return res.status(500).json({
       message: "Failed to fetch deadline analytics",
+      error: error.message,
     });
   }
 };
