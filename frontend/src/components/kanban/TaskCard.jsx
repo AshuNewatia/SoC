@@ -1,11 +1,12 @@
 // src/components/task/TaskCard.jsx
 import { motion } from "framer-motion";
-import { CalendarDays, Users, MessageCircle } from "lucide-react";
+import { CalendarDays, Users, MessageCircle, Paperclip } from "lucide-react";
 
 const priorityColors = {
   High: "bg-orange-100 text-orange-700",
   Medium: "bg-yellow-100 text-yellow-700",
   Low: "bg-emerald-100 text-emerald-700",
+  Critical: "bg-purple-100 text-purple-700",
 };
 
 export default function TaskCard({ task, onClick }) {
@@ -17,7 +18,7 @@ export default function TaskCard({ task, onClick }) {
       onClick={onClick}
       whileHover={{ y: -2 }}
       transition={{ duration: 0.15 }}
-      className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition cursor-pointer"
+      className="relative bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition cursor-pointer"
     >
       {task.hasUnreadComments && (
         <span className="absolute top-3 right-3 w-3 h-3 rounded-full bg-red-500 ring-2 ring-white"></span>
@@ -42,10 +43,10 @@ export default function TaskCard({ task, onClick }) {
           <p>
             {task.dueDate
               ? new Date(task.dueDate).toLocaleDateString("en-IN", {
-                weekday: "short",
-                day: "numeric",
-                month: "short",
-              })
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                })
               : "No Due Date"}
           </p>
         </div>
@@ -64,6 +65,14 @@ export default function TaskCard({ task, onClick }) {
             <MessageCircle size={15} />
             <span className="text-xs font-medium">
               {task.commentCount || 0}
+            </span>
+          </div>
+
+          {/* Attachments */}
+          <div className="flex items-center gap-1.5 text-slate-500">
+            <Paperclip size={15} />
+            <span className="text-xs font-medium">
+              {task.attachments?.length || 0}
             </span>
           </div>
 

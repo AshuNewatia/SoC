@@ -78,17 +78,15 @@ export const createComment = async (req, res) => {
       }
     );
 
-    // 2. ⚡ NEW: Generate and push notifications for tagged users
     if (mentions && mentions.length > 0) {
-      // Don't issue a notification if you accidentally mention yourself
       const targetUserIds = mentions;
 
       for (const recipientId of targetUserIds) {
-        // Create a new record in the Notification collection
+
         const notification = new Notification({
           recipient: recipientId,
           sender: createdBy,
-          type: "mention",
+          type: "COMMENT_MENTION",
           message: `${newComment.createdBy.name} mentioned you in a comment: "${comment.trim().substring(0, 35)}..."`,
           link: `/workspaces/${existingTask.workspace}/tasks/${taskId}`,
           isRead: false
@@ -180,12 +178,7 @@ export const editComment = async (req, res) => {
     const { comment, mentions = [] } = req.body;
     const userId = req.user._id || req.user.id;
 
-    if (!comment || !comment.trim()) {
-      return res.status(400).json({
-        message: "Comment cannot be empty",
-      });
-    }
-
+    // ✅ FIX 1 & 2: Fetch comment first, then task
     const existingComment = await Comment.findById(commentId);
 
     if (!existingComment) {
@@ -194,6 +187,13 @@ export const editComment = async (req, res) => {
       });
     }
 
+    if (!comment || !comment.trim()) {
+      return res.status(400).json({
+        message: "Comment cannot be empty",
+      });
+    }
+
+    // Get task from the comment
     const task = await Task.findById(existingComment.task);
 
     if (!task) {
@@ -202,12 +202,49 @@ export const editComment = async (req, res) => {
       });
     }
 
+    // Check if user is the author
     if (existingComment.createdBy.toString() !== userId.toString()) {
       return res.status(403).json({
         message: "You can only edit your own comment",
       });
     }
 
+    // ✅ FIX 8: Move io declaration to the top
+    const io = req.app.get("io");
+
+    // ✅ FIX 3: Use .length instead of .size()
+    // ✅ FIX 4: Compare arrays, not just lengths
+    const oldMentionIds = existingComment.mentions.map((id) => id.toString());
+    const newMentionIds = mentions.map((id) => id.toString());
+
+    // Find only newly added users
+    const addedMentions = newMentionIds.filter(
+      (id) => !oldMentionIds.includes(id)
+    );
+
+    // Populate author before sending notifications
+    await existingComment.populate("createdBy", "name email avatar");
+
+    // ✅ Send notifications for newly added mentions only
+    if (addedMentions.length > 0) {
+      for (const recipientId of addedMentions) {
+        // Skip notifying yourself
+        if (recipientId.toString() === userId.toString()) continue;
+
+        // ✅ FIX 5, 6, 7: Use createAndSendNotification with correct data
+        await createAndSendNotification(req, {
+          recipient: recipientId,
+          sender: userId,
+          type: "COMMENT_MENTION",
+          message: `${existingComment.createdBy.name} mentioned you in a comment: "${comment.trim().substring(0, 35)}..."`,
+          workspace: task.workspace,
+          relatedId: existingComment._id,
+          relatedModel: "Comment",
+        });
+      }
+    }
+
+    // Update comment
     existingComment.comment = comment.trim();
     existingComment.mentions = mentions;
     existingComment.isEdited = true;
@@ -225,14 +262,9 @@ export const editComment = async (req, res) => {
       },
     ]);
 
-    const io = req.app.get("io");
-
-    io.to(task.workspace.toString()).emit(
-      "commentUpdated",
-      {
-        taskId: task._id.toString(),
-      }
-    );
+    io.to(task.workspace.toString()).emit("commentUpdated", {
+      taskId: task._id.toString(),
+    });
 
     return res.status(200).json({
       message: "Comment updated successfully",
@@ -246,7 +278,6 @@ export const editComment = async (req, res) => {
     });
   }
 };
-
 export const deleteComment = async (req, res) => {
   try {
     const { commentId } = req.params;

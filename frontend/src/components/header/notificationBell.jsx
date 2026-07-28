@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Clock, Bell, Check, Trash2, Circle, MessageSquare, AtSign, UserPlus, Edit3 } from "lucide-react";
+import { Clock, Bell, Check, Trash2, Circle, MessageSquare, AtSign, UserPlus, Edit3, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import socket from "../../services/socket";
-import { handleApiError,handleSuccess } from "../../utils/handleApiError";
+import { handleApiError, handleSuccess } from "../../utils/handleApiError";
 
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
@@ -79,9 +79,18 @@ export default function NotificationBell() {
 
   const handleAcceptInvitation = async (notification) => {
     try {
-      await api.post(`/api/workspaces/workspace-invitations/${notification.relatedId}/accept`);
-      handleSuccess("Invitation accepted")
+      const res = await api.post(`/api/workspaces/workspace-invitations/${notification.relatedId}/accept`);
+      
+      handleSuccess("✓ Successfully joined the workspace.");
       setNotifications((prev) => prev.filter((n) => n._id !== notification._id));
+      setIsOpen(false);
+      
+      // Navigate to workspace after accepting
+      if (res.data?.workspace?.id) {
+        navigate(`/workspace/${res.data.workspace.id}`);
+      } else if (notification.workspace) {
+        navigate(`/workspace/${notification.workspace}`);
+      }
     } catch (err) {
       console.error("Failed to accept invitation:", err);
       handleApiError(err);
@@ -91,8 +100,10 @@ export default function NotificationBell() {
   const handleDeclineInvitation = async (notification) => {
     try {
       await api.post(`/api/workspaces/workspace-invitations/${notification.relatedId}/decline`);
-      handleSuccess("Invitation declined")
+      
+      handleSuccess("Invitation declined.");
       setNotifications((prev) => prev.filter((n) => n._id !== notification._id));
+      setIsOpen(false);
     } catch (err) {
       console.error("Failed to decline invitation:", err);
       handleApiError(err);
@@ -133,8 +144,8 @@ export default function NotificationBell() {
         );
       case "WORKSPACE_INVITATION":
         return (
-          <div className="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shadow-xs text-lg">
-            📩
+          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-xs">
+            <Users size={17} />
           </div>
         );
       default:
@@ -196,72 +207,85 @@ export default function NotificationBell() {
                 </p>
               </div>
             ) : (
-              notifications.map((notif) => (
-                <div
-                  key={notif._id || Math.random()}
-                  onClick={() => handleNotificationClick(notif)}
-                  className={`p-4 flex gap-3 hover:bg-slate-50 transition relative group cursor-pointer ${
-                    !notif.isRead ? "bg-blue-50/20" : ""
-                  }`}
-                >
-                  {/* Icon */}
-                  <div className="shrink-0 mt-0.5">{renderNotificationIcon(notif.type)}</div>
+              notifications.map((notif) => {
+                const isInvitation = notif.type === "WORKSPACE_INVITATION";
+                
+                return (
+                  <div
+                    key={notif._id || Math.random()}
+                    onClick={() => handleNotificationClick(notif)}
+                    className={`p-4 flex gap-3 transition relative group cursor-pointer ${
+                      isInvitation
+                        ? "border border-emerald-200 bg-emerald-50/40 rounded-xl mx-2 my-2"
+                        : `hover:bg-slate-50 ${!notif.isRead ? "bg-blue-50/20" : ""}`
+                    }`}
+                  >
+                    {/* Icon */}
+                    <div className="shrink-0 mt-0.5">{renderNotificationIcon(notif.type)}</div>
 
-                  {/* Content */}
-                  <div className="flex-1 space-y-1 pr-4 font-sans">
-                    <p
-                      className={`text-xs leading-relaxed wrap-break-word ${
-                        !notif.isRead ? "text-slate-900 font-medium" : "text-slate-600"
-                      }`}
-                    >
-                      {notif.message}
-                    </p>
+                    {/* Content */}
+                    <div className="flex-1 space-y-1 pr-4 font-sans">
+                      {/* Workspace Invitation Badge */}
+                      {isInvitation && (
+                        <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-semibold px-2 py-0.5 mb-1">
+                          Workspace Invitation
+                        </span>
+                      )}
 
-                    {/* Accept/Decline buttons for workspace invitations */}
-                    {notif.type === "WORKSPACE_INVITATION" && (
-                      <div className="flex gap-2 mt-3">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAcceptInvitation(notif);
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-semibold hover:bg-green-700 transition cursor-pointer"
-                        >
-                          Accept
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeclineInvitation(notif);
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition cursor-pointer"
-                        >
-                          Decline
-                        </button>
+                      <p
+                        className={`text-xs leading-relaxed wrap-break-word ${
+                          !notif.isRead ? "text-slate-900 font-medium" : "text-slate-600"
+                        }`}
+                      >
+                        {notif.message}
+                      </p>
+
+                      {/* Accept/Decline buttons for workspace invitations */}
+                      {isInvitation && (
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAcceptInvitation(notif);
+                            }}
+                            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-2 text-xs font-semibold transition"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeclineInvitation(notif);
+                            }}
+                            className="flex-1 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 rounded-lg py-2 text-xs font-semibold transition"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      )}
+
+                      <span className="text-[10px] text-slate-400 block mt-1">
+                        {new Date(notif.createdAt).toLocaleDateString([], {
+                          month: "short",
+                          day: "numeric",
+                        })}{" "}
+                        at{" "}
+                        {new Date(notif.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+
+                    {/* Unread dot */}
+                    {!notif.isRead && (
+                      <div className="absolute right-4 top-5">
+                        <Circle size={6} className="fill-blue-600 text-blue-600" />
                       </div>
                     )}
-
-                    <span className="text-[10px] text-slate-400 block mt-1">
-                      {new Date(notif.createdAt).toLocaleDateString([], {
-                        month: "short",
-                        day: "numeric",
-                      })}{" "}
-                      at{" "}
-                      {new Date(notif.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
                   </div>
-
-                  {/* Unread dot */}
-                  {!notif.isRead && (
-                    <div className="absolute right-4 top-5">
-                      <Circle size={6} className="fill-blue-600 text-blue-600" />
-                    </div>
-                  )}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
