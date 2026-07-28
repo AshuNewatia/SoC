@@ -30,10 +30,10 @@ export default function WorkspaceMembers() {
   const [inviteUrl, setInviteUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const [urlLoading, setUrlLoading] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(false); // ✅ Added loading state
 
   const [openMenu, setOpenMenu] = useState(null);
 
-  // ✅ Fetch members function (kept from HEAD)
   const fetchMembers = useCallback(async () => {
     try {
       const res = await api.get(`/api/workspaces/${id}/members`);
@@ -65,16 +65,27 @@ export default function WorkspaceMembers() {
     return () => document.removeEventListener('click', closeMenu);
   }, []);
 
+  // ✅ Updated handleInvite with loading state
   const handleInvite = async () => {
+    if (!inviteEmail.trim()) return;
+
+    setInviteLoading(true);
+
     try {
       await api.post(`/api/workspaces/${id}/members`, { email: inviteEmail });
+
+      handleSuccess("Invitation sent! The recipient should receive an email shortly.");
+
       setInviteEmail('');
-      handleSuccess("Member invited successfully");
+      setInviteUrl('');
       setInviteOpen(false);
-      fetchMembers();
+
+      await fetchMembers();
     } catch (err) {
       console.error(err);
       handleApiError(err);
+    } finally {
+      setInviteLoading(false);
     }
   };
 
@@ -197,56 +208,30 @@ export default function WorkspaceMembers() {
       <div className="divide-y divide-slate-100">
         {loading ? (
           <div className="divide-y divide-slate-100">
-
             {[1, 2, 3, 4, 5].map((item) => (
-              <div
-                key={item}
-                className="flex items-center justify-between p-5"
-              >
+              <div key={item} className="flex items-center justify-between p-5">
                 <div className="flex items-center gap-4">
-
-                  {/* Avatar */}
                   <Skeleton className="w-11 h-11 rounded-full" />
-
                   <div className="space-y-2">
-
                     <Skeleton className="h-5 w-40" />
-
                     <Skeleton className="h-5 w-20 rounded-full" />
-
                   </div>
-
                 </div>
-
-                {/* Menu Button */}
                 <Skeleton className="w-9 h-9 rounded-lg" />
-
               </div>
             ))}
-
           </div>
         ) : filteredMembers.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-90 px-6 text-center">
-
             <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-6">
-
-              <Users
-                size={34}
-                className="text-primary"
-              />
-
+              <Users size={34} className="text-primary" />
             </div>
-
-            <h3 className="text-2xl font-semibold text-text-primary">
-              No Members Found
-            </h3>
-
+            <h3 className="text-2xl font-semibold text-text-primary">No Members Found</h3>
             <p className="text-text-secondary mt-3 max-w-md leading-relaxed">
               {searchQuery
                 ? "No workspace members match your search."
                 : "Invite teammates to collaborate on tasks, manage projects and work together in this workspace."}
             </p>
-
           </div>
         ) : (
           filteredMembers.map((member) => (
@@ -272,7 +257,6 @@ export default function WorkspaceMembers() {
                 </div>
               </div>
 
-              {/* Action buttons */}
               <div className="flex items-center gap-2">
                 {member.role !== 'Owner' && (
                   <div className="relative">
@@ -356,20 +340,25 @@ export default function WorkspaceMembers() {
             />
 
             <div className="flex justify-end gap-3 mt-4">
+              {/* ✅ Cancel button with disabled state */}
               <button
+                disabled={inviteLoading}
                 onClick={() => {
                   setInviteOpen(false);
                   setInviteUrl('');
                 }}
-                className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-50"
+                className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
+
+              {/* ✅ Invite button with loading state */}
               <button
                 onClick={handleInvite}
-                className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90"
+                disabled={inviteLoading || !inviteEmail.trim()}
+                className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Invite via Email
+                {inviteLoading ? "Sending Invitation..." : "Invite via Email"}
               </button>
             </div>
 

@@ -115,7 +115,7 @@ export default function EditTaskModal({ task, isOpen, onClose, onSave }) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center p-5"
+            className="fixed inset-0 z-60 flex items-center justify-center p-5"
           >
             <div
               onClick={(e) => e.stopPropagation()}
