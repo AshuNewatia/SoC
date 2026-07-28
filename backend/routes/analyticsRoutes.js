@@ -8,6 +8,7 @@ import {
   getGithubAnalytics,
   getInsights,
   getProductivityPercentage,
+  getDeadlinesRisk,
   exportAnalyticsReport,
   getCSVReport
 } from "../controllers/analyticsController.js";
@@ -31,6 +32,8 @@ router.get("/github", protect, getGithubAnalytics);
 router.get("/insights", protect, getInsights);
 
 router.get("/productivity-percentage", protect, getProductivityPercentage);
+
+router.get("/deadlines-risk", protect, getDeadlinesRisk);
 
 router.get("/export", protect, exportAnalyticsReport);
 

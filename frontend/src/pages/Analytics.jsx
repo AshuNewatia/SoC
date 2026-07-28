@@ -10,6 +10,7 @@ import PriorityChart from "../components/analytics/PriorityChart";
 import MemberPerformance from "../components/analytics/MemberPerformance";
 import ProductivityChart from "../components/analytics/ProductivityChart";
 import InsightsSection from "../components/analytics/InsightsSection";
+import DeadlinesRisk from "../components/analytics/DeadlinesRisk";
 
 import { exportReport } from "../services/analyticsService";
 import { getCSVReport } from "../services/analyticsService";
@@ -153,6 +154,9 @@ export default function Analytics() {
       {user?.role === "professor" && (
         <ProductivityChart />
       )}
+
+      {/* Deadline & Risk */}
+      <DeadlinesRisk />
 
       {/* Professor Only */}
       {user?.role === "professor" && (
