@@ -55,7 +55,7 @@ export default function CreateTaskModal({
     setFormData({
       title: "",
       description: "",
-      priority: "",
+      priority: "Medium",
       dueDate: "",
       tag: "",
     });
@@ -63,11 +63,7 @@ export default function CreateTaskModal({
     onClose();
   };
 
-  const priorities = [
-    "Low",
-    "Medium",
-    "High",
-  ];
+  const priorities = ["Low", "Medium", "High"];
 
   const tags = [
     "Frontend",
@@ -80,10 +76,19 @@ export default function CreateTaskModal({
   ];
 
   const priorityStyles = {
-    Low: "bg-green-50 text-green-600 border-green-200",
-    Medium: "bg-yellow-50 text-yellow-600 border-yellow-200",
-    High: "bg-red-50 text-red-600 border-red-200",
+    Low: "bg-green-50 text-green-600 border-green-200 hover:bg-green-100",
+    Medium: "bg-yellow-50 text-yellow-600 border-yellow-200 hover:bg-yellow-100",
+    High: "bg-red-50 text-red-600 border-red-200 hover:bg-red-100",
   };
+
+  const prioritySelectedStyles = {
+    Low: "bg-green-500 text-white border-green-500",
+    Medium: "bg-yellow-500 text-white border-yellow-500",
+    High: "bg-red-500 text-white border-red-500",
+  };
+
+  const inputClass =
+    "w-full rounded-xl border border-border-light px-4 py-3 outline-none transition-all duration-200 bg-white text-text-primary placeholder:text-text-secondary focus:border-primary focus:ring-4 focus:ring-primary/10 hover:border-primary/30";
 
   return (
     <AnimatePresence>
@@ -95,7 +100,7 @@ export default function CreateTaskModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
           />
 
           {/* Modal */}
@@ -108,27 +113,29 @@ export default function CreateTaskModal({
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col"
+              className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-border-light overflow-hidden max-h-[92vh] flex flex-col"
             >
               {/* Header */}
-              <div className="sticky top-0 bg-white border-b border-slate-200 px-7 py-5 z-20">
+              <div className="sticky top-0 bg-white border-b border-border-light px-7 py-5 z-20">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h2 className="text-2xl font-semibold text-slate-900">
+                    <h2 className="text-2xl font-semibold text-text-primary">
                       Create Task
                     </h2>
-                    <div className="mt-3 w-16 h-1 rounded-full bg-sky-500" />
-                    <p className="text-sm text-slate-500 mt-1">
+                    <div className="mt-3 w-16 h-1 rounded-full bg-primary" />
+                    <p className="text-sm text-text-secondary mt-1">
                       Organize your work with priorities and deadlines.
                     </p>
                   </div>
 
-                  <button
+                  <motion.button
                     onClick={onClose}
+                    whileHover={{ rotate: 90 }}
+                    transition={{ duration: 0.2 }}
                     className="w-10 h-10 rounded-xl hover:bg-slate-100 transition flex items-center justify-center"
                   >
                     <X size={18} />
-                  </button>
+                  </motion.button>
                 </div>
               </div>
 
@@ -139,8 +146,8 @@ export default function CreateTaskModal({
               >
                 {/* Title */}
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                    <Type size={16} className="text-slate-400" />
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-primary mb-2">
+                    <Type size={16} className="text-text-secondary" />
                     Title
                   </label>
 
@@ -150,14 +157,14 @@ export default function CreateTaskModal({
                     onChange={handleChange}
                     placeholder="What needs to be done?"
                     required
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-900 focus:ring-4 focus:ring-slate-200"
+                    className={inputClass}
                   />
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                    <FileText size={16} className="text-slate-400" />
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-primary mb-2">
+                    <FileText size={16} className="text-text-secondary" />
                     Description
                   </label>
 
@@ -167,43 +174,46 @@ export default function CreateTaskModal({
                     value={formData.description}
                     onChange={handleChange}
                     placeholder="Add a detailed description..."
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 resize-none outline-none transition focus:border-slate-900 focus:ring-4 focus:ring-slate-200"
+                    className={`${inputClass} resize-none`}
                   />
                 </div>
 
                 {/* Priority */}
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
-                    <Flag size={16} className="text-slate-400" />
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-primary mb-3">
+                    <Flag size={16} className="text-text-secondary" />
                     Priority
                   </label>
 
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     {priorities.map((priority) => (
-                      <button
+                      <motion.button
                         key={priority}
                         type="button"
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() =>
                           setFormData({
                             ...formData,
                             priority,
                           })
                         }
-                        className={`rounded-xl border px-3 py-3 text-sm font-medium transition ${formData.priority === priority
-                            ? priorityStyles[priority]
-                            : "border-slate-200"
-                          }`}
+                        className={`rounded-xl border px-3 py-3 text-sm font-medium transition-all duration-200 ${
+                          formData.priority === priority
+                            ? prioritySelectedStyles[priority]
+                            : `border-border-light hover:shadow-sm ${priorityStyles[priority]}`
+                        }`}
                       >
                         {priority}
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
                 </div>
 
                 {/* Due Date */}
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-                    <CalendarDays size={16} className="text-slate-400" />
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-primary mb-2">
+                    <CalendarDays size={16} className="text-text-secondary" />
                     Due Date
                   </label>
 
@@ -212,51 +222,55 @@ export default function CreateTaskModal({
                     name="dueDate"
                     value={formData.dueDate}
                     onChange={handleChange}
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
+                    className={inputClass}
                   />
                 </div>
 
                 {/* Tags */}
                 <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-3">
-                    <Tag size={16} className="text-slate-400" />
+                  <label className="flex items-center gap-2 text-sm font-medium text-text-primary mb-3">
+                    <Tag size={16} className="text-text-secondary" />
                     Tag
                   </label>
 
                   <div className="flex flex-wrap gap-2 mb-4">
                     {tags.map((tag) => (
-                      <button
+                      <motion.button
                         key={tag}
                         type="button"
+                        whileHover={{ y: -1 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() =>
                           setFormData({
                             ...formData,
                             tag,
                           })
                         }
-                        className={`rounded-full px-4 py-2 text-sm transition border ${formData.tag === tag
-                            ? "bg-sky-500 text-white border-sky-500"
-                            : "border-slate-200 hover:border-sky-300"
-                          }`}
+                        className={`rounded-full px-4 py-2 text-sm transition-all duration-200 border ${
+                          formData.tag === tag
+                            ? "bg-primary text-white border-primary shadow-sm"
+                            : "border-border-light hover:bg-primary/5 hover:border-primary/30"
+                        }`}
                       >
                         {tag}
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
 
+                  <p className="text-xs text-text-secondary mb-2">Or type your own tag:</p>
                   <input
                     name="tag"
                     value={formData.tag}
                     onChange={handleChange}
-                    placeholder="Or type your own tag..."
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-slate-900 focus:ring-4 focus:ring-slate-200"
+                    placeholder="Custom tag..."
+                    className={inputClass}
                   />
                 </div>
               </form>
 
               {/* Footer */}
-              <div className="sticky bottom-0 bg-white border-t border-slate-200 px-7 py-5 flex justify-between items-center">
-                <p className="text-sm text-slate-500">
+              <div className="sticky bottom-0 bg-white border-t border-border-light px-7 py-5 flex justify-between items-center">
+                <p className="text-sm text-text-secondary">
                   All fields can be edited later.
                 </p>
 
@@ -264,18 +278,20 @@ export default function CreateTaskModal({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 transition"
+                    className="px-5 py-2.5 rounded-xl border border-border-light hover:bg-slate-50 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm active:scale-95"
                   >
                     Cancel
                   </button>
 
-                  <button
+                  <motion.button
                     type="submit"
                     onClick={handleSubmit}
-                    className="px-6 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white transition shadow-sm"
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-7 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-medium transition-all duration-200 shadow-sm hover:shadow-lg active:scale-95"
                   >
                     Create Task
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             </div>

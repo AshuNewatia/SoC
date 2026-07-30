@@ -53,13 +53,13 @@ function AuthenticatedLayout() {
       return;
     }
 
-    console.log(`🚀 Attempting to emit joinRoom for ID: ${userId}`);
+    // console.log(`🚀 Attempting to emit joinRoom for ID: ${userId}`);
 
     socket.connect();
     socket.emit("joinRoom", userId);
 
     socket.on("connect", () => {
-      console.log("🟢 Success! Frontend socket successfully connected to backend server. ID:", socket.id);
+      // console.log("🟢 Success! Frontend socket successfully connected to backend server. ID:", socket.id);
     });
 
     return () => {

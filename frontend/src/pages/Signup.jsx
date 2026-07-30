@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/authContext';
-import { User, Mail, Lock, UserPlus, ArrowRight, ShieldCheck, KeyRound } from 'lucide-react';
+import { User, Mail, Lock, UserPlus, ArrowRight, ShieldCheck, KeyRound, ArrowLeft } from 'lucide-react';
 import { FaGoogle, FaGithub } from 'react-icons/fa'; 
 import api from '../services/api'; 
+import logo from '../assets/logo.png';
 
 function Signup() {
   const [step, setStep] = useState(1);
@@ -106,10 +107,10 @@ function Signup() {
     <div className="min-h-screen relative overflow-hidden bg-linear-to-br from-blue-50 via-sky-50 to-indigo-50 font-sans">
       {/* Premium gradient mesh background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-blue-200/30 blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-indigo-200/25 blur-3xl" />
-        <div className="absolute top-1/3 right-1/4 w-60 h-60 rounded-full bg-sky-200/20 blur-3xl" />
-        <div className="absolute bottom-1/3 left-1/4 w-64 h-64 rounded-full bg-violet-200/20 blur-3xl" />
+        <div className="absolute top-20 left-10 w-40 h-40 sm:w-72 sm:h-72 rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="absolute bottom-10 right-10 w-40 h-40 sm:w-80 sm:h-80 rounded-full bg-indigo-200/25 blur-3xl" />
+        <div className="absolute top-1/3 right-1/4 w-40 h-40 sm:w-60 sm:h-60 rounded-full bg-sky-200/20 blur-3xl" />
+        <div className="absolute bottom-1/3 left-1/4 w-40 h-40 sm:w-64 sm:h-64 rounded-full bg-violet-200/20 blur-3xl" />
         <svg
           className="absolute inset-0 w-full h-full opacity-[0.03] pointer-events-none"
           xmlns="http://www.w3.org/2000/svg"
@@ -123,17 +124,35 @@ function Signup() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.4),transparent_70%)]" />
       </div>
 
+      {/* Back to Home Button - Top Left Corner */}
+      <div className="absolute top-6 left-6 z-20">
+        <button
+          onClick={() => navigate("/")}
+          className="group inline-flex items-center gap-2 rounded-xl bg-white/70 backdrop-blur-sm border border-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-300 hover:-translate-x-1 hover:bg-white hover:shadow-md"
+        >
+          <ArrowLeft
+            size={16}
+            className="transition-transform duration-300 group-hover:-translate-x-1"
+          />
+          Back to Home
+        </button>
+      </div>
+
       {/* Centered container with vertical padding */}
-      <div className="relative z-10 min-h-screen flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-lg">
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-6 py-8">
+        <div className="w-full max-w-md lg:max-w-lg">
+          
           {/* Glass card */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-4xl shadow-[0_20px_60px_rgba(37,99,235,0.12)] border border-white/60 p-10 transition-all duration-500 hover:shadow-[0_30px_80px_rgba(37,99,235,0.18)]">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-[0_20px_60px_rgba(37,99,235,0.12)] border border-white/60 px-8 pt-8 pb-8 transition-all duration-500 hover:shadow-[0_30px_80px_rgba(37,99,235,0.18)]">
             
             {/* Brand Header */}
-            <div className="text-center mb-3">
-              <h1 className="text-4xl font-bold text-blue-600 tracking-tight">
-                CampusFlow
-              </h1>
+            <div className="text-center mb-6">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <img src={logo} alt="CampusFlow" className="h-12 w-12 rounded-2xl shadow-lg" />
+                <h1 className="text-4xl font-bold text-blue-600 tracking-tight">
+                  CampusFlow
+                </h1>
+              </div>
             </div>
 
             {/* Dynamic Step Headings */}
@@ -166,7 +185,7 @@ function Signup() {
                       placeholder="John Doe"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 outline-none transition-all duration-200"
+                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 outline-none transition-all duration-200 hover:border-primary/40"
                       required
                     />
                   </div>
@@ -181,7 +200,7 @@ function Signup() {
                       placeholder="you@iiti.ac.in"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 outline-none transition-all duration-200"
+                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 outline-none transition-all duration-200 hover:border-primary/40"
                       required
                     />
                   </div>
@@ -196,7 +215,7 @@ function Signup() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 outline-none transition-all duration-200"
+                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 outline-none transition-all duration-200 hover:border-primary/40"
                       required
                     />
                   </div>
@@ -211,7 +230,7 @@ function Signup() {
                       placeholder="••••••••"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 outline-none transition-all duration-200"
+                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 outline-none transition-all duration-200 hover:border-primary/40"
                       required
                     />
                   </div>
@@ -220,7 +239,7 @@ function Signup() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(37,99,235,0.25)] hover:-translate-y-0.5 disabled:opacity-50 cursor-pointer group"
+                  className="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(37,99,235,0.25)] hover:bg-blue-700 hover:scale-[1.01] hover:shadow-lg active:scale-95 focus:ring-4 focus:ring-blue-500/30 disabled:opacity-50 cursor-pointer group"
                 >
                   <UserPlus className="w-5 h-5" />
                   {loading ? 'Sending Verification Code...' : 'Get OTP Code'}
@@ -244,7 +263,7 @@ function Signup() {
                       placeholder="123456"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3.5 tracking-widest text-center text-xl font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 outline-none transition-all duration-200"
+                      className="w-full pl-11 pr-4 py-3.5 tracking-widest text-center text-xl font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 outline-none transition-all duration-200 hover:border-primary/40"
                       required
                     />
                   </div>
@@ -253,7 +272,7 @@ function Signup() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(37,99,235,0.25)] hover:-translate-y-0.5 disabled:opacity-50 cursor-pointer"
+                  className="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(37,99,235,0.25)] hover:bg-blue-700 hover:scale-[1.01] hover:shadow-lg active:scale-95 focus:ring-4 focus:ring-blue-500/30 disabled:opacity-50 cursor-pointer"
                 >
                   <ShieldCheck className="w-5 h-5" />
                   {loading ? 'Verifying...' : 'Complete Registration'}
@@ -262,7 +281,7 @@ function Signup() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="w-full text-xs text-slate-500 hover:text-slate-700 text-center block transition pt-2"
+                  className="w-full text-xs text-slate-500 hover:text-slate-700 text-center block transition-all duration-200 hover:translate-x-1 pt-2"
                 >
                   ← Incorrect email or want to edit details?
                 </button>
@@ -282,7 +301,7 @@ function Signup() {
               <button
                 type="button"
                 onClick={handleGoogleLogin}
-                className="h-12 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition flex items-center justify-center gap-2 text-slate-700 font-medium text-sm cursor-pointer"
+                className="h-12 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-200 flex items-center justify-center gap-2 text-slate-700 font-medium text-sm cursor-pointer hover:bg-slate-100 hover:-translate-y-0.5 hover:shadow-md"
               >
                 <FaGoogle className="text-red-500" />
                 Google
@@ -290,7 +309,7 @@ function Signup() {
               <button
                 type="button"
                 onClick={handleGithubLogin}
-                className="h-12 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition flex items-center justify-center gap-2 text-slate-700 font-medium text-sm cursor-pointer"
+                className="h-12 rounded-xl border border-slate-200 bg-slate-50 transition-all duration-200 flex items-center justify-center gap-2 text-slate-700 font-medium text-sm cursor-pointer hover:bg-slate-100 hover:-translate-y-0.5 hover:shadow-md"
               >
                 <FaGithub />
                 GitHub
