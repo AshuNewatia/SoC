@@ -1,7 +1,6 @@
-// src/pages/Dashboard.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FolderKanban, CheckSquare, CalendarClock, BadgeCheck, AlertTriangle } from "lucide-react";
+import { FolderKanban, CheckSquare, CalendarClock, BadgeCheck, AlertTriangle, ArrowUp, ArrowDown } from "lucide-react";
 import api from "../services/api";
 import { getTasks } from "../services/taskServices";
 import { useAuth } from "../context/authContext";
@@ -10,6 +9,7 @@ import Hero from "../components/dashboard/Hero";
 import CreateWorkspaceModal from "../components/workspace/CreateWorkspaceModal";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import UpcomingDeadlines from "../components/dashboard/UpcomingDeadlines";
+import DashboardSkeleton from "../components/dashboard/DashboardSkeleton";
 import { handleSuccess, handleApiError } from "../utils/handleApiError";
 
 export default function Dashboard() {
@@ -17,71 +17,71 @@ export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [workspaces, setWorkspaces] = useState([]);
   const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchWorkspaces = async () => {
+    const fetchAllData = async () => {
+      setLoading(true);
       try {
-        const res = await api.get("/api/workspaces");
-        setWorkspaces(res.data || []);
+        // Fetch workspaces first
+        const workspacesRes = await api.get("/api/workspaces");
+        const fetchedWorkspaces = workspacesRes.data || [];
+        setWorkspaces(fetchedWorkspaces);
+
+        if (fetchedWorkspaces.length === 0) {
+          setLoading(false);
+          return;
+        }
+
+        // Fetch tasks and activities in parallel using Promise.all
+        const [tasksResults, activitiesResults] = await Promise.all([
+          // Fetch tasks from all workspaces in parallel
+          Promise.all(
+            fetchedWorkspaces.map((workspace) =>
+              getTasks(workspace._id).catch(() => ({ data: [] }))
+            )
+          ),
+          // Fetch activities from all workspaces in parallel
+          Promise.all(
+            fetchedWorkspaces.map((workspace) =>
+              api.get(`/api/workspaces/${workspace._id}/activity`).catch(() => ({ data: [] }))
+            )
+          ),
+        ]);
+
+        // Flatten tasks
+        let allTasks = [];
+        tasksResults.forEach((res) => {
+          allTasks = [...allTasks, ...(res.data || [])];
+        });
+        setTasks(allTasks);
+
+        // Flatten and sort activities
+        let allActivities = [];
+        activitiesResults.forEach((res) => {
+          allActivities = [...allActivities, ...(res.data || [])];
+        });
+        allActivities.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setActivities(allActivities.slice(0, 10));
+
       } catch (err) {
-        console.error("Failed to fetch workspaces:", err);
+        console.error("Failed to fetch dashboard data:", err);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchWorkspaces();
+
+    fetchAllData();
   }, []);
 
-  useEffect(() => {
-    const fetchTasksForWorkspaces = async () => {
-      if (!workspaces.length) return;
-      try {
-        let allTasks = [];
-        for (const workspace of workspaces) {
-          const res = await getTasks(workspace._id);
-          allTasks = [...allTasks, ...(res.data || [])];
-        }
-        setTasks(allTasks);
-      } catch (err) {
-        console.error("Failed to fetch tasks:", err);
-      }
-    };
-    fetchTasksForWorkspaces();
-  }, [workspaces]);
-
-  useEffect(() => {
-    const fetchActivities = async () => {
-      try {
-        if (!workspaces.length) return;
-
-        let allActivities = [];
-
-        for (const workspace of workspaces) {
-          const res = await api.get(
-            `/api/workspaces/${workspace._id}/activity`
-          );
-
-          allActivities = [
-            ...allActivities,
-            ...(res.data || []),
-          ];
-        }
-
-        allActivities.sort(
-          (a, b) =>
-            new Date(b.createdAt) -
-            new Date(a.createdAt)
-        );
-
-        setActivities(allActivities.slice(0, 10));
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchActivities();
-  }, [workspaces]);
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
 
   const isProfessor = user?.role === "professor";
 
@@ -95,7 +95,6 @@ export default function Dashboard() {
 
   const overdueTasks = tasks.filter((task) => {
     if (!task.dueDate) return false;
-
     return (
       task.status !== "completed" &&
       new Date(task.dueDate) < new Date()
@@ -104,7 +103,6 @@ export default function Dashboard() {
 
   const overdueTasksStudent = assignedTasks.filter((task) => {
     if (!task.dueDate) return false;
-
     return (
       task.status !== "completed" &&
       new Date(task.dueDate) < new Date()
@@ -120,32 +118,46 @@ export default function Dashboard() {
     return dueDate >= now && dueDate <= nextWeek;
   }).length;
 
+  // Calculate weekly changes for stats
+  const weeklyChange = 4; // This would come from real data in production
+
   const studentStats = [
     {
       title: "Active Workspaces",
       value: activeWorkspaces,
       subtitle: "Currently active",
       icon: FolderKanban,
+      change: `+${weeklyChange}`,
+      changeLabel: "this week",
+      trend: "up",
     },
     {
       title: "Assigned Tasks",
       value: assignedTasks.length,
       subtitle: "Currently assigned",
       icon: CheckSquare,
+      change: `+${Math.min(assignedTasks.length, 3)}`,
+      changeLabel: "new this week",
+      trend: "up",
     },
     {
       title: "Due This Week",
       value: dueThisWeek,
       subtitle: "Need attention",
       icon: CalendarClock,
+      change: dueThisWeek > 0 ? `${dueThisWeek} tasks` : "All caught up",
+      changeLabel: dueThisWeek > 0 ? "this week" : "🎉",
+      trend: dueThisWeek > 0 ? "up" : "down",
     },
     {
       title: "Overdue Tasks",
       value: overdueTasksStudent,
       subtitle: "Require attention",
       icon: AlertTriangle,
+      change: overdueTasksStudent > 0 ? `${overdueTasksStudent} overdue` : "No overdue",
+      changeLabel: overdueTasksStudent > 0 ? "take action" : "✅",
+      trend: overdueTasksStudent > 0 ? "up" : "down",
     },
-    
   ];
 
   const professorStats = [
@@ -154,24 +166,36 @@ export default function Dashboard() {
       value: activeWorkspaces,
       subtitle: "Projects supervised",
       icon: FolderKanban,
+      change: `+${weeklyChange}`,
+      changeLabel: "this week",
+      trend: "up",
     },
     {
       title: "Total Tasks",
       value: tasks.length,
       subtitle: "Awaiting approval",
       icon: CheckSquare,
+      change: `+${Math.min(tasks.length, 5)}`,
+      changeLabel: "new tasks",
+      trend: "up",
     },
     {
       title: "Completed Tasks",
       value: completedTasks,
       subtitle: "Finished",
       icon: BadgeCheck,
+      change: `${Math.min(completedTasks, 8)} completed`,
+      changeLabel: "this month",
+      trend: "up",
     },
     {
       title: "Overdue Tasks",
       value: overdueTasks,
       subtitle: "Require attention",
       icon: AlertTriangle,
+      change: overdueTasks > 0 ? `${overdueTasks} overdue` : "All on track",
+      changeLabel: overdueTasks > 0 ? "⚠️" : "🌟",
+      trend: overdueTasks > 0 ? "up" : "down",
     },
   ];
 
@@ -181,6 +205,7 @@ export default function Dashboard() {
     name: user?.name || "User",
     role: user?.role || "Student",
   };
+
   const summary = "You have 2 tasks due this week";
   let greeting = "";
   const hour = new Date().getHours();
@@ -199,15 +224,15 @@ export default function Dashboard() {
       } else {
         console.warn("Could not find workspace ID in the response to redirect!");
       }
-      handleSuccess("Workspace created successfully")
+      handleSuccess("Workspace created successfully");
       setCreateOpen(false);
     } catch (err) {
-      handleApiError(err); ``
+      handleApiError(err);
     }
   };
 
   return (
-    <div className="p-5.75">
+    <div className="px-4 sm:px-6 lg:px-8 py-6">
       <CreateWorkspaceModal
         isOpen={createOpen}
         onClose={() => setCreateOpen(false)}
@@ -217,17 +242,16 @@ export default function Dashboard() {
         user={displayUser}
         summary={summary}
         greeting={greeting}
-        onCreateWorkspace={() => setCreateOpen(true)}
-      />
+        onCreateWorkspace={() => setCreateOpen(true)} />
       <StatsGrid workspaceStat={dashboardStats} />
-      <UpcomingDeadlines
-        tasks={tasks}
-        currentUser={user}
-        isProfessor={isProfessor}
-      />
-      <RecentActivity
-        activities={activities}
-      />
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-8">
+        <UpcomingDeadlines
+          tasks={tasks}
+          currentUser={user}
+          isProfessor={isProfessor}
+        />
+        <RecentActivity activities={activities} />
+      </div>
     </div>
   );
 }

@@ -15,7 +15,8 @@ import {
   Link2,
   Unlink,
   CalendarClock,
-  FileUp
+  FileUp,
+  Activity
 } from "lucide-react";
 import api from '../../services/api';
 
@@ -26,10 +27,6 @@ export default function WorkspaceActivity() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('All');
-
-  // ------------------------------------------------
-  // 1. Fetch & live updates
-  // ------------------------------------------------
 
   const fetchActivities = async () => {
     try {
@@ -54,9 +51,6 @@ export default function WorkspaceActivity() {
     };
   }, [id, socket]);
 
-  // ------------------------------------------------
-  // 2. Filtering – includes 'Admins'
-  // ------------------------------------------------
   const filters = ['All', 'Tasks', 'Members', 'Admins'];
 
   const filteredActivities = useMemo(() => {
@@ -77,9 +71,6 @@ export default function WorkspaceActivity() {
     });
   }, [activities, activeFilter]);
 
-  // ------------------------------------------------
-  // 3. Group activities by actual dates
-  // ------------------------------------------------
   const groupedActivities = useMemo(() => {
     const groups = {};
     const today = new Date();
@@ -105,7 +96,6 @@ export default function WorkspaceActivity() {
       groups[groupLabel].push(activity);
     });
 
-    // Sort groups: Today, Yesterday, then other dates descending
     const order = ['Today', 'Yesterday'];
     const sortedGroups = {};
     order.forEach((key) => {
@@ -125,9 +115,6 @@ export default function WorkspaceActivity() {
     return sortedGroups;
   }, [filteredActivities]);
 
-  // ------------------------------------------------
-  // 4. Helpers: Icons, Colors, Avatar
-  // ------------------------------------------------
   const getActivityConfig = (actionType) => {
     switch (actionType) {
       case "ADMIN_PROMOTED":
@@ -159,8 +146,7 @@ export default function WorkspaceActivity() {
       case 'TASK_DUE_DATE_CHANGED':
         return { icon: CalendarClock, color: 'text-orange-500', bg: 'bg-orange-50' };
       case 'FILE_UPLOADED':
-        return { icon: FileUp, colour: 'text-sky-500', bg: 'bg-sky-50' };
-
+        return { icon: FileUp, color: 'text-sky-500', bg: 'bg-sky-50' };
       default:
         return { icon: Clock, color: "text-gray-500", bg: "bg-gray-50" };
     }
@@ -195,18 +181,17 @@ export default function WorkspaceActivity() {
       .slice(0, 2);
   };
 
-  // ------------------------------------------------
-  // 5. Render – Responsive Header
-  // ------------------------------------------------
   return (
-    <div className="w-full bg-white border border-slate-200 rounded-2xl shadow-sm font-sans overflow-hidden">
-      {/* Header – now responsive with flex-wrap */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-6 border-b border-slate-200 bg-white">
+    <div className="w-full bg-white border border-border-light rounded-3xl shadow-sm font-sans overflow-hidden">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-6 border-b border-border-light bg-white">
         <div className="flex items-center gap-3 md:gap-4 flex-wrap">
-          <div className="text-primary text-xl font-bold">≡</div>
-          <h2 className="text-lg md:text-xl font-bold text-slate-800">Activity Log</h2>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-50 text-emerald-700 border border-green-200 text-xs font-semibold whitespace-nowrap">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> LIVE
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Activity size={18} className="text-primary" />
+          </div>
+          <h2 className="text-lg md:text-xl font-bold text-text-primary">Activity Log</h2>
+          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-green-50 text-emerald-700 border border-green-200 text-[10px] font-semibold whitespace-nowrap uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live
           </span>
         </div>
 
@@ -215,10 +200,10 @@ export default function WorkspaceActivity() {
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
-              className={`px-3 md:px-4 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition-colors whitespace-nowrap
+              className={`px-3 md:px-4 py-1.5 rounded-lg text-xs md:text-sm font-semibold transition-all duration-200 whitespace-nowrap
                 ${activeFilter === filter
                   ? 'bg-primary text-white shadow-sm'
-                  : 'bg-transparent border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+                  : 'bg-transparent border border-border-light text-text-secondary hover:bg-slate-50 hover:text-text-primary hover:-translate-y-0.5 hover:shadow-sm'
                 }`}
             >
               {filter}
@@ -228,23 +213,18 @@ export default function WorkspaceActivity() {
       </div>
 
       {/* Activity Feed */}
-      <div className="max-h-[70vh] overflow-y-auto bg-white">
+      <div className="max-h-[70vh] overflow-y-auto bg-white minimalist-scrollbar">
         {loading ? (
           <div className="p-6">
-
             {[1, 2, 3, 4, 5, 6].map((item) => (
               <div
                 key={item}
                 className="relative flex gap-4 py-5"
               >
-
-                {/* Timeline */}
                 {item !== 6 && (
-                  <div className="absolute left-5 top-14 bottom-0 w-px bg-slate-200" />
+                  <div className="absolute left-5 top-14 bottom-0 w-px bg-slate-300/60" />
                 )}
-                {/* Avatar */}
                 <Skeleton className="w-10 h-10 rounded-full shrink-0" />
-                {/* Content */}
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <Skeleton className="h-4 w-28" />
@@ -259,32 +239,23 @@ export default function WorkspaceActivity() {
           </div>
         ) : Object.keys(groupedActivities).length === 0 ? (
           <div className="flex flex-col items-center justify-center h-[420px] px-6 text-center">
-
-            <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center mb-6">
-
-              <Clock
-                size={34}
-                className="text-primary"
-              />
-
+            <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-6">
+              <Clock size={28} className="text-primary" />
             </div>
-
             <h3 className="text-2xl font-semibold text-text-primary">
               No Activity Yet
             </h3>
-
             <p className="text-text-secondary mt-3 max-w-md leading-relaxed">
               Workspace activity will appear here whenever members create,
               update, complete, assign tasks or make changes inside the
               workspace.
             </p>
-
           </div>
         ) : (
           Object.entries(groupedActivities).map(([groupLabel, items]) => (
             <div key={groupLabel}>
               {/* Group header */}
-              <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm px-6 py-2 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm px-6 py-2 border-b border-border-light text-xs font-semibold text-text-secondary uppercase tracking-wider">
                 {groupLabel}
               </div>
 
@@ -299,21 +270,24 @@ export default function WorkspaceActivity() {
                   });
 
                   return (
-                    <div key={item._id} className="relative flex gap-4 px-6 py-4 hover:bg-slate-50 transition-colors">
+                    <div 
+                      key={item._id} 
+                      className="relative flex gap-4 px-6 py-4 hover:bg-slate-50 hover:border-l-4 hover:border-primary transition-all duration-200"
+                    >
                       {/* Vertical line (except last) */}
                       {!isLast && (
-                        <div className="absolute left-9 top-12 bottom-0 w-0.5 bg-slate-200" />
+                        <div className="absolute left-9 top-12 bottom-0 w-0.5 bg-slate-300/60" />
                       )}
 
                       {/* Avatar + Icon */}
                       <div className="relative shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm border-2 border-white shadow-sm">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm border-2 border-white shadow-sm hover:scale-105 transition-transform duration-200">
                           {getUserInitials(item.userId?.name)}
                         </div>
 
                         {/* Action icon badge */}
                         <div
-                          className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full ${bg} border-2 border-white flex items-center justify-center shadow-sm`}
+                          className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full ${bg} border-2 border-white flex items-center justify-center shadow-md`}
                         >
                           <Icon size={12} className={color} strokeWidth={2.5} />
                         </div>
@@ -321,13 +295,13 @@ export default function WorkspaceActivity() {
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-slate-800 leading-relaxed">
+                        <p className="text-sm text-text-primary leading-relaxed">
                           <span className="font-semibold text-primary">
                             {item.userId?.name || 'A user'}
                           </span>{' '}
                           {item.description}
                         </p>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 font-medium flex-wrap">
+                        <div className="flex items-center gap-3 mt-1 text-xs text-text-secondary font-medium flex-wrap">
                           <span>
                             {formatDateTime(item.createdAt)}
                           </span>

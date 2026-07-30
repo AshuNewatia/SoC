@@ -75,23 +75,28 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-50/50 p-6 md:p-10">
+    <div className="min-h-screen w-full bg-slate-50/50 px-4 sm:px-6 lg:px-10 py-6">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition shadow-xs text-slate-600"
+            className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all duration-300 shadow-xs text-slate-600 hover:-translate-x-1"
           >
             <ArrowLeft size={16} />
           </button>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Profile Settings</h1>
-            <p className="text-xs text-slate-500 mt-0.5">Manage your institutional student profile identities and security settings.</p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-primary/10">
+              <User size={24} className="text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Profile Settings</h1>
+              <p className="text-xs text-slate-500 mt-0.5">Manage your institutional student profile identities and security settings.</p>
+            </div>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs transition-all duration-300 hover:shadow-md hover:border-primary/20 space-y-4">
             <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
               <User size={16} className="text-primary" />
               Personal Information
@@ -101,7 +106,7 @@ export default function Settings() {
               <label className="block text-xs font-semibold text-slate-500 mb-2">Full Name</label>
               <input
                 type="text"
-                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition bg-white text-sm text-slate-800 font-medium"
+                className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-200 bg-white text-sm text-slate-800 font-medium hover:border-primary/30"
                 placeholder="Full Name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -114,7 +119,7 @@ export default function Settings() {
                 <select
                   value={formData.facultyType}
                   onChange={(e) => setFormData({ ...formData, facultyType: e.target.value })}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition bg-white text-sm text-slate-800 font-medium"
+                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-200 bg-white text-sm text-slate-800 font-medium hover:border-primary/30"
                 >
                   <option value="">Select Designation</option>
                   <option value="Assistant Professor">Assistant Professor</option>
@@ -124,7 +129,8 @@ export default function Settings() {
               </div>
             )}
           </div>
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+          
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs transition-all duration-300 hover:shadow-md hover:border-primary/20 space-y-4">
             <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
               <GraduationCap size={16} className="text-primary" />
               Academic Credentials
@@ -136,7 +142,7 @@ export default function Settings() {
                 <select
                   value={formData.program}
                   onChange={(e) => setFormData({ ...formData, program: e.target.value })}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition bg-white text-sm text-slate-800 font-medium"
+                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-200 bg-white text-sm text-slate-800 font-medium hover:border-primary/30"
                 >
                   <option value="">Select Program</option>
                   <option value="BTech">BTech</option>
@@ -150,7 +156,7 @@ export default function Settings() {
                 <select
                   value={formData.year}
                   onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition bg-white text-sm text-slate-800 font-medium"
+                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-200 bg-white text-sm text-slate-800 font-medium hover:border-primary/30"
                 >
                   <option value="">Select Year</option>
                   <option value="1">1st Year</option>
@@ -166,7 +172,7 @@ export default function Settings() {
                 <select
                   value={branches.includes(formData.branch) ? formData.branch : formData.branch === "" ? "" : "Other"}
                   onChange={(e) => setFormData({ ...formData, branch: e.target.value === "Other" ? "" : e.target.value })}
-                  className="w-full p-3 mb-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition bg-white text-sm text-slate-800 font-medium"
+                  className="w-full p-3 mb-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-200 bg-white text-sm text-slate-800 font-medium hover:border-primary/30"
                 >
                   <option value="">Select Branch</option>
                   {branches.map(branch => (
@@ -180,13 +186,14 @@ export default function Settings() {
                     placeholder="Enter your custom branch title"
                     value={formData.branch}
                     onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition bg-white text-sm"
+                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-200 bg-white text-sm hover:border-primary/30"
                   />
                 )}
               </div>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+          
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs transition-all duration-300 hover:shadow-md hover:border-primary/20 space-y-4">
             <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
               <Shield size={16} className="text-primary" />
               Security & Credentials
@@ -197,7 +204,7 @@ export default function Settings() {
                 <label className="block text-xs font-semibold text-slate-500 mb-2">Old Password</label>
                 <input
                   type="password"
-                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition bg-white text-sm"
+                  className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-200 bg-white text-sm hover:border-primary/30"
                   placeholder="Verify old password to commit modifications"
                   value={formData.oldPassword}
                   onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })}
@@ -209,7 +216,7 @@ export default function Settings() {
                   <label className="block text-xs font-semibold text-slate-500 mb-2">New Password (Optional)</label>
                   <input
                     type="password"
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition bg-white text-sm"
+                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-200 bg-white text-sm hover:border-primary/30"
                     placeholder="Enter new password code"
                     value={formData.newPassword}
                     onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
@@ -220,7 +227,7 @@ export default function Settings() {
                   <label className="block text-xs font-semibold text-slate-500 mb-2">Confirm New Password</label>
                   <input
                     type="password"
-                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition bg-white text-sm"
+                    className="w-full p-3 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all duration-200 bg-white text-sm hover:border-primary/30"
                     placeholder="Confirm new password code"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
@@ -229,17 +236,18 @@ export default function Settings() {
               </div>
             </div>
           </div>
+          
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={() => navigate('/dashboard')}
-              className="px-6 py-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition shadow-2xs"
+              className="px-6 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold text-sm transition-all duration-200 shadow-2xs hover:border-primary hover:text-primary hover:bg-slate-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold text-sm transition shadow-sm"
+              className="px-6 py-3 bg-slate-900 text-white rounded-xl font-semibold text-sm transition-all duration-300 shadow-sm hover:bg-slate-800 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 focus:ring-4 focus:ring-slate-900/30"
             >
               Save Changes
             </button>

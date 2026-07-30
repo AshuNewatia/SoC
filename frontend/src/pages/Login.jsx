@@ -4,9 +4,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, LogIn, ArrowLeft } from 'lucide-react';
 import { FaGoogle, FaGithub } from 'react-icons/fa'; 
 import api from '../services/api'; 
+import logo from '../assets/logo.png';
 
 function Login() {
-  const [view, setView] = useState('login'); // 'login', 'forgot', 'otp'
+  const [view, setView] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState(''); 
@@ -83,14 +84,13 @@ function Login() {
   };
 
   return (
-    <div className="h-screen relative overflow-hidden bg-linear-to-br from-blue-50 via-sky-50 to-indigo-50">
-      
+    <div className="min-h-screen relative overflow-hidden bg-linear-to-br from-blue-50 via-sky-50 to-indigo-50">
       {/* Premium gradient mesh background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-blue-200/30 blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-indigo-200/25 blur-3xl" />
-        <div className="absolute top-1/3 right-1/4 w-60 h-60 rounded-full bg-sky-200/20 blur-3xl" />
-        <div className="absolute bottom-1/3 left-1/4 w-64 h-64 rounded-full bg-violet-200/20 blur-3xl" />
+        <div className="absolute top-20 left-10 w-40 h-40 sm:w-72 sm:h-72 rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="absolute bottom-10 right-10 w-40 h-40 sm:w-80 sm:h-80 rounded-full bg-indigo-200/25 blur-3xl" />
+        <div className="absolute top-1/3 right-1/4 w-40 h-40 sm:w-60 sm:h-60 rounded-full bg-sky-200/20 blur-3xl" />
+        <div className="absolute bottom-1/3 left-1/4 w-40 h-40 sm:w-64 sm:h-64 rounded-full bg-violet-200/20 blur-3xl" />
         
         <svg className="absolute inset-0 w-full h-full opacity-[0.03] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
           <pattern id="nodes" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
@@ -102,22 +102,39 @@ function Login() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.4),transparent_70%)]" />
       </div>
 
-      <div className="relative z-10 h-full flex items-center justify-center px-6">
-        <div className="w-full max-w-lg">
+      {/* Back to Home Button - Top Left Corner */}
+      <div className="absolute top-6 left-6 z-20">
+        <button
+          onClick={() => navigate("/")}
+          className="group inline-flex items-center gap-2 rounded-xl bg-white/70 backdrop-blur-sm border border-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-all duration-300 hover:-translate-x-1 hover:bg-white hover:shadow-md"
+        >
+          <ArrowLeft
+            size={16}
+            className="transition-transform duration-300 group-hover:-translate-x-1"
+          />
+          Back to Home
+        </button>
+      </div>
+
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-6 py-8">
+        <div className="w-full max-w-md lg:max-w-lg">
           
           {/* Header Card */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-t-2xl shadow-lg border border-white p-8 text-center pb-6">
-            <h1 className="text-3xl font-bold text-blue-600 tracking-tight mb-2">CampusFlow</h1>
+          <div className="bg-white/90 backdrop-blur-sm rounded-t-2xl shadow-lg border border-white px-8 pt-8 pb-6 text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <img src={logo} alt="CampusFlow" className="h-12 w-12 rounded-2xl shadow-lg" />
+              <h1 className="text-3xl font-bold text-blue-600 tracking-tight">CampusFlow</h1>
+            </div>
             <h2 className="text-slate-800 text-2xl font-bold">
               {view === 'login' ? 'Welcome back' : 'Account Recovery'}
             </h2>
-            <p className="text-slate-500 mt-1">
+            <p className="text-slate-500 mt-1 text-sm">
               {view === 'login' ? 'Sign in to your collaborative workspace' : 'Follow the steps to reset your password'}
             </p>
           </div>
 
           {/* Main Form Card */}
-          <div className="backdrop-blur-xl bg-white/60 rounded-b-2xl shadow-xl border-x border-b border-white p-8">
+          <div className="backdrop-blur-xl bg-white/60 rounded-b-2xl shadow-xl border-x border-b border-white px-8 pb-8 pt-6">
             
             {error && (
               <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -139,7 +156,7 @@ function Login() {
                         placeholder="you@iiti.ac.in"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        className="w-full pl-10 pr-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-primary/40"
                         required
                       />
                     </div>
@@ -154,14 +171,18 @@ function Login() {
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        className="w-full pl-10 pr-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-primary/40"
                         required
                       />
                     </div>
                   </div>
 
                   <div className="flex justify-end mb-6">
-                    <button type="button" onClick={() => setView('forgot')} className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline transition">
+                    <button 
+                      type="button" 
+                      onClick={() => setView('forgot')} 
+                      className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-all duration-200 hover:translate-x-1"
+                    >
                       Forgot Password?
                     </button>
                   </div>
@@ -179,7 +200,7 @@ function Login() {
                       placeholder="you@iiti.ac.in"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                      className="w-full pl-10 pr-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-primary/40"
                       required
                     />
                   </div>
@@ -196,7 +217,7 @@ function Login() {
                       placeholder="6-digit code"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition tracking-widest"
+                      className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-primary/40 tracking-widest"
                       required
                     />
                   </div>
@@ -209,7 +230,7 @@ function Login() {
                         placeholder="••••••••"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                        className="w-full pl-10 pr-4 py-3 bg-white/80 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-primary/40"
                         required
                       />
                     </div>
@@ -220,7 +241,7 @@ function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:-translate-y-0.5 disabled:opacity-50"
+                className="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:bg-blue-700 hover:scale-[1.01] hover:shadow-lg active:scale-95 focus:ring-4 focus:ring-blue-500/30 disabled:opacity-50"
               >
                 <LogIn className="w-5 h-5" />
                 {loading ? 'Processing...' : view === 'login' ? 'Sign In' : 'Continue'}
@@ -232,7 +253,7 @@ function Login() {
               <button 
                 type="button" 
                 onClick={() => setView('login')} 
-                className="mt-6 w-full flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition"
+                className="mt-6 w-full flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition-all duration-200 hover:translate-x-1"
               >
                 <ArrowLeft size={16} /> Back to Login
               </button>
@@ -252,7 +273,7 @@ function Login() {
                   <button
                     type="button"
                     onClick={handleGoogleLogin}
-                    className="flex items-center justify-center gap-2 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 font-medium hover:bg-slate-50 transition duration-200 text-sm shadow-sm"
+                    className="flex items-center justify-center gap-2 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 font-medium transition-all duration-200 text-sm shadow-sm hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-md"
                   >
                     <FaGoogle className="w-4 h-4 text-red-500" />
                     Google
@@ -260,7 +281,7 @@ function Login() {
                   <button
                     type="button"
                     onClick={handleGithubLogin}
-                    className="flex items-center justify-center gap-2 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 font-medium hover:bg-slate-50 transition duration-200 text-sm shadow-sm"
+                    className="flex items-center justify-center gap-2 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 font-medium transition-all duration-200 text-sm shadow-sm hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-md"
                   >
                     <FaGithub className="w-4 h-4 text-slate-900" />
                     GitHub
