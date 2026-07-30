@@ -31,6 +31,7 @@ export default function drawCover(doc, report) {
     const pageWidth = doc.page.width;
     const margin = doc.page.margins.left;
     const contentWidth = pageWidth - margin * 2;
+    const columnWidth = (contentWidth / 2) - 20;
 
     const startY = 45;
     if (fs.existsSync(logoPath)) {
@@ -71,12 +72,16 @@ export default function drawCover(doc, report) {
         doc.fillColor(COLORS.secondary)
            .fontSize(10)
            .font("Helvetica")
-           .text(label, x, y);
+           .text(label, x, y, {
+               width: columnWidth,
+           });
 
         doc.fillColor(COLORS.text)
            .fontSize(13)
            .font("Helvetica-Bold")
-           .text(value || "-", x, y + 16);
+           .text(value || "-", x, y + 16, {
+               width: columnWidth,
+           });
     };
 
     drawInfo(leftX, y, "Workspace", report.workspace.name);
@@ -84,13 +89,27 @@ export default function drawCover(doc, report) {
 
     y += 55;
 
+    // Draw description with proper wrapping and calculate height
     drawInfo(leftX, y, "Description", report.workspace.description || "-");
-    drawInfo(rightX, y, "Created On", report.workspace.createdAt
-        ? new Date(report.workspace.createdAt).toLocaleDateString()
-        : "-"
+    drawInfo(
+        rightX,
+        y,
+        "Created On",
+        report.workspace.createdAt
+            ? new Date(report.workspace.createdAt).toLocaleDateString()
+            : "-"
     );
 
-    y += 55;
+    // Calculate the height used by the description
+    const descriptionHeight = doc.heightOfString(
+        report.workspace.description || "-",
+        {
+            width: columnWidth,
+        }
+    );
+
+    // Leave enough space for whichever column is taller
+    y += Math.max(55, descriptionHeight + 28);
 
     drawInfo(leftX, y, "Members", report.workspace.members?.length || 0);
     drawInfo(rightX, y, "Admins", report.workspace.admins?.length || 0);
@@ -177,6 +196,4 @@ export default function drawCover(doc, report) {
        });
 
     doc.moveDown(6);
-    
-    // NOTE: Do NOT call drawFooter here - it's called from workspaceReportPdf.js
 }
