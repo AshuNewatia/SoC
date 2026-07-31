@@ -117,38 +117,62 @@ export default function KanbanBoard() {
     }
   };
 
-  useEffect(() => {
-    if (!workspaceId) return;
+useEffect(() => {
+  if (!workspaceId) return;
 
-    socket.on("connect", () => {
-      socket.emit("userJoined", {
-        id: socket.id,
-        name: currentUserName,
-        workspaceId,
-        userId: user.id,
+  // 1. Tell socket to join this workspace room
+  socket.emit("userJoined", {
+    id: socket.id,
+    name: currentUserName,
+    workspaceId,
+    userId: user.id,
+  });
+
+  // 2. Real-time Task Created handler (Appends directly to state)
+  const handleTaskCreatedSocket = (newTask) => {
+    // Only process if task belongs to the current open workspace
+    if (newTask.workspace === workspaceId || newTask.workspace?._id === workspaceId) {
+      setAllTasks((prevTasks) => {
+        // Prevent duplicate cards
+        if (prevTasks.some((t) => t._id === newTask._id)) return prevTasks;
+        return [newTask, ...prevTasks];
       });
-    });
+    }
+  };
 
-    socket.on("taskMoved", fetchTasks);
-    socket.on("taskCreated", fetchTasks);
-    socket.on("taskUpdated", fetchTasks);
-    socket.on("taskDeleted", fetchTasks);
+  // 3. Real-time Task Updated handler
+  const handleTaskUpdatedSocket = (updatedTask) => {
+    setAllTasks((prevTasks) =>
+      prevTasks.map((t) => (t._id === updatedTask._id ? { ...t, ...updatedTask } : t))
+    );
+  };
 
-    fetchTasks();
-    fetchMembers();
+  // 4. Real-time Task Deleted handler
+  const handleTaskDeletedSocket = (deletedTask) => {
+    setAllTasks((prevTasks) =>
+      prevTasks.filter((t) => t._id !== (deletedTask._id || deletedTask))
+    );
+  };
 
-    const handleGlobalCreate = () => setCreateOpen(true);
-    window.addEventListener("openCreateTaskModal", handleGlobalCreate);
+  socket.on("taskCreated", handleTaskCreatedSocket);
+  socket.on("taskUpdated", handleTaskUpdatedSocket);
+  socket.on("taskMoved", fetchTasks);
+  socket.on("taskDeleted", handleTaskDeletedSocket);
 
-    return () => {
-      socket.off("connect");
-      socket.off("taskMoved");
-      socket.off("taskCreated");
-      socket.off("taskUpdated");
-      socket.off("taskDeleted");
-      window.removeEventListener("openCreateTaskModal", handleGlobalCreate);
-    };
-  }, [workspaceId, currentUserName, user.id]);
+  fetchTasks();
+  fetchMembers();
+
+  const handleGlobalCreate = () => setCreateOpen(true);
+  window.addEventListener("openCreateTaskModal", handleGlobalCreate);
+
+  return () => {
+    socket.off("taskCreated", handleTaskCreatedSocket);
+    socket.off("taskUpdated", handleTaskUpdatedSocket);
+    socket.off("taskMoved", fetchTasks);
+    socket.off("taskDeleted", handleTaskDeletedSocket);
+    window.removeEventListener("openCreateTaskModal", handleGlobalCreate);
+  };
+}, [workspaceId, currentUserName, user.id]);
 
   useEffect(() => {
     const syncTaskCommentCount = () => {

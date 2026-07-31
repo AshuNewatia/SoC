@@ -524,3 +524,38 @@ export const uploadAttachment = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+export const createTaskFromGithub = async (req, res) => {
+  try {
+    const { title, description, workspaceId, githubIssueUrl, githubIssueNumber } = req.body;
+
+    // 1. Find the target workspace or board
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      return res.status(404).json({ message: "Workspace not found" });
+    }
+
+    // 2. Create the task explicitly set to "To Do" status/column
+    const newTask = new Task({
+      title,
+      description,
+      workspace: workspaceId,
+      status: "To Do", // or columnId: workspace.columns.find(c => c.name === "To Do")._id
+      githubIssueUrl,
+      githubIssueNumber,
+      createdAt: new Date(),
+    });
+
+    await newTask.save();
+
+    // 3. Emit a Socket.io event if you are using real-time updates
+    if (req.app.get("io")) {
+      req.app.get("io").to(workspaceId).emit("task:created", newTask);
+    }
+
+    res.status(201).json(newTask);
+  } catch (err) {
+    console.error("Error creating task card:", err);
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+};
