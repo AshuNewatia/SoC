@@ -11,7 +11,7 @@ export const handleGithubWebhook = async (req, res) => {
     return res.status(200).send("Pong! Webhook connected successfully.");
   }
 
-  // Acknowledge all other events immediately to prevent timeouts
+  // Acknowledge all other events immediately to prevent GitHub timeouts
   if (!res.headersSent) {
     res.status(200).send("Webhook received");
   }
@@ -20,12 +20,17 @@ export const handleGithubWebhook = async (req, res) => {
   try {
     if (event !== "issues") return;
 
+    if (!payload || !payload.issue || !payload.repository) {
+      console.log("[Webhook Warning] Missing issue or repository payload");
+      return;
+    }
+
     const issueNumber = payload.issue.number;
-    const repoFullName = payload.repository.full_name;
+    const repoFullName = payload.repository.full_name; // e.g. "AshuNewatia/SoC"
     
-    // Find all workspaces matching the repo name (case-insensitive search recommended)
+    // Find all workspaces where githubRepo ends with or contains "AshuNewatia/SoC"
     const workspaces = await Workspace.find({ 
-      githubRepo: { $regex: new RegExp(`^${repoFullName}$`, "i") } 
+      githubRepo: { $regex: repoFullName.replace('/', '\\/'), $options: "i" } 
     });
 
     if (!workspaces || workspaces.length === 0) {
@@ -33,8 +38,6 @@ export const handleGithubWebhook = async (req, res) => {
       return;
     }
 
-    const adminFallback = await User.findOne();
-    const fallbackId = adminFallback ? adminFallback._id : null;
     const io = req.app.get("io");
 
     for (const workspace of workspaces) {
@@ -52,19 +55,26 @@ export const handleGithubWebhook = async (req, res) => {
             continue;
           }
 
+          // Resolve creatorId safely
           let creatorId = workspace.owner;
-          if (creatorId && creatorId._id) creatorId = creatorId._id; 
-          if (!creatorId) creatorId = fallbackId; 
+          if (creatorId && typeof creatorId === "object" && creatorId._id) {
+            creatorId = creatorId._id;
+          }
 
           if (!creatorId) {
-            console.error(`[Webhook Error] Skipping workspace ${workspace._id}: No valid User exists for createdBy.`);
+            const fallbackUser = await User.findOne();
+            creatorId = fallbackUser ? fallbackUser._id : null;
+          }
+
+          if (!creatorId) {
+            console.error(`[Webhook Error] Cannot create task for Workspace ${workspace._id}: No valid User found for 'createdBy'.`);
             continue;
           }
 
           const newTask = await Task.create({
             title: payload.issue.title,
             description: payload.issue.body || "",
-            status: "todo", // Make sure this matches your frontend column key/enum!
+            status: "todo",
             priority: "Medium",
             workspace: workspace._id,
             githubIssueNumber: Number(issueNumber),
@@ -74,7 +84,6 @@ export const handleGithubWebhook = async (req, res) => {
           console.log(`[Webhook] Success: Created task for Workspace ${workspace._id}`);
 
           if (io) {
-            // Broadcast to all sockets OR workspace room
             io.emit("taskCreated", newTask);
             io.to(workspace._id.toString()).emit("taskCreated", newTask);
           }
