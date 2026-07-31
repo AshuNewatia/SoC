@@ -96,61 +96,68 @@ export default function KanbanBoard() {
     });
   }, [filteredTasks]);
 
-  const fetchTasks = async () => {
-    try {
-      const res = await getTasks(workspaceId);
-      const tasks = res.data;
-      setAllTasks(tasks);
-    } catch (err) {
-      console.error("Error fetching tasks:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchTasks = useCallback(async () => {
+  if (!workspaceId) return;
+  try {
+    const res = await getTasks(workspaceId);
+    setAllTasks(res.data);
+  } catch (err) {
+    console.error("Error fetching tasks:", err);
+  } finally {
+    setLoading(false);
+  }
+}, [workspaceId]);
 
-  const fetchMembers = async () => {
-    try {
-      const res = await api.get(`/api/workspaces/${workspaceId}/members`);
-      setMembers(Array.isArray(res.data) ? res.data : []);
-    } catch (error) {
-      console.error("Failed to fetch workspace members:", error);
-    }
-  };
+const fetchMembers = async () => {
+  try {
+    const res = await api.get(`/api/workspaces/${workspaceId}/members`);
+    setMembers(Array.isArray(res.data) ? res.data : []);
+  } catch (error) {
+    console.error("Failed to fetch workspace members:", error);
+  }
+};
+
+const userId = user?._id || user?.id;
 
 useEffect(() => {
   if (!workspaceId) return;
 
-  // 1. Tell socket to join this workspace room
   socket.emit("userJoined", {
     id: socket.id,
     name: currentUserName,
     workspaceId,
-    userId: user.id,
+    userId,
   });
 
-  // 2. Real-time Task Created handler (Appends directly to state)
   const handleTaskCreatedSocket = (newTask) => {
-    // Only process if task belongs to the current open workspace
-    if (newTask.workspace === workspaceId || newTask.workspace?._id === workspaceId) {
+    const taskWorkspaceId = typeof newTask.workspace === "object" 
+      ? newTask.workspace?._id?.toString() 
+      : newTask.workspace?.toString();
+
+    if (taskWorkspaceId === workspaceId.toString()) {
       setAllTasks((prevTasks) => {
-        // Prevent duplicate cards
-        if (prevTasks.some((t) => t._id === newTask._id)) return prevTasks;
+        if (prevTasks.some((t) => t._id.toString() === newTask._id.toString())) {
+          return prevTasks;
+        }
         return [newTask, ...prevTasks];
       });
     }
   };
 
-  // 3. Real-time Task Updated handler
   const handleTaskUpdatedSocket = (updatedTask) => {
     setAllTasks((prevTasks) =>
-      prevTasks.map((t) => (t._id === updatedTask._id ? { ...t, ...updatedTask } : t))
+      prevTasks.map((t) => 
+        t._id.toString() === updatedTask._id.toString() 
+          ? { ...t, ...updatedTask } 
+          : t
+      )
     );
   };
 
-  // 4. Real-time Task Deleted handler
   const handleTaskDeletedSocket = (deletedTask) => {
+    const deletedId = deletedTask._id || deletedTask;
     setAllTasks((prevTasks) =>
-      prevTasks.filter((t) => t._id !== (deletedTask._id || deletedTask))
+      prevTasks.filter((t) => t._id.toString() !== deletedId.toString())
     );
   };
 
@@ -172,7 +179,7 @@ useEffect(() => {
     socket.off("taskDeleted", handleTaskDeletedSocket);
     window.removeEventListener("openCreateTaskModal", handleGlobalCreate);
   };
-}, [workspaceId, currentUserName, user.id]);
+}, [workspaceId, currentUserName, userId, fetchTasks]);
 
   useEffect(() => {
     const syncTaskCommentCount = () => {
