@@ -115,7 +115,7 @@ export default function Landing() {
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-5 justify-center lg:justify-start">
               <Link
-                to="/dashboard"
+                to="/login"
                 className="group w-full sm:w-auto px-8 py-4 bg-primary hover:bg-primary-hover text-white rounded-xl font-semibold shadow-xl shadow-primary/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-2"
               >
                 Start Collaborating
