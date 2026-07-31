@@ -359,7 +359,7 @@ export default function Landing() {
               <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
               <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>
               <a
-                href="https://github.com"
+                href="https://github.com/AshuNewatia/SoC"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-primary transition-colors"
