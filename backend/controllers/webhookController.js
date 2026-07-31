@@ -4,12 +4,18 @@ import User from "../models/User.js";
 
 export const handleGithubWebhook = async (req, res) => {
   const event = req.headers["x-github-event"];
-  const payload = req.body;
 
-  if (!res.headersSent) {
-    res.status(200).send("Webhook processed");
+  // 1. Instantly return 200 OK for GitHub's initial ping test
+  if (event === "ping") {
+    return res.status(200).send("Pong! Webhook connected successfully.");
   }
 
+  // Acknowledge all other events immediately to prevent timeouts
+  if (!res.headersSent) {
+    res.status(200).send("Webhook received");
+  }
+
+  // 2. Process issues...
   try {
     if (event !== "issues") return;
 
