@@ -4,6 +4,7 @@ import User from "../models/User.js";
 
 export const handleGithubWebhook = async (req, res) => {
   const event = req.headers["x-github-event"];
+  const payload = req.body;
 
   // 1. Instantly return 200 OK for GitHub's initial ping test
   if (event === "ping") {
