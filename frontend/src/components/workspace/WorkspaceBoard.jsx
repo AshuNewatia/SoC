@@ -1,5 +1,5 @@
 import api from "../../services/api";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { Search, X } from "lucide-react";
@@ -96,59 +96,90 @@ export default function KanbanBoard() {
     });
   }, [filteredTasks]);
 
-  const fetchTasks = async () => {
-    try {
-      const res = await getTasks(workspaceId);
-      const tasks = res.data;
-      setAllTasks(tasks);
-    } catch (err) {
-      console.error("Error fetching tasks:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchTasks = useCallback(async () => {
+  if (!workspaceId) return;
+  try {
+    const res = await getTasks(workspaceId);
+    setAllTasks(res.data);
+  } catch (err) {
+    console.error("Error fetching tasks:", err);
+  } finally {
+    setLoading(false);
+  }
+}, [workspaceId]);
 
-  const fetchMembers = async () => {
-    try {
-      const res = await api.get(`/api/workspaces/${workspaceId}/members`);
-      setMembers(Array.isArray(res.data) ? res.data : []);
-    } catch (error) {
-      console.error("Failed to fetch workspace members:", error);
-    }
-  };
+const fetchMembers = async () => {
+  try {
+    const res = await api.get(`/api/workspaces/${workspaceId}/members`);
+    setMembers(Array.isArray(res.data) ? res.data : []);
+  } catch (error) {
+    console.error("Failed to fetch workspace members:", error);
+  }
+};
 
-  useEffect(() => {
-    if (!workspaceId) return;
+const userId = user?._id || user?.id;
 
-    socket.on("connect", () => {
-      socket.emit("userJoined", {
-        id: socket.id,
-        name: currentUserName,
-        workspaceId,
-        userId: user.id,
+useEffect(() => {
+  if (!workspaceId) return;
+
+  socket.emit("userJoined", {
+    id: socket.id,
+    name: currentUserName,
+    workspaceId,
+    userId,
+  });
+
+  const handleTaskCreatedSocket = (newTask) => {
+    const taskWorkspaceId = typeof newTask.workspace === "object" 
+      ? newTask.workspace?._id?.toString() 
+      : newTask.workspace?.toString();
+
+    if (taskWorkspaceId === workspaceId.toString()) {
+      setAllTasks((prevTasks) => {
+        if (prevTasks.some((t) => t._id.toString() === newTask._id.toString())) {
+          return prevTasks;
+        }
+        return [newTask, ...prevTasks];
       });
-    });
+    }
+  };
 
-    socket.on("taskMoved", fetchTasks);
-    socket.on("taskCreated", fetchTasks);
-    socket.on("taskUpdated", fetchTasks);
-    socket.on("taskDeleted", fetchTasks);
+  const handleTaskUpdatedSocket = (updatedTask) => {
+    setAllTasks((prevTasks) =>
+      prevTasks.map((t) => 
+        t._id.toString() === updatedTask._id.toString() 
+          ? { ...t, ...updatedTask } 
+          : t
+      )
+    );
+  };
 
-    fetchTasks();
-    fetchMembers();
+  const handleTaskDeletedSocket = (deletedTask) => {
+    const deletedId = deletedTask._id || deletedTask;
+    setAllTasks((prevTasks) =>
+      prevTasks.filter((t) => t._id.toString() !== deletedId.toString())
+    );
+  };
 
-    const handleGlobalCreate = () => setCreateOpen(true);
-    window.addEventListener("openCreateTaskModal", handleGlobalCreate);
+  socket.on("taskCreated", handleTaskCreatedSocket);
+  socket.on("taskUpdated", handleTaskUpdatedSocket);
+  socket.on("taskMoved", fetchTasks);
+  socket.on("taskDeleted", handleTaskDeletedSocket);
 
-    return () => {
-      socket.off("connect");
-      socket.off("taskMoved");
-      socket.off("taskCreated");
-      socket.off("taskUpdated");
-      socket.off("taskDeleted");
-      window.removeEventListener("openCreateTaskModal", handleGlobalCreate);
-    };
-  }, [workspaceId, currentUserName, user.id]);
+  fetchTasks();
+  fetchMembers();
+
+  const handleGlobalCreate = () => setCreateOpen(true);
+  window.addEventListener("openCreateTaskModal", handleGlobalCreate);
+
+  return () => {
+    socket.off("taskCreated", handleTaskCreatedSocket);
+    socket.off("taskUpdated", handleTaskUpdatedSocket);
+    socket.off("taskMoved", fetchTasks);
+    socket.off("taskDeleted", handleTaskDeletedSocket);
+    window.removeEventListener("openCreateTaskModal", handleGlobalCreate);
+  };
+}, [workspaceId, currentUserName, userId, fetchTasks]);
 
   useEffect(() => {
     const syncTaskCommentCount = () => {

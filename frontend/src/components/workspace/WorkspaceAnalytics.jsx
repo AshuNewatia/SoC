@@ -152,7 +152,7 @@ export default function WorkspaceAnalytics() {
 
       <KPISection workspaceId={workspaceId} />
 
-      {workspace?.githubRepo && <GithubAnalytics workspaceId={workspaceId} githubRepo={workspace.githubRepo} />}
+      {workspace?.githubRepo && <GithubAnalytics workspaceId={workspaceId} githubRepo={workspace.githubRepo} githubToken={workspace.githubToken} />}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <TaskTrendChart workspaceId={workspaceId} />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"; // 👈 Added useEffect
+import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { WorkspaceProvider } from "./context/workspaceContext";
 
@@ -16,7 +16,7 @@ import ViewProfile from "./pages/ViewProfile";
 import JoinWorkspace from "./pages/JoinWorkspace";
 import Invitation from "./pages/Invitation";
 
-import WorkspaceOverview from "./components/workspace/overview/WorkspaceOverview"
+import WorkspaceOverview from "./components/workspace/overview/WorkspaceOverview";
 import WorkspaceAnalytics from "./components/workspace/WorkspaceAnalytics";
 import WorkspaceActivity from "./components/workspace/WorkspaceActivity";
 import WorkspaceMembers from "./components/workspace/WorkspaceMembers";
@@ -31,11 +31,17 @@ function ProtectedRoute() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-50">
+        <div className="text-slate-600 font-medium animate-pulse">Loading session...</div>
+      </div>
+    );
   }
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
+
   return <Outlet />;
 }
 
@@ -48,23 +54,19 @@ function AuthenticatedLayout() {
   useEffect(() => {
     if (!user) return;
     const userId = user._id || user.id;
-    if (!userId) {
-      console.log("⚠️ Still missing ID! Click the arrow on this object to find where the ID is stored:", user);
-      return;
-    }
-
-    // console.log(`🚀 Attempting to emit joinRoom for ID: ${userId}`);
+    if (!userId) return;
 
     socket.connect();
     socket.emit("joinRoom", userId);
 
-    socket.on("connect", () => {
-      // console.log("🟢 Success! Frontend socket successfully connected to backend server. ID:", socket.id);
-    });
+    const handleConnect = () => {
+      socket.emit("joinRoom", userId);
+    };
+
+    socket.on("connect", handleConnect);
 
     return () => {
-      socket.off("joinRoom");
-      socket.off("connect");
+      socket.off("connect", handleConnect);
     };
   }, [user]);
 
@@ -95,17 +97,17 @@ function App() {
         <Route path="/oauth/callback" element={<OAuthCallback />} />
         <Route path="/join/workspace/:token" element={<JoinWorkspace />} />
 
-        <Route path="/create-profile" element={<CreateProfile />} />
-
         <Route element={<ProtectedRoute />}>
-          <Route element={<AuthenticatedLayout />}>
+          
+          <Route path="/create-profile" element={<CreateProfile />} />
 
+          <Route element={<AuthenticatedLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/myboard" element={<MyBoard />} />
             <Route path="/profile" element={<ViewProfile />} />
-            <Route path="/invitations/:invitationId" element={<Invitation/>}/>
+            <Route path="/invitations/:invitationId" element={<Invitation />} />
 
             <Route path="/workspace/:id" element={<WorkSpace />}>
               <Route index element={<Navigate to="overview" replace />} />
@@ -115,8 +117,8 @@ function App() {
               <Route path="activity" element={<WorkspaceActivity />} />
               <Route path="members" element={<WorkspaceMembers />} />
             </Route>
-
           </Route>
+
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

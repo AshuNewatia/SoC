@@ -9,8 +9,6 @@ export default function GithubAnalytics({ githubRepo, workspaceId }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log("useEffect running check. repo:", githubRepo, "ID:", workspaceId);
-
     if (!githubRepo) {
       setLoading(false);
       return;
@@ -20,7 +18,19 @@ export default function GithubAnalytics({ githubRepo, workspaceId }) {
       try {
         setLoading(true);
         setError(null);
-        const res = await axios.get(`/api/workspace-analytics/github-stats?repo=${githubRepo}`);
+
+        // 🔐 1. Retrieve the logged-in user's JWT Token
+        const token = localStorage.getItem("token");
+
+        // 🚀 2. Pass workspaceId AND attach Authorization Bearer token
+        const res = await axios.get(
+          `/api/workspace-analytics/github-stats?repo=${encodeURIComponent(githubRepo)}&workspaceId=${workspaceId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (res.data && res.data.stats) {
           setRepoData(res.data.stats);
@@ -36,38 +46,25 @@ export default function GithubAnalytics({ githubRepo, workspaceId }) {
     }
 
     fetchGitStats();
-  }, [githubRepo, workspaceId]); 
+  }, [githubRepo, workspaceId]);
 
- if (loading) {
+  if (loading) {
     return (
-        <div className="bg-white border border-border-light rounded-2xl p-6 shadow-sm">
-
-            <Skeleton className="h-6 w-52"/>
-
-            <Skeleton className="h-4 w-40 mt-3"/>
-
-            <div className="grid md:grid-cols-3 gap-5 mt-8">
-
-                {[1,2,3].map((item)=>(
-                    <div
-                        key={item}
-                        className="border rounded-xl p-5"
-                    >
-
-                        <Skeleton className="w-12 h-12 rounded-xl"/>
-
-                        <Skeleton className="h-8 w-20 mt-5"/>
-
-                        <Skeleton className="h-3 w-28 mt-3"/>
-
-                    </div>
-                ))}
-
+      <div className="bg-white border border-border-light rounded-2xl p-6 shadow-sm">
+        <Skeleton className="h-6 w-52" />
+        <Skeleton className="h-4 w-40 mt-3" />
+        <div className="grid md:grid-cols-3 gap-5 mt-8">
+          {[1, 2, 3].map((item) => (
+            <div key={item} className="border rounded-xl p-5">
+              <Skeleton className="w-12 h-12 rounded-xl" />
+              <Skeleton className="h-8 w-20 mt-5" />
+              <Skeleton className="h-3 w-28 mt-3" />
             </div>
-
+          ))}
         </div>
+      </div>
     );
-}
+  }
 
   if (error) {
     return (
@@ -86,7 +83,9 @@ export default function GithubAnalytics({ githubRepo, workspaceId }) {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2.5">
           <div>
-            <h3 className="font-display text-lg font-bold text-slate-900">Linked Repository Insights</h3>
+            <h3 className="font-display text-lg font-bold text-slate-900">
+              Linked Repository Insights
+            </h3>
             <p className="text-xs text-text-secondary font-sans mt-0.5">{githubRepo}</p>
           </div>
         </div>
@@ -94,6 +93,7 @@ export default function GithubAnalytics({ githubRepo, workspaceId }) {
           Live Syncing
         </span>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-sans">
         <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50/70 border border-slate-100">
           <div className="p-3 bg-sky-50 text-sky-600 rounded-xl">
@@ -101,16 +101,21 @@ export default function GithubAnalytics({ githubRepo, workspaceId }) {
           </div>
           <div>
             <span className="block text-xs font-semibold text-text-secondary">Total Commits</span>
-            <span className="text-2xl font-bold text-slate-900 tracking-tight">{repoData?.totalCommits ?? 0}</span>
+            <span className="text-2xl font-bold text-slate-900 tracking-tight">
+              {repoData?.totalCommits ?? 0}
+            </span>
           </div>
         </div>
+
         <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50/70 border border-slate-100">
           <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
             <GitPullRequest size={22} />
           </div>
           <div>
             <span className="block text-xs font-semibold text-text-secondary">Open Pull Requests</span>
-            <span className="text-2xl font-bold text-slate-900 tracking-tight">{repoData?.openPRs ?? 0}</span>
+            <span className="text-2xl font-bold text-slate-900 tracking-tight">
+              {repoData?.openPRs ?? 0}
+            </span>
           </div>
         </div>
 
@@ -120,7 +125,9 @@ export default function GithubAnalytics({ githubRepo, workspaceId }) {
           </div>
           <div>
             <span className="block text-xs font-semibold text-text-secondary">Closed Pull Requests</span>
-            <span className="text-2xl font-bold text-slate-900 tracking-tight">{repoData?.closedPRs ?? 0}</span>
+            <span className="text-2xl font-bold text-slate-900 tracking-tight">
+              {repoData?.closedPRs ?? 0}
+            </span>
           </div>
         </div>
       </div>

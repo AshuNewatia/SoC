@@ -13,17 +13,30 @@ import authRoutes from "./routes/authRoutes.js";
 import personalTaskRoutes from "./routes/personalTaskRoutes.js";
 import quickNoteRoutes from "./routes/quickNoteRoutes.js";
 import personalActivityRoutes from "./routes/personalActivityRoutes.js";
-import analyticsRoutes from "./routes/analyticsRoutes.js"
-import webhookRoutes from "./routes/webhookRoutes.js"
+import analyticsRoutes from "./routes/analyticsRoutes.js";
+import webhookRoutes from "./routes/webhookRoutes.js";
 import myBoardRoutes from "./routes/myBoardRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
-import notificationRoutes from "./routes/notificationRoutes.js"
+import notificationRoutes from "./routes/notificationRoutes.js";
 import workspaceAnalyticsRoutes from "./routes/workspaceAnalyticsRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
+// 1. JSON Body Parser (Must be declared before routes!)
+app.use(express.json()); 
+
+// 2. Logging Middleware
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+  next();
+});
+
+// 🟢 3. Webhook Endpoint (Placed BEFORE CORS so GitHub requests bypass browser Origin restrictions)
+app.use('/api/webhooks', webhookRoutes);
+
+// 4. CORS Configuration for standard client requests
 const allowedOrigins = [
   'http://localhost:5173', 
   process.env.CLIENT_URL   
@@ -40,14 +53,8 @@ app.use(cors({
   credentials: true, 
 }));
 
-app.use(express.json()); 
-app.use((req, res, next) => {
-    console.log(`Incoming request: ${req.method} ${req.url}`);
-    next();
-});
-app.use('/api/webhooks', webhookRoutes);
+// 5. API Routes
 app.use("/api/auth", authRoutes);
-app.use("/api", taskRoutes);
 app.use("/api/workspaces", workspaceRoutes);
 app.use("/api/workspaces", memberRoutes);
 app.use("/api/workspaces", activityRoutes);
@@ -57,15 +64,15 @@ app.use("/api/personal-activity", personalActivityRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/my-board", myBoardRoutes);
-app.use("/api/comments", commentRoutes)
+app.use("/api/comments", commentRoutes);
 app.use("/api/notifications", notificationRoutes);
-app.use("/api/workspace-analytics",workspaceAnalyticsRoutes);
-
+app.use("/api/workspace-analytics", workspaceAnalyticsRoutes);
 
 app.get("/", (req, res) => {
   res.send("CampusFlow Backend Running 🚀");
 });
 
+// 6. Server & Socket.IO Initialization
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -79,13 +86,13 @@ const io = new Server(server, {
   },
 });
 
-app.set('io', io)
+app.set('io', io);
 
 initializeSocket(io);
 
 io.on("connection", (socket) => {
   console.log("User connected to socket:", socket.id);
-    socket.on("joinRoom", (userId) => {
+  socket.on("joinRoom", (userId) => {
     socket.join(userId);
     console.log(`User ${userId} joined their notification room`);
   });
@@ -96,9 +103,9 @@ const PORT = process.env.PORT || 5000;
 connectDB()
   .then(() => {
     server.listen(PORT, () => {
-      console.log(` Server running on port ${PORT}`);
+      console.log(`Server running on port ${PORT}`);
     });
   })
   .catch((error) => {
-      console.error("Database connection failed:", error);
+    console.error("Database connection failed:", error);
   });

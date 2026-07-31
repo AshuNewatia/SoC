@@ -7,7 +7,6 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    // 1. CHANGED THIS FROM false TO true
     const [loading, setLoading] = useState(true); 
     
     useEffect(() =>{
@@ -17,7 +16,6 @@ export const AuthProvider = ({ children }) => {
         if (token && storedUser) {
             setUser(JSON.parse(storedUser));
         }
-        // 2. Once the check is complete, turn off loading so the route can render
         setLoading(false);
     }, []);
     

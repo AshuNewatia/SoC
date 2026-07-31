@@ -2,7 +2,7 @@ import Workspace from "../models/Workspace.js";
 import User from "../models/User.js";
 import mongoose from "mongoose";
 import { logActivity } from "./activityController.js";
-import { fetchGithubIssues } from '../services/githubService.js';
+import { fetchGithubIssues, fetchGithubRepoStats } from '../services/githubService.js';
 import Task from '../models/Task.js';
 import { createAndSendNotification } from "../utils/notificationHelper.js";
 import crypto from "crypto";
@@ -418,5 +418,62 @@ export const togglePinWorkspace = async (req, res) => {
   } catch (error) {
     console.error("Error toggling pin status:", error);
     return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const getWorkspaceAnalytics = async (req, res) => {
+  try {
+    const { workspaceId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(workspaceId)) {
+      return res.status(400).json({ success: false, message: "Invalid workspace ID." });
+    }
+
+    const workspace = await Workspace.findById(workspaceId);
+    if (!workspace) {
+      return res.status(404).json({ success: false, message: "Workspace not found." });
+    }
+
+    // 💡 Fetch token from Workspace or fallback to User object
+    const user = await User.findById(req.user._id);
+    const token = workspace.githubToken || user.githubToken;
+    const repoString = workspace.githubRepo;
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized, no GitHub token configured for this workspace.",
+      });
+    }
+
+    if (!repoString) {
+      return res.status(400).json({
+        success: false,
+        message: "No GitHub repository linked to this workspace.",
+      });
+    }
+
+    // 🚀 Fetch stats from Octokit
+    const githubStats = await fetchGithubRepoStats(token, repoString);
+
+    // Get database task metrics for the workspace
+    const totalTasks = await Task.countDocuments({ workspace: workspaceId });
+    const completedTasks = await Task.countDocuments({ workspace: workspaceId, status: "Done" });
+    const pendingTasks = totalTasks - completedTasks;
+
+    return res.status(200).json({
+      success: true,
+      analytics: {
+        github: githubStats,
+        tasks: {
+          total: totalTasks,
+          completed: completedTasks,
+          pending: pendingTasks,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error in getWorkspaceAnalytics:", error.message);
+    return res.status(500).json({ success: false, message: "Failed to fetch workspace analytics." });
   }
 };
