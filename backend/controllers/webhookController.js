@@ -6,8 +6,12 @@ export const handleGithubWebhook = async (req, res) => {
   const event = req.headers["x-github-event"];
   const payload = req.body;
 
+  console.log(`\n================ WEBHOOK INCOMING ================`);
+  console.log(`[DEBUG] Received Header x-github-event: "${event}"`);
+
   // 1. Instantly return 200 OK for GitHub's initial ping test
   if (event === "ping") {
+    console.log(`[DEBUG] Ping event received. Responding with 200 OK.`);
     return res.status(200).send("Pong! Webhook connected successfully.");
   }
 
@@ -18,31 +22,46 @@ export const handleGithubWebhook = async (req, res) => {
 
   // 2. Process issues...
   try {
-    if (event !== "issues") return;
+    if (event !== "issues") {
+      console.log(`[DEBUG] Event is "${event}" (not "issues"). Exiting.`);
+      return;
+    }
 
     if (!payload || !payload.issue || !payload.repository) {
-      console.log("[Webhook Warning] Missing issue or repository payload");
+      console.log("[DEBUG WARNING] Missing issue or repository payload structure.");
       return;
     }
 
     const issueNumber = payload.issue.number;
     const repoFullName = payload.repository.full_name; // e.g. "AshuNewatia/SoC"
-    
-    // Find all workspaces where githubRepo ends with or contains "AshuNewatia/SoC"
+    const action = payload.action;
+
+    console.log(`[DEBUG] Action: "${action}" | Issue #${issueNumber} | Repo: "${repoFullName}"`);
+
+    // Flexible regex search for matching workspace
+    const searchRegex = repoFullName.replace('/', '\\/');
+    console.log(`[DEBUG] Searching DB for Workspaces with githubRepo matching regex: /${searchRegex}/i`);
+
     const workspaces = await Workspace.find({ 
-      githubRepo: { $regex: repoFullName.replace('/', '\\/'), $options: "i" } 
+      githubRepo: { $regex: searchRegex, $options: "i" } 
     });
 
+    console.log(`[DEBUG] Workspaces matching in DB: ${workspaces.length}`);
+
     if (!workspaces || workspaces.length === 0) {
-      console.log(`[Webhook Warning] No workspaces found matching repo: ${repoFullName}`);
+      console.log(`[DEBUG WARNING] No workspace found where githubRepo matches "${repoFullName}". Check Workspace Settings in Mongo!`);
       return;
     }
 
     const io = req.app.get("io");
+    if (!io) {
+      console.log(`[DEBUG WARNING] Socket.io instance ("io") is NOT attached to req.app!`);
+    }
 
     for (const workspace of workspaces) {
+      console.log(`--- Processing Workspace ID: ${workspace._id} ---`);
       try {
-        if (payload.action === "opened") {
+        if (action === "opened") {
 
           // Check for duplicate task first
           const existingTask = await Task.findOne({
@@ -51,7 +70,7 @@ export const handleGithubWebhook = async (req, res) => {
           });
 
           if (existingTask) {
-            console.log(`[Webhook] Task already exists for issue #${issueNumber} in workspace ${workspace._id}`);
+            console.log(`[DEBUG] Task already exists in DB for Issue #${issueNumber} in Workspace ${workspace._id}. Task ID: ${existingTask._id}`);
             continue;
           }
 
@@ -64,10 +83,11 @@ export const handleGithubWebhook = async (req, res) => {
           if (!creatorId) {
             const fallbackUser = await User.findOne();
             creatorId = fallbackUser ? fallbackUser._id : null;
+            console.log(`[DEBUG] Workspace owner missing. Fallback User ID resolved: ${creatorId}`);
           }
 
           if (!creatorId) {
-            console.error(`[Webhook Error] Cannot create task for Workspace ${workspace._id}: No valid User found for 'createdBy'.`);
+            console.error(`[DEBUG ERROR] Cannot create task for Workspace ${workspace._id}: No valid User found for 'createdBy'.`);
             continue;
           }
 
@@ -81,37 +101,43 @@ export const handleGithubWebhook = async (req, res) => {
             createdBy: creatorId 
           });
 
-          console.log(`[Webhook] Success: Created task for Workspace ${workspace._id}`);
+          console.log(`[DEBUG SUCCESS] 🎉 Created Task ID: ${newTask._id} for Workspace: ${workspace._id}`);
 
           if (io) {
             io.emit("taskCreated", newTask);
             io.to(workspace._id.toString()).emit("taskCreated", newTask);
+            console.log(`[DEBUG SOCKET] Emitted "taskCreated" for Task ID: ${newTask._id}`);
           }
         } 
         
-        else if (payload.action === "closed" || payload.action === "reopened") {
+        else if (action === "closed" || action === "reopened") {
           const task = await Task.findOne({ 
             workspace: workspace._id, 
             githubIssueNumber: Number(issueNumber)
           });
 
           if (task) {
-            task.status = payload.action === "closed" ? "completed" : "todo";
+            task.status = action === "closed" ? "completed" : "todo";
             await task.save();
-            console.log(`[Webhook] Success: Updated task status to "${task.status}"`);
+            console.log(`[DEBUG SUCCESS] Updated task status to "${task.status}" for Task ID: ${task._id}`);
 
             if (io) {
               io.emit("taskUpdated", task);
               io.to(workspace._id.toString()).emit("taskUpdated", task);
+              console.log(`[DEBUG SOCKET] Emitted "taskUpdated" for Task ID: ${task._id}`);
             }
+          } else {
+            console.log(`[DEBUG WARNING] Could not find Task for Issue #${issueNumber} to update action "${action}"`);
           }
+        } else {
+          console.log(`[DEBUG] Ignored issue action: "${action}"`);
         }
 
       } catch (workspaceError) {
-        console.error(`[Webhook Workspace Loop Error] Workspace ID ${workspace._id}:`, workspaceError.message);
+        console.error(`[DEBUG WORKSPACE LOOP ERROR] Workspace ID ${workspace._id}:`, workspaceError.message);
       }
     }
   } catch (error) {
-    console.error("Global Webhook Controller Error:", error);
+    console.error("[DEBUG GLOBAL ERROR]:", error);
   }
 };
