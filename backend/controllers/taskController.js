@@ -203,9 +203,7 @@ export const updateTaskStatus = async (req, res) => {
             });
         }
 
-        const workspace = await Workspace.findById(
-            task.workspace
-        );
+        const workspace = await Workspace.findById(task.workspace);
 
         if (!workspace) {
             return res.status(404).json({
@@ -213,38 +211,26 @@ export const updateTaskStatus = async (req, res) => {
             });
         }
 
-        const isOwner =
-            workspace.owner.toString() ===
-            req.user._id.toString();
+        const isOwner = workspace.owner.toString() === req.user._id.toString();
 
-        const isAdmin =
-            workspace.admins?.some(
-                admin =>
-                    admin.toString() ===
-                    req.user._id.toString()
-            ) || false;
+        const isAdmin = workspace.admins?.some(
+            admin => admin.toString() === req.user._id.toString()
+        ) || false;
 
-        const isMember =
-            workspace.members?.some(
-                member =>
-                    member.toString() ===
-                    req.user._id.toString()
-            ) || false;
+        const isMember = workspace.members?.some(
+            member => member.toString() === req.user._id.toString()
+        ) || false;
 
-        const isUnassigned = task.assignedTo.length === 0;
+        const isUnassigned = !task.assignedTo || task.assignedTo.length === 0;
 
         if (!isOwner && !isAdmin && !isUnassigned) {
-            const isAssigned =
-                task.assignedTo?.some(
-                    user =>
-                        user.toString() ===
-                        req.user._id.toString()
-                ) || false;
+            const isAssigned = task.assignedTo?.some(
+                user => user.toString() === req.user._id.toString()
+            ) || false;
 
             if (!isAssigned) {
                 return res.status(403).json({
-                    message:
-                        "You can only move tasks assigned to you"
+                    message: "You can only move tasks assigned to you"
                 });
             }
         }
@@ -259,18 +245,21 @@ export const updateTaskStatus = async (req, res) => {
             return res.status(404).json({ message: "Task not found" });
         }
 
-        if (updatedTask.githubIssueNumber) {
-            if (workspace && workspace.githubToken && workspace.githubRepo) {
-                await updateGithubIssueState(
-                    workspace.githubToken,
-                    workspace.githubRepo,
-                    updatedTask.githubIssueNumber,
-                    status
-                );
-            }
+        // 🟢 GitHub Issue State Sync
+        if (updatedTask.githubIssueNumber && workspace?.githubToken && workspace?.githubRepo) {
+            // Map Kanban status to GitHub's state ('closed' vs 'open')
+            const isCompletedStatus = ["done", "completed", "closed"].includes(status.toLowerCase());
+            const githubState = isCompletedStatus ? "closed" : "open";
+
+            await updateGithubIssueState(
+                workspace.githubToken,
+                workspace.githubRepo,
+                updatedTask.githubIssueNumber,
+                githubState
+            );
         }
 
-        if (updatedTask.status === "completed") {
+        if (updatedTask.status === "completed" || updatedTask.status === "done") {
             await logActivity(
                 workspace._id,
                 req.user._id,

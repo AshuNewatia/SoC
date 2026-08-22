@@ -9,7 +9,7 @@ import {
   X,
   Pin,
 } from "lucide-react";
-import logo from "../../assets/logo.png";
+import {CampusFlowLogo} from "../CampusFlowLogo";
 
 import { useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
@@ -168,37 +168,31 @@ export default function Sidebar({ isOpen = false, onClose = () => { }, workspace
         `}
       >
         {/* Mobile header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 md:hidden">
-          <div className="flex items-center gap-2">
-            <img
-              src={logo}
-              alt="CampusFlow"
-              className="h-11 w-11 rounded-xl object-cover"
-            />
-            <h1 className="font-bold text-xl text-text-primary">CampusFlow</h1>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg hover:bg-slate-100 transition"
-          >
-            <X size={20} />
-          </button>
-        </div>
+<div className="flex items-center justify-between p-4 border-b border-slate-200 md:hidden">
+  <div className="flex items-center gap-2">
+    {/* 🟢 Rendered directly as React SVG Component */}
+    <CampusFlowLogo className="h-11 w-11" />
+    <h1 className="font-bold text-xl text-text-primary">CampusFlow</h1>
+  </div>
+  <button
+    onClick={onClose}
+    className="p-1 rounded-lg hover:bg-slate-100 transition"
+  >
+    <X size={20} />
+  </button>
+</div>
 
-        {/* Desktop logo */}
-        <div className="hidden md:flex h-18 px-6 items-center shrink-0 mt-0">
-          <div className="flex items-center gap-3">
-            <img
-              src={logo}
-              alt="CampusFlow"
-              className="h-11 w-11 rounded-xl object-cover"
-            />
-            <div>
-              <h1 className="font-bold text-xl text-text-primary">CampusFlow</h1>
-              <p className="text-xs text-text-secondary">Collaborative Workspace</p>
-            </div>
-          </div>
-        </div>
+{/* Desktop logo */}
+<div className="hidden md:flex h-18 px-6 items-center shrink-0 mt-0">
+  <div className="flex items-center gap-3">
+    {/* 🟢 Rendered directly as React SVG Component */}
+    <CampusFlowLogo className="h-11 w-11" />
+    <div>
+      <h1 className="font-bold text-xl text-text-primary">CampusFlow</h1>
+      <p className="text-xs text-text-secondary">Collaborative Workspace</p>
+    </div>
+  </div>
+</div>
 
         <div className="px-4 shrink-0 mt-0">
           <div className="h-px bg-slate-200"></div>

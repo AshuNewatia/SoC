@@ -1,18 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/authContext';
-import { User, Mail, Lock, UserPlus, ArrowRight, ShieldCheck, KeyRound, ArrowLeft } from 'lucide-react';
+import { User, Mail, Lock, UserPlus, ArrowRight, ArrowLeft } from 'lucide-react';
 import { FaGoogle, FaGithub } from 'react-icons/fa'; 
-import api from '../services/api'; 
 import logo from '../assets/logo.png';
 
 function Signup() {
-  const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [otp, setOtp] = useState('');
   
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +25,7 @@ function Signup() {
     }
   }, [location]);
 
-  const handleRequestOTP = async (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       setError('Passwords do not match');
@@ -38,38 +35,10 @@ function Signup() {
     setLoading(true);
 
     try {
-      const res = await api.post('/api/auth/send-otp', { email });
-      if (res.data.success) {
-        setStep(2); 
-      }
+      await signup(name, email, password);
+      navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to send verification code.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyAndSignup = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const res = await api.post('/api/auth/verify-otp-signup', {
-        name,
-        email,
-        password,
-        otp
-      });
-
-      if (res.data.success) {
-        if (res.data.token) {
-          localStorage.setItem('token', res.data.token);
-        }
-        navigate('/dashboard');
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Invalid or expired OTP code.');
+      setError(err.response?.data?.message || 'Failed to create account.');
     } finally {
       setLoading(false);
     }
@@ -155,15 +124,13 @@ function Signup() {
               </div>
             </div>
 
-            {/* Dynamic Step Headings */}
+            {/* Heading */}
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-                {step === 1 ? 'Join the Community' : 'Verify Email'}
+                Join the Community
               </h2>
               <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto">
-                {step === 1 
-                  ? 'Start collaborating with your team' 
-                  : `Enter the 6-digit code sent to ${email}`}
+                Start collaborating with your team
               </p>
             </div>
 
@@ -173,9 +140,8 @@ function Signup() {
               </div>
             )}
 
-            {/* STEP 1: INITIAL DETAILS FORM */}
-            {step === 1 && (
-              <form onSubmit={handleRequestOTP}>
+            {/* REGISTRATION FORM */}
+            <form onSubmit={handleSignup}>
                 <div className="mb-5">
                   <label className="block text-sm font-medium text-slate-700 mb-2">Full Name</label>
                   <div className="relative">
@@ -242,51 +208,10 @@ function Signup() {
                   className="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(37,99,235,0.25)] hover:bg-blue-700 hover:scale-[1.01] hover:shadow-lg active:scale-95 focus:ring-4 focus:ring-blue-500/30 disabled:opacity-50 cursor-pointer group"
                 >
                   <UserPlus className="w-5 h-5" />
-                  {loading ? 'Sending Verification Code...' : 'Get OTP Code'}
+                  {loading ? 'Creating Account...' : 'Create Account'}
                   {!loading && <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />}
                 </button>
               </form>
-            )}
-
-            {/* STEP 2: OTP INPUT FORM */}
-            {step === 2 && (
-              <form onSubmit={handleVerifyAndSignup} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2 text-center">
-                    Enter Verification Code
-                  </label>
-                  <div className="relative">
-                    <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input
-                      type="text"
-                      maxLength={6}
-                      placeholder="123456"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      className="w-full pl-11 pr-4 py-3.5 tracking-widest text-center text-xl font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-300 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 outline-none transition-all duration-200 hover:border-primary/40"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_10px_30px_rgba(37,99,235,0.25)] hover:bg-blue-700 hover:scale-[1.01] hover:shadow-lg active:scale-95 focus:ring-4 focus:ring-blue-500/30 disabled:opacity-50 cursor-pointer"
-                >
-                  <ShieldCheck className="w-5 h-5" />
-                  {loading ? 'Verifying...' : 'Complete Registration'}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="w-full text-xs text-slate-500 hover:text-slate-700 text-center block transition-all duration-200 hover:translate-x-1 pt-2"
-                >
-                  ← Incorrect email or want to edit details?
-                </button>
-              </form>
-            )}
 
             {/* OAuth Separator */}
             <div className="relative my-7">
