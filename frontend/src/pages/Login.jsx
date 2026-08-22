@@ -63,6 +63,7 @@ function Login() {
       access_type: 'offline',
       response_type: 'code',
       prompt: 'consent',
+      state: 'google',
       scope: [
         'https://www.googleapis.com/auth/userinfo.profile',
         'https://www.googleapis.com/auth/userinfo.email',
@@ -78,6 +79,7 @@ function Login() {
       client_id: 'Ov23liAjvQDdoB6Ix9s4', 
       redirect_uri: `${window.location.origin}/oauth/callback`, 
       scope: 'user:email',
+      state: 'github',
     };
     const qs = new URLSearchParams(options).toString();
     window.location.href = `${rootUrl}?${qs}`;

@@ -52,6 +52,7 @@ function Signup() {
       access_type: 'offline',
       response_type: 'code',
       prompt: 'consent',
+      state: 'google',
       scope: [
         'https://www.googleapis.com/auth/userinfo.profile',
         'https://www.googleapis.com/auth/userinfo.email',
@@ -65,8 +66,9 @@ function Signup() {
     const rootUrl = 'https://github.com/login/oauth/authorize';
     const options = {
       client_id: 'Ov23liAjvQDdoB6Ix9s4', 
-      redirect_uri: "http://localhost:5173/oauth/callback",
+      redirect_uri: `${window.location.origin}/oauth/callback`,
       scope: 'user:email',
+      state: 'github',
     };
     const qs = new URLSearchParams(options).toString();
     window.location.href = `${rootUrl}?${qs}`;

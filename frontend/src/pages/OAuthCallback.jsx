@@ -16,7 +16,8 @@ function OAuthCallback() {
         return;
       }
 
-      const isGoogle = location.search.includes('scope');
+      const provider = searchParams.get('state');
+      const isGoogle = provider === 'google';
       
       // Dynamic backend URL handling for Render and Localhost
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
