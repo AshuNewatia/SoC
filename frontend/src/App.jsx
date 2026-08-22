@@ -96,10 +96,9 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/oauth/callback" element={<OAuthCallback />} />
         <Route path="/join/workspace/:token" element={<JoinWorkspace />} />
+        <Route path="/create-profile" element={<CreateProfile />} />
 
         <Route element={<ProtectedRoute />}>
-          
-          <Route path="/create-profile" element={<CreateProfile />} />
 
           <Route element={<AuthenticatedLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
